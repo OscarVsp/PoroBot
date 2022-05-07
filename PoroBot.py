@@ -135,5 +135,4 @@ if __name__ == "__main__":
     bot.config = config
 
     load_commands()
-    #bot.run(config['DISCORD_TOKEN'])
-    bot.run("NTMzMzMzNzYyODkzODA3NjE2.XDjPxQ.Gf23keeOe3K2PLRJzPnktemMBeY")
+    bot.run(config['DISCORD_TOKEN'])
