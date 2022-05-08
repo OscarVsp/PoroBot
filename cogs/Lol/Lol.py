@@ -20,10 +20,13 @@ class Lol(commands.Cog):
                 self.bot = bot
                 self.watcher = Watcher(bot.config["RIOT_APIKEY"])
 
-        @commands.slash_command()
-        async def clash(self, inter: ApplicationCommandInteraction, summoner : str):
-                """Commander une bière (permet de tester le ping du bot)
-                """
+        @commands.slash_command(
+                description = "Scouter une team clash à partir du nom d'un des joueurs"
+        )
+        async def clash(self, inter: ApplicationCommandInteraction,
+                        summoner : str = commands.Param(
+                                description = "Le nom d'invocateur d'un des joueurs"
+                        )):
                 try:
                         team = self.watcher.get_clash_team(summoner)
                         await inter.response.send_message(
@@ -50,7 +53,9 @@ class Lol(commands.Cog):
                                 delete_after = 10
                         )
         
-        @commands.slash_command()
+        @commands.slash_command(
+                description = "Voir combien de temps et d'argent tu as dépensés sur LOL"
+        )
         async def wasteonlol(self, inter : ApplicationCommandInteraction):
                 await inter.response.send_message(
                         embed = new_embed(
@@ -64,7 +69,9 @@ class Lol(commands.Cog):
                         delete_after = 60
                 )
                 
-        @commands.slash_command()
+        @commands.slash_command(
+                description = "Obtenir les règles de l'aram à boire"
+        )
         async def drink(self, inter : ApplicationCommandInteraction):
                 drinkview = DrinkView(inter)
                 await inter.response.send_message(

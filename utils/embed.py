@@ -8,7 +8,7 @@ def new_embed(title = None, description = None, color = disnake.Embed.Empty, use
     #use *arhs and **kwargs !!
     if title != None:
         if description != None:
-            if color != None:
+            if color != disnake.Embed.Empty:
                 embed = disnake.Embed(title=title, description=description, color=color)
             else:
                 embed = disnake.Embed(title=title, description=description)
@@ -30,8 +30,11 @@ def new_embed(title = None, description = None, color = disnake.Embed.Empty, use
                 embed = disnake.Embed()
 
     if fields != None:
-        for k in fields:
-            embed.add_field(name=k, value=fields[k], inline=False)
+        for field in fields:
+            if 'inline' in field.keys():
+                embed.add_field(name=field['name'], value=field['value'], inline=field['inline'])
+            else:
+                embed.add_field(name=field['name'], value=field['value'], inline=False)
 
     if user != None:
         embed.set_thumbnail(url=user.display_avatar.url)

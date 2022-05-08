@@ -70,7 +70,7 @@ async def on_slash_command_error(interaction: ApplicationCommandInteraction, err
     tb = tracebackEx(error)
     await interaction.send(
         embed= new_embed(
-            title=":x:__**ERROR**__:x:",
+            title=":x: __**ERROR**__: x:",
             description=f"Une erreur s'est produite lors de la commande **/{interaction.application_command.name}**\n{bot.owner.mention} a été prévenu et corrigera ce bug au plus vite !\nUtilise `/beer` pour un bière de consolation :beer:",
             thumbnail = "https://i.imgur.com/U7rBtRu.png"),
         delete_after=10)

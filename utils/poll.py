@@ -5,7 +5,7 @@ from disnake.channel import TextChannel, Thread
 from disnake.message import Message
 
 from asyncio import sleep
-import 
+
 
 class Poll(object):
     """Represents the Poll-Object which the Bot can create.
