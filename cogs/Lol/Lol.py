@@ -18,18 +18,33 @@ class Lol(commands.Cog):
                 Get the member dict for the lore from the "Members.json" file next to it.
                 """
                 self.bot = bot
-                #self.watcher = Watcher(bot.config["RIOT_APIKEY"])
+                self.watcher = Watcher(bot.config["RIOT_APIKEY"])
 
         @commands.slash_command()
-        async def beeer(self, inter: ApplicationCommandInteraction):
+        async def clash(self, inter: ApplicationCommandInteraction, sumonner : str):
                 """Commander une bière (permet de tester le ping du bot)
                 """
-                await inter.response.send_message(
-                embed=new_embed(
-                        title="Voilà tes bières",
-                        description=f":beer:\n Après {round(self.bot.latency,2)} secondes d'attente seulement !",
-                        color = data.color.gold
-                ))
+                try:
+                        await inter.response.send_message(
+                                embed=self.watcher.get_clash_team(sumonner).to_embed()
+                        )
+                except (NoCurrentTeam):
+                        await inter.response.send_message(
+                                embed = new_embed(
+                                        description="Aucune équipe trouvée..."
+                                )
+                        )
+                except (SumomnerNotFound):
+                        await inter.response.send_message(
+                                embed = new_embed(
+                                        description = "Invocateur introuvable..." 
+                                )
+                        )
+        
+        @commands.slash_command()
+        async def test(self, inter : ApplicationCommandInteraction):
+                pass
+                        
 
 
 def setup(bot):

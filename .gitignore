@@ -365,3 +365,4 @@ FodyWeavers.xsd
 *.pyproj
 *.sln
 .env
+.vscode/

@@ -1,4 +1,4 @@
 disnake[voice]
-pyot
+riot-games-api
 python-dotenv
 requests

@@ -1,6 +1,6 @@
 import disnake 
 from disnake import ApplicationCommandInteraction
-from random import randint,choices,sample
+from random import choices
 from utils.embed import new_embed
 from utils import data
 import asyncio

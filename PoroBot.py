@@ -22,7 +22,6 @@ from disnake.ext.commands import Context
 
 from utils.embed import new_embed
 import traceback
-import exceptions
 
 def tracebackEx(ex):
     if type(ex) == str:
