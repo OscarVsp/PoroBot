@@ -1,7 +1,6 @@
 import disnake
-import asyncio
 
-async def new_embed(title = None, description = None, color = disnake.Embed.Empty, user : disnake.Member = None, fields : dict = None, thumbnail = None, image : str = None, footer : str = None):
+def new_embed(title = None, description = None, color = disnake.Embed.Empty, user : disnake.Member = None, fields : dict = None, thumbnail = None, image : str = None, footer : str = None):
     """
 
     """
