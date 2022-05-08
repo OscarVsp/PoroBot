@@ -5,6 +5,35 @@ from utils.embed import new_embed
 from utils import data
 import asyncio
 
+class PoroFeed(disnake.ui.View):
+    
+    def __init__(self, inter : ApplicationCommandInteraction):
+        super().__init__(timeout=10)
+        self.inter = inter
+        self.counter = 0
+
+    @disnake.ui.button(emoji = "<:porosnack:908477364135161877>", style=disnake.ButtonStyle.primary)
+    async def feed(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
+        if self.counter < 9:
+            self.counter += 1
+            await interaction.response.edit_message(
+                embed = new_embed(
+                    description="Continue à nourrir le poro !", 
+                    image=data.images.poros.growings[self.counter], 
+                    footer = f"{self.counter}/10"),
+                view=self)
+        else:
+            self.counter += 1
+            button.disabled = True
+            await interaction.response.edit_message(
+                embed = new_embed(
+                    description="*#Explosion de poros*", 
+                    image=data.images.poros.growings[self.counter]),
+                view=self)
+
+    async def on_timeout(self) -> None:
+        await self.inter.delete_original_message()
+
 class Beer(disnake.ui.View):
         
     def __init__(self, inter : ApplicationCommandInteraction):
@@ -15,14 +44,26 @@ class Beer(disnake.ui.View):
     @disnake.ui.button(emoji = "🍺", style=disnake.ButtonStyle.primary)
     async def beer(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
         self.counter += 1
-        await interaction.response.edit_message(
-            embed=new_embed(
-                title="Voilà tes bières",
-                description=f"{':beer:'*self.counter} \n Après {round(interaction.bot.latency,2)} secondes d'attente seulement !",
-                color = data.color.gold
-            ),
-            view = self
-        )
+        if self.counter < 10:
+            await interaction.response.edit_message(
+                embed=new_embed(
+                    title="Voilà tes bières",
+                    description=f"{':beer:'*self.counter} \n Après {round(interaction.bot.latency,2)} secondes d'attente seulement !",
+                    color = data.color.gold
+                ),
+                view = self
+            )
+        else:
+            button.disabled = True
+            self.stop()
+            await interaction.response.edit_message(
+                embed=new_embed(
+                    title="Déjà 10 bières ?! On va se calmer là...",
+                    description=f"{':beer:'*self.counter} \n Après {round(interaction.bot.latency,2)} secondes d'attente seulement !",
+                    color = data.color.gold
+                ),
+                view = self
+            )
         
     async def on_timeout(self) -> None:
         await self.inter.delete_original_message()

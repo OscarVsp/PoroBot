@@ -20,7 +20,7 @@ class emotes:
         rank = {'UNRANKED':"<:Unranked:829242191020032001>",'IRON':"<:Iron:829240724871577600>",'BRONZE':"<:Bronze:829240724754792449>",'SILVER':"<:Silver:829240724867514378>",'GOLD':"<:Gold:829240724842872872>",'PLATINUM':"<:Platinum:829240724797128754>",'DIAMOND':"<:Diamond:829240724830027796>",'MASTER':"<:Master:829240724943405096>",'GRANDMASTER':"<:Grandmaster:829240724767768576>",'CHALLENGER':"<:Challenger:829240724712456193>"}
 
     @classmethod
-    def number_to_emotes(cls, number : int, size : int = None) -> []:
+    def number_to_emotes(cls, number : int, size : int = None):
         """
         Take a number and return a list of emotes that correspond to the number
         """
@@ -40,19 +40,39 @@ class images:
         "back":     "https://i.imgur.com/xAegVLz.png"
     }
 
-    poros = [
-            "https://i.imgur.com/Eex5g5J.png",
-            "https://i.imgur.com/52LLvqI.png",
-            "https://i.imgur.com/2vEGssv.png",
-            "https://i.imgur.com/PcXqiub.png",
-            "https://i.imgur.com/7ohi1cB.png",
-            "https://i.imgur.com/VBmrv8w.png",
-            "https://i.imgur.com/7bIdncF.png",
-            "https://i.imgur.com/gQ79HSq.png",
-            "https://i.imgur.com/2gBVwgr.png",
-            "https://i.imgur.com/LGM3liY.png",
-            "https://i.imgur.com/sGvrPcj.png"
-            ]
+    class poros:
+        angry = "https://i.imgur.com/bOH0XUl.png"
+        bluch = "https://i.imgur.com/vliXsat.png"
+        cool = "https://i.imgur.com/wuPk5Fa.png"
+        crying = "https://i.imgur.com/apDuJZW.png"
+        tongue_long = "https://i.imgur.com/apDuJZW.png"
+        tongue_short = "https://i.imgur.com/NHfc3Wd.png"
+        neutral = "https://i.imgur.com/fcKmaLr.png"
+        love = "https://i.imgur.com/lH71Gmf.png"
+        poo = "https://i.imgur.com/lj6XmQI.png"
+        question = "https://i.imgur.com/52zSz3H.png"
+        sad = "https://i.imgur.com/iOWD0yL.png"
+        shock = "https://i.imgur.com/U7rBtRu.png"
+        sleepy = "https://i.imgur.com/6bmFC6l.png"
+        sweat = "https://i.imgur.com/KbWJZkD.png"
+        kiss = "https://i.imgur.com/vuZeoRO.png"
+        smirk = "https://i.imgur.com/or3cvYB.png"
+        xd = "https://i.imgur.com/BC0OBa6.png"
+        ox = "https://i.imgur.com/CiZdJAd.png"
+
+        growings = [
+                "https://i.imgur.com/Eex5g5J.png",
+                "https://i.imgur.com/52LLvqI.png",
+                "https://i.imgur.com/2vEGssv.png",
+                "https://i.imgur.com/PcXqiub.png",
+                "https://i.imgur.com/7ohi1cB.png",
+                "https://i.imgur.com/VBmrv8w.png",
+                "https://i.imgur.com/7bIdncF.png",
+                "https://i.imgur.com/gQ79HSq.png",
+                "https://i.imgur.com/2gBVwgr.png",
+                "https://i.imgur.com/LGM3liY.png",
+                "https://i.imgur.com/sGvrPcj.png"
+                ]
 
 class color:
     vert = disnake.Color.green()

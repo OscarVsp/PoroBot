@@ -1,6 +1,7 @@
 from riot_games_api import RiotGamesApi
 from riot_games_api.exceptions import RiotGamesApiException
 from .exceptions import NoCurrentTeam, SumomnerNotFound
+from utils.embed import new_embed
 import logging
 from disnake import Embed
 from datetime import datetime
@@ -14,23 +15,30 @@ class ClashTeam():
     def __init__(self,team):
         self.name = team.name
         self.abbreviation = team.abbreviation
-        self.icon = f"https://raw.communitydragon.org/pbe/plugins/rcp-be-lol-game-data/global/default/assets/clash/roster-logos/{team.icon_id}/1.png"
-        self.opgg = "https://euw.op.gg/multi/query="
         self.playersNotSorted = {"TOP":[],"JUNGLE":[],"MIDDLE":[],"BOTTOM":[],"UTILITY":[],"FILL":[],"UNSELECTED":[]}
 
     def addPlayer(self,player):
         self.playersNotSorted[player.position].append(player)
-        self.opgg += player.name.replace(' ','%20')+'%2C'
 
     def getPlayersSorted(self):
         return self.playersNotSorted["TOP"] + self.playersNotSorted["JUNGLE"] + self.playersNotSorted["MIDDLE"] + self.playersNotSorted["BOTTOM"] + self.playersNotSorted["UTILITY"] + self.playersNotSorted["FILL"] + self.playersNotSorted["UNSELECTED"]
 
 
-    def toEmbed(self):
-        text = ""
-        for player in self.getPlayersSorted():
-            text += role_to_emote[player.position] + rank_to_emote[player.tier] +" "+player.name + " \n"
-        return Embed(title=f"<:Opgg:829260989404020776> __**{self.name} ({self.abbreviation})**__ <:Opgg:829260989404020776>",description=text,url=self.opgg).set_thumbnail(url=self.icon)
+    @property
+    def embed(self) -> Embed:
+        return new_embed(
+            title = "__**{self.name} ({self.abbreviation})**__",
+            description = f"\n".join([f"{role_to_emote[p.position]}{rank_to_emote[p.tier]} {player.name}" for p in self.getPlayersSorted()]),
+            thumbnail = self.icon
+        )
+        
+    @property
+    def opgg(self) -> str:
+        return f"https://euw.op.gg/multi/query={''.join([p.name.replace(' ','%20')+'%2C' for p in self.players])}"
+    
+    @property
+    def icon(self) -> str:
+        return f"https://raw.communitydragon.org/pbe/plugins/rcp-be-lol-game-data/global/default/assets/clash/roster-logos/{team.icon_id}/1.png"
 
 class ClashPlayer():
 

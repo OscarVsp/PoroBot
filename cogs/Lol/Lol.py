@@ -21,29 +21,58 @@ class Lol(commands.Cog):
                 self.watcher = Watcher(bot.config["RIOT_APIKEY"])
 
         @commands.slash_command()
-        async def clash(self, inter: ApplicationCommandInteraction, sumonner : str):
+        async def clash(self, inter: ApplicationCommandInteraction, summoner : str):
                 """Commander une bière (permet de tester le ping du bot)
                 """
                 try:
+                        team = self.watcher.get_clash_team(summoner)
                         await inter.response.send_message(
-                                embed=self.watcher.get_clash_team(sumonner).to_embed()
+                                embed= team.embed,
+                                components = disnake.ui.Button(label="OPGG", emoji= "<:Opgg:948174103557312563>", style = disnake.ButtonStyle.link, url = team.opgg),
+                                delete_after = 1200
                         )
                 except (NoCurrentTeam):
                         await inter.response.send_message(
                                 embed = new_embed(
-                                        description="Aucune équipe trouvée..."
-                                )
+                                        title = f"__**Clash**__",
+                                        description = f"**{summoner}** is currently not register in any clash team...",
+                                        thumbnail = "https://i.imgur.com/52zSz3H.png"
+                                ),
+                                delete_after = 10
                         )
                 except (SumomnerNotFound):
                         await inter.response.send_message(
                                 embed = new_embed(
-                                        description = "Invocateur introuvable..." 
-                                )
+                                        title = f"__**Clash**__",
+                                        description = f"**{summoner}** is not a valid summoner name, or there is an unexpected error...",
+                                        thumbnail = "https://i.imgur.com/52zSz3H.png"
+                                ),
+                                delete_after = 10
                         )
         
         @commands.slash_command()
-        async def test(self, inter : ApplicationCommandInteraction):
-                pass
+        async def wasteonlol(self, inter : ApplicationCommandInteraction):
+                await inter.response.send_message(
+                        embed = new_embed(
+                                title = "__**Wasted on Lol**__",
+                                description = "Utilise les liens ci-dessous pour découvrir combien de temps et/ou d'argent tu as dépensés dans League of Legends"
+                        ),
+                        components = [
+                                disnake.ui.Button(label="Temps passé sur lol", emoji= "⌛", style = disnake.ButtonStyle.link, url = "https://wol.gg/"),
+                                disnake.ui.Button(label="Argent dépensé sur lol", emoji= "💰", style = disnake.ButtonStyle.link, url = "https://support-leagueoflegends.riotgames.com/hc/fr/articles/360026080634")
+                        ],
+                        delete_after = 60
+                )
+                
+        @commands.slash_command()
+        async def drink(self, inter : ApplicationCommandInteraction):
+                drinkview = DrinkView(inter)
+                await inter.response.send_message(
+                        embeds = [drinkview.pre_embed,drinkview.embeds[0]],
+                        view = drinkview
+                )
+                
+        
                         
 
 

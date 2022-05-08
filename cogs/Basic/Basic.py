@@ -16,10 +16,10 @@ class Basic(commands.Cog):
         """
         self.bot = bot
 
-    @commands.slash_command()
+    @commands.slash_command(
+        description = "Commander un bière (test le ping du bot)"
+    )
     async def beer(self, inter: ApplicationCommandInteraction):
-        """Commander une bière (permet de tester le ping du bot)
-        """
         await inter.response.send_message(
             embed=new_embed(
                 title="Voilà tes bières",
@@ -34,20 +34,19 @@ class Basic(commands.Cog):
     async def porosnack(self, inter: ApplicationCommandInteraction):
         """Nourrir le poro
         """
-        await inter.response.send_message(embed = new_embed(description="Nourris le poro !", image=data.images.poros[0], footer="0/10"), view=PoroFeed(inter))
+        await inter.response.send_message(embed = new_embed(description="Nourris le poro !", image=data.images.poros.growings[0], footer="0/10"), view=PoroFeed(inter))
         
         
     
-    @commands.slash_command()
+    @commands.slash_command(
+        description = "Supprimer les derniers messages du channel"
+    )
     async def clear(self, inter : ApplicationCommandInteraction,
-        nombre : commands.Range[1, ...]
+        nombre : int = commands.Param(
+            description = "le nombre de message à supprimer",
+            gt = 0
+        )
     ):
-        """Supprime les derniers messages du channel
-        
-        Parameters
-        ----------
-        nombre: le nombre de message à supprimer
-        """
         await inter.response.defer()
         await inter.channel.purge(limit=nombre)
         await inter.response.send_message(
@@ -55,7 +54,9 @@ class Basic(commands.Cog):
                 description = f":broom: {nombre} messages supprimés ! :broom:"),
             delete_after=3)
         
-    @commands.slash_command()
+    @commands.slash_command(
+        description = "Lancer des dés"
+    )
     async def dice(self, inter : ApplicationCommandInteraction,
         nombre_de_faces : int = commands.Param(
             description = "le nombre de face des dés (6 par default)",
