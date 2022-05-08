@@ -3,53 +3,63 @@ from disnake import ApplicationCommandInteraction
 from random import randint,choices,sample
 from utils.embed import new_embed
 from utils import data
+import asyncio
 
-class PoroFeed(disnake.ui.View):
-    
-    images = [
-            "https://i.imgur.com/Eex5g5J.png",
-            "https://i.imgur.com/52LLvqI.png",
-            "https://i.imgur.com/2vEGssv.png",
-            "https://i.imgur.com/PcXqiub.png",
-            "https://i.imgur.com/7ohi1cB.png",
-            "https://i.imgur.com/VBmrv8w.png",
-            "https://i.imgur.com/7bIdncF.png",
-            "https://i.imgur.com/gQ79HSq.png",
-            "https://i.imgur.com/2gBVwgr.png",
-            "https://i.imgur.com/LGM3liY.png",
-            "https://i.imgur.com/sGvrPcj.png"
-            ]
-    
-    
+class Beer(disnake.ui.View):
+        
     def __init__(self, inter : ApplicationCommandInteraction):
         super().__init__(timeout=10)
         self.inter = inter
-        self.counter = 0
+        self.counter = 1
 
-
-    # Define the actual button
-    # When pressed, this increments the number displayed until it hits 5.
-    # When it hits 5, the counter button is disabled and it turns green.
-    # note: The name of the function does not matter to the library
-    @disnake.ui.button(emoji = "<:porosnack:908477364135161877>", style=disnake.ButtonStyle.primary)
-    async def feed(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
-        if self.counter < 9:
-            self.counter += 1
-            await interaction.response.edit_message(
-                embed = new_embed(
-                    description="Continue à nourrir le poro !", 
-                    image=PoroFeed.images[self.counter], 
-                    footer = f"{self.counter}/10"),
-                view=self)
-        else:
-            self.counter += 1
-            button.disabled = True
-            await interaction.response.edit_message(
-                embed = new_embed(
-                    description="*#Explosion de poros*", 
-                    image=PoroFeed.images[self.counter]),
-                view=self)
+    @disnake.ui.button(emoji = "🍺", style=disnake.ButtonStyle.primary)
+    async def beer(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
+        self.counter += 1
+        await interaction.response.edit_message(
+            embed=new_embed(
+                title="Voilà tes bières",
+                description=f"{':beer:'*self.counter} \n Après {round(interaction.bot.latency,2)} secondes d'attente seulement !",
+                color = data.color.gold
+            ),
+            view = self
+        )
         
     async def on_timeout(self) -> None:
         await self.inter.delete_original_message()
         
+class DiceView(disnake.ui.View):
+    
+    def __init__(self, inter : ApplicationCommandInteraction, nombre_de_faces : int, nombre_de_des : int):
+        super().__init__(timeout=600)
+        self.nbr_faces = nombre_de_faces
+        self.nbr_des = nombre_de_des
+        self.inter = inter       
+        self.counter = 0
+        self.total = 0
+
+
+    @disnake.ui.button(label = "Roll", emoji = "🎲", style=disnake.ButtonStyle.primary)
+    async def roll(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
+        self.counter += 1
+        sortie = choices([i+1 for i in range(self.nbr_faces)],k=self.nbr_des)
+        resultats = "\n".join(["".join(data.emotes.number_to_emotes(nombre,len(str(self.nbr_faces)))) for nombre in sortie])
+        self.total += sum(sortie)
+        await interaction.response.edit_message(
+            embed = new_embed(
+                title = f"🎲 Lancé de {self.nbr_des} dé(s) à {self.nbr_faces} face(s)",
+                fields = {
+                    'Résultats du dernier lancé :' : f"{resultats}",
+                    'Total du dernier lancé :' : f"{''.join(data.emotes.number_to_emotes(sum(sortie)))}",
+                    f'Total des {self.counter} lancés :' : f"{''.join(data.emotes.number_to_emotes(self.total))}"
+                }
+            ),
+            view=self
+        )
+        
+    @disnake.ui.button(label = "Stop", style=disnake.ButtonStyle.danger)
+    async def stop_button(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
+        self.stop()
+        await self.inter.delete_original_message()
+        
+    async def on_timeout(self) -> None:
+        await self.inter.delete_original_message()

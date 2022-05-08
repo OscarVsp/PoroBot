@@ -57,7 +57,7 @@ def load_commands() -> None:
             logging.info(f"Loaded extension '{extension}'")
         except Exception as e:
             exception = f"{type(e).__name__}: {e}"
-            logging.warning(f"Failed to load extension {extension}\n{exception}")
+            logging.warning(f"Failed to load extension {extension}\n{exception}\n{tracebackEx(exception)}")
 
 
 

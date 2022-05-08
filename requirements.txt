@@ -1,3 +1,4 @@
 disnake[voice]
 pyot
 python-dotenv
+requests

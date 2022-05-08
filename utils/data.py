@@ -19,6 +19,18 @@ class emotes:
         position = {'UNSELECTED':"<:Missing:908411949405069352>",'TOP':'<:Top:797548227004071956>','JUNGLE':'<:Jungle:797548226998829078>','MIDDLE':'<:Mid:797548226944565298>','BOTTOM':'<:Bot:829047436563054632>','UTILITY':'<:Support:797548227347480593>',"FILL":"<:Fill:829062843717386261>"}
         rank = {'UNRANKED':"<:Unranked:829242191020032001>",'IRON':"<:Iron:829240724871577600>",'BRONZE':"<:Bronze:829240724754792449>",'SILVER':"<:Silver:829240724867514378>",'GOLD':"<:Gold:829240724842872872>",'PLATINUM':"<:Platinum:829240724797128754>",'DIAMOND':"<:Diamond:829240724830027796>",'MASTER':"<:Master:829240724943405096>",'GRANDMASTER':"<:Grandmaster:829240724767768576>",'CHALLENGER':"<:Challenger:829240724712456193>"}
 
+    @classmethod
+    def number_to_emotes(cls, number : int, size : int = None) -> []:
+        """
+        Take a number and return a list of emotes that correspond to the number
+        """
+        if size != None:
+            number_str = "0"*(size - len(str(number))) + str(number)
+        else:
+            number_str = str(number)
+        return [cls.num[int(chiffre)] for chiffre in number_str]
+            
+
 class images:
     cards = {
         "coeur":    ["https://i.imgur.com/sSNc54Q.png","https://i.imgur.com/q4M9V3l.png","https://i.imgur.com/OldvcEy.png","https://i.imgur.com/wj1GoO9.png","https://i.imgur.com/0B2Ud1T.png","https://i.imgur.com/eCliqU4.png","https://i.imgur.com/lMbRY2r.png","https://i.imgur.com/cuG1fqu.png","https://i.imgur.com/4NwgCla.png","https://i.imgur.com/2SR4Ial.png"],

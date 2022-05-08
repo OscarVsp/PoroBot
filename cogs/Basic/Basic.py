@@ -4,7 +4,7 @@ from disnake import ApplicationCommandInteraction
 from random import randint,choices,sample
 from utils.embed import new_embed
 from utils import data
-from .view import PoroFeed
+from .view import *
 import asyncio
 
 
@@ -20,11 +20,14 @@ class Basic(commands.Cog):
     async def beer(self, inter: ApplicationCommandInteraction):
         """Commander une bière (permet de tester le ping du bot)
         """
-        embed = new_embed(
-            title="Voilà tes bières",
-            description=':beer:'*randint(1,10)+"\n Après "+str(round(self.bot.latency,2))+" secondes d'attente seulement !",
-            color = data.color.gold)
-        embed = await inter.send(embed=embed,delete_after=5)
+        await inter.response.send_message(
+            embed=new_embed(
+                title="Voilà tes bières",
+                description=f":beer:\n Après {round(self.bot.latency,2)} secondes d'attente seulement !",
+                color = data.color.gold
+            ),
+            view = Beer(inter)
+        )
 
 
     @commands.slash_command()
@@ -65,13 +68,12 @@ class Basic(commands.Cog):
             gt = 0
             )
     ):
-        sortie = sample([i+1 for i in range(nombre_de_faces)],nombre_de_des)
-        resultats = "__" + "__, __".join(sortie) + "__"
         await inter.response.send_message(
             embed = new_embed(
-                title = f"Lancé de {nombre_de_des} dé(s) à {nombre_de_faces} face(s)",
-                description = f"**Résultats :** {resultats}\n**Total :** __{sum(sortie)}__"
-            ), delete_after = 60
+                title = f"🎲 Lancé de {nombre_de_des} dé(s) à {nombre_de_faces} face(s)",
+                description = f"Utilise le bouton pour commencer à lancer les dés !"
+            ),
+            view = DiceView(inter, nombre_de_faces, nombre_de_des)
         )
         
         
