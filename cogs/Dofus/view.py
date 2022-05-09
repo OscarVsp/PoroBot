@@ -26,36 +26,27 @@ class AlmanaxView(disnake.ui.View):
 
     @disnake.ui.button(emoji = ":calendar_spiral:", label = "Semaine", style=disnake.ButtonStyle.primary)
     async def week(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
-        await interaction.author.send(embed = self.data_to_embed(Almanax_scraper.scrape(7)))
+        await interaction.author.send(embed = self.data_to_embed(Almanax_scraper.get_almanax(7)))
         
     @disnake.ui.button(emoji = ":calendar_spiral:", label = "Mois", style=disnake.ButtonStyle.primary)
     async def month(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
-        await interaction.author.send(embed = self.data_to_embed(Almanax_scraper.scrape(31)))
+        await interaction.author.send(embed = self.data_to_embed(Almanax_scraper.get_almanax(31)))
         
     @disnake.ui.button(emoji = ":calendar_spiral:", label = "Année", style=disnake.ButtonStyle.primary)
     async def year(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
-        await interaction.author.send(embed = self.data_to_embed(Almanax_scraper.scrape(365)))
+        await interaction.author.send(embed = self.data_to_embed(Almanax_scraper.get_almanax(365)))
 
-    @staticmethod
-    def data_to_embed(data):
+    @classmethod
+    def data_to_embed(cls,data):
         if type(data) == list:
-            return new_embed(
-                title = f"__**Almanax des {len(data)} prochains jours**__",
-                fields= [
-                    {"name" : "Dates",
-                     
-                     "value" : "\n".join([f"{d['date'].strftime('%d %b')}" for d in data]),
-                     "inline" : True
-                    },
-                    {"name" : "Offrandes",
-                     "value" : "\n".join([f"**{d['item_quantity']}x** {d['item']}" for d in data]),
-                     "inline" : True
-                    },
-                ]
+            embed =  new_embed(
+                title = f":calendar_spiral:__**Almanax des {len(data)} prochains jours**__:calendar_spiral:",
+                description = "\n".join([f"{d['date'].strftime('%d')} {cls.MONTHS[d['date'].strftime('%m')]} : **{d['item_quantity']}x** {d['item']}" for d in data])
             )
+            return embed
         else:
             return new_embed(
-                title = f"__**Almanax du {data['date'].strftime('%d %b')}**__",
+                title = f":calendar_spiral:__**Almanax du {data['date'].strftime('%d')} {cls.MONTHS[data['date'].strftime('%m')]}**__:calendar_spiral:",
                 fields = [
                     {"name" : "__Offrande :__",
                      "value" : f"**{data['item_quantity']}x** {data['item']}"},

@@ -16,12 +16,21 @@ class Clicbang(commands.Cog):
         self.bot = bot
 
 
-#TODO (RIP TON APREM BRO)
-    
-        
-        
-    
-               
-
+    @commands.slash_command(
+        description = "Démarrer une partie de bang"
+    )
+    async def bang(self, inter : ApplicationCommandInteraction):
+        menu = BangMenu(inter)
+        await inter.response.send_message(
+            embed = menu.embed,
+            view = menu
+        )
+        await menu.wait()
+        if menu.start:
+            pass
+        else:
+            await menu.interaction.delete_original_message()
+  
+            
 def setup(bot):
     bot.add_cog(Clicbang(bot))

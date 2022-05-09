@@ -4,6 +4,7 @@ from disnake import ApplicationCommandInteraction
 from requests import delete
 from utils.embed import new_embed
 from utils import data
+from utils.tools import tracebackEx
 from .view import *
 from .scraper import Almanax_scraper
 import asyncio
@@ -29,18 +30,19 @@ class Dofus(commands.Cog):
         nombre_de_jours : int = commands.Param(
             description = "Le nombre de prochain jour dont tu veux connaitre l'almanax",
             ge = 0,
-            le = 30,
             default = 0
         )
     ):
         await inter.response.send_message(
             embed = new_embed(
-                description = "Consultation du Krosmoz en cours...\nL'almanax vous sera envoyé en privé dès qu'il sera prêt.",
+                title = "Consultation du Krosmoz en cours...",
+                description = "À chaque fois que l'almanax d'un jour est demander pour la première fois, cela peut prendre un peu de temps.\nL'almanax te sera envoyé en privé dès qu'il sera prêt.",
+                thumbnail = data.images.sablier
             ),
             delete_after = 10
         )
         await inter.author.send(
-            embed = AlmanaxView.data_to_embed(Almanax_scraper.scrape(nombre_de_jours))
+            embed = AlmanaxView.data_to_embed(Almanax_scraper.get_almanax(nombre_de_jours))
         )
         
 
@@ -49,7 +51,7 @@ class Dofus(commands.Cog):
     async def almanax_task(self):
         logging.info("Almanax tasks run")
         await self.almanax_message.delete()
-        self.almanax_message = await self.almanax_channel.send(AlmanaxView.data_to_embed(Almanax_scraper.scrape()))
+        self.almanax_message = await self.almanax_channel.send(AlmanaxView.data_to_embed(Almanax_scraper.get_almanax()))
 
     @almanax_task.before_loop
     async def before_almanax_task(self):
@@ -58,18 +60,33 @@ class Dofus(commands.Cog):
         await asyncio.sleep(1)
         self.almanax_channel = self.bot.get_channel(int(self.bot.config['ALMANAX_CHANNEL']))
         if self.almanax_channel == None:
-            logging.error("Almanax channel not found")
+            logging.error("Almanax channel not found. Task is cancelled")
             self.almanax.cancel()
         else:
             await self.almanax_channel.purge(limit=10)
-            self.almanax_message = await self.almanax_channel.send(embed = AlmanaxView.data_to_embed(Almanax_scraper.scrape()))
-            logging.info("Almanax before tasks run at start.")
+            self.almanax_message = await self.almanax_channel.send(embed = AlmanaxView.data_to_embed(Almanax_scraper.get_almanax()))
+            logging.info("Almanax first tasks run at start.")
             time = datetime.now()
             time_to_wait = (23-time.hour)*3600 + (59-time.minute+1)*60 + (59-time.second)
-            logging.info(f"Almanax tasks waiting for {(23-time.hour)} hours, {(59-time.minute+1)} minutes and {(59-time.second)} secondes before starting task")
+            logging.info(f"Almanax tasks waiting for {(23-time.hour)} hours, {(59-time.minute+1)} minutes and {(59-time.second)} secondes before next task")
             await asyncio.sleep(time_to_wait)
     
-        
+    @almanax_task.error
+    async def error_almanax_task(self, error):
+        tb = tracebackEx(error)
+        await self.bot.log_channel.send(
+            embed= new_embed(
+                title=f":x: __** ERROR**__ :x:",
+                description=f"""```{error}```\nRaised on task **Almanax_task**."""))
+        n = (len(tb) // 4096) 
+        for i in range(n):
+            await self.bot.log_channel.send(
+                embed=new_embed(
+                    description=f"```python\n{tb[4096*i:4096*(i+1)]}```"))
+        await self.bot.log_channel.send(
+            embed=new_embed(
+                description=f"```python\n{tb[4096*n:]}```"))
+        logging.error(f"{error} raised on task Almanax_task \n {tb}")
         
     def cog_unload(self):
         self.almanax.cancel()

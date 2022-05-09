@@ -73,6 +73,11 @@ class images:
                 "https://i.imgur.com/LGM3liY.png",
                 "https://i.imgur.com/sGvrPcj.png"
                 ]
+        
+    sablier = "https://i.imgur.com/2V0xDMW.png"
+    placeholder  = "https://i.imgur.com/n8NfUD3.png"
+    
+    bang_6 = "https://i.imgur.com/aMhejbX.png"
 
 class color:
     vert = disnake.Color.green()

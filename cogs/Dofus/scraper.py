@@ -3,16 +3,20 @@ from datetime import date, datetime, timedelta
 from bs4 import BeautifulSoup
 import json
 import argparse
+import logging
 import requests
 import os
 import sys
+import shelve
+from utils.data import images
 
 
 class Almanax_scraper:
     
     scraper = cfscrape.create_scraper(sess=requests.Session())
     base_url = "http://www.krosmoz.com/fr/almanax/"
-        
+    database = shelve.open("cogs/Dofus/almanax")
+            
     @classmethod
     def scrape_one_day(cls,date):
         iterate_link = f"{cls.base_url}{date}"
@@ -46,7 +50,10 @@ class Almanax_scraper:
                 break
         offering = offering.replace(str(offering_count), '').strip()
 
-        pic = mid_container.img['src']
+        if mid_container.img != None:
+            pic = mid_container.img['src']
+        else:
+            pic = images.placeholder
 
         bonus = str(mid_container)
         bonus = bonus[len('<div class="more">'):bonus.index('<div class="more-infos">')].strip()
@@ -63,10 +70,24 @@ class Almanax_scraper:
             "item_picture_url": pic
         }
         
+        cls.database[date.strftime('%d-%m-%y')] = data
+        
+        logging.info(f"Almanax data of {date.strftime('%d-%m-%y')} has been added to the database.")
+        
         return data
     
     @classmethod
-    def scrape(cls, advance : int = 0):
+    def get_one_day(cls,date):
+        """Check if the data is already scraped. If not, scrape it and add it to the database
+        
+        """
+        if date.strftime('%d-%m-%y') in list(cls.database.keys()):
+            return cls.database[date.strftime('%d-%m-%y')]
+        else:
+            return cls.scrape_one_day(date)
+    
+    @classmethod
+    def get_almanax(cls, advance : int = 0):
         """Scrape the almamanx data.
         if no advance:
             return only the data of today almanax
@@ -74,11 +95,12 @@ class Almanax_scraper:
             return a list of the data of the advance+1 next day
         """
         if advance == 0:
-            return cls.scrape_one_day(date.today())
+            data = cls.get_one_day(date.today())
+            
         else:
             data = []
             for d in range(advance):
-                data.append(cls.scrape_one_day(date.today() + timedelta(days = d)))
-            return data
-    
+                data.append(cls.get_one_day((date.today() + timedelta(days = d))))
+        cls.database.sync()
+        return data
     
