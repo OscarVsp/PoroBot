@@ -19,12 +19,20 @@ class Clicbang(commands.Cog):
     @commands.slash_command(
         description = "Démarrer une partie de bang"
     )
-    async def bang(self, inter : ApplicationCommandInteraction):
-        menu = BangMenu(inter.author)
-        await menu.update(inter)
-        timeout = await menu.wait()
-        if not timeout and not menu.cancelled:
-            game = BangGame(menu.players)
+    async def bang(self, inter : ApplicationCommandInteraction,
+        valeur_max : int = commands.Param(
+            description = "La valeur maximal des cartes (6 par défault)",
+            ge = 1,
+            default = 6
+        )
+    ):
+        menu = BangMenu(inter)
+        await inter.response.send_message(
+            embed = menu.embed,
+            view = menu
+        )
+        if not (await menu.wait()) and not menu.cancelled:
+            game = BangGame(inter, menu.players, valeur_max)
             await game.start_game(menu.interaction)
             
   

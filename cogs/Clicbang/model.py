@@ -1,6 +1,26 @@
 from utils import data
 from utils.embed import new_embed
 import disnake
+from math import ceil
+
+regles = new_embed(
+    title = ":scroll: __**REGLES DU BANG**__ :scroll:",
+    description = """Ce jeu reprend le principe de la roulette russe, avec des cartes. Chacun à son tour, on sera maitre du jeu et on tirera une carte (distribué automatiquement par le bot en message privé). Le nombre indiqué sur la carte correspond à la position de l'unique balle dans le barillet, et donc le nombre de *"coup à tiré"* avant que la balle sorte.
+                     Le maitre du jeu choisit alors un autre joueur sur qui tirer, et annonce le résultat du tire (à faire oralement):
+                     :arrow_right: **"Bang"** si la carte est un :one:, puisque c'est le premier coup tiré.
+                     :arrow_right: **"Clic"** sinon, et le "pistolet" va au joueur ciblé.
+                     Un joueur visé par un **"Clic"** choisit à son tour une cible, et le maitre du jeu annonce de nouveau le résultat (puisqu'il est le seul à connaitre la carte). Le *"pistolet"* va donc passer de joueur en joueur jusqu'à ce que le nombre de coups tirés soit égal au numéro sur la carte et donc que le maitre du jeu annonce **"Bang"**.
+                     ▪
+                     Lorsque cela se produit, le maitre du jeu révèle la carte et la donne au joueur victime du **"Bang"** en guise de balle (le maitre du jeu doit sélectionner la cible du **"Bang"** sous le message). L'effet dépend de la couleur de la carte, et le nombre de :beer: du numéro de la carte (l'effet est rappelé par le bot à chaque fois) :
+                     :spades: Pique : Boit les :beer:.
+                     :hearts: Coeur : Distribue les :beer: (garde la carte).
+                     :clubs: Trefle : Boit les :beer: et les deux joueurs adjacents boivent la moitié (arrondit vers le haut).
+                     :diamonds: Carreau : Boit les :beer: et les deux derniers joueurs à avoir eu un carreau sont en miroir.
+                     ▪
+                     Une fois la carte distribuée, le maitre du jeu passe le paquet de cartes au joueur à sa droite, qui devient le nouveau maitre du jeu (automatiquement fait par le bot). Le paquet tourne ainsi jusqu'à son épuisement.
+                     Un joueur peut se prendre lui-même pour cible autant de fois qu'il se souhaite, à condition qu'il ne soit pas le maitre du jeu.
+                     À la fin de la partie, le joueur ayant accumulé le plus de points (valeur cumulée des cartes en sa possession) est désigné perdant et prend un affond final."""
+)
         
 class Carte(object):
     """Cartes class
@@ -44,13 +64,13 @@ class Carte(object):
     @property
     def effet(self):
         if self.color == "pique":
-            return f"Boit __{self.value}__ 🍺"
+            return f"Boit **{self.value}** 🍺"
         elif self.color == "coeur":
-            return f"Distribue __{self.value}__ 🍺"
+            return f"Distribue **{self.value}** 🍺"
         elif self.color == "carreau":
-            return f"Boit __{self.value}__ 🍺 et est en mirror avec la dernière personne à avoir eu un carreau"
+            return f"Boit **{self.value}** 🍺\net est en mirror avec la dernière personne à avoir eu un :diamonds:"
         elif self.color == "trefle":
-            return f"Boit __{self.value}__ 🍺 et les personnes adjacentes boivent également {ceil(self.value/2)} 🍺"
+            return f"Boit **{self.value}** 🍺\net les personnes adjacentes boivent également **{ceil(self.value/2)}** 🍺"
 
 
     @property
@@ -60,17 +80,17 @@ class Carte(object):
         Returns:
             str: The "https" link to tho image on "Imgur".
         """
-        return data.images.cards[self.color][self.value]
+        return data.images.cards[self.color][self.value-1]
     
     @property
     def embed(self):
         return new_embed(
-            title = {self},
+            title = f"{self}",
             thumbnail = self.image,
-            fields = {
+            fields = [{
                 'name' : "__Effet :__",
-                'value' : f"{self.effet}"
-            }
+                'value' : f"*{self.effet}*"
+            }]
         )
     
 
@@ -106,7 +126,6 @@ class Player(object):
         self.carreau = False
         self.doubleCarreau = False
         self.points = 0
-        self.looses = looses
 
     def getCopy(self):
         """Make a "deepcopy" copy of itself.
@@ -168,5 +187,5 @@ class Player(object):
         self.carreau = False
         self.doubleCarreau = False
         
-    async def send(self,embed):
-        await self.member.send(embed=embed)
+    async def send(self,carte):
+        await self.member.send(embed=carte.embed)

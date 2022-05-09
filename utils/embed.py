@@ -30,11 +30,14 @@ def new_embed(title = None, description = None, color = disnake.Embed.Empty, use
                 embed = disnake.Embed()
 
     if fields != None:
-        for field in fields:
-            if 'inline' in field.keys():
-                embed.add_field(name=field['name'], value=field['value'], inline=field['inline'])
-            else:
-                embed.add_field(name=field['name'], value=field['value'], inline=False)
+        if type(fields) == list:
+            for field in fields:
+                if 'inline' in field.keys():
+                    embed.add_field(name=field['name'], value=field['value'], inline=field['inline'])
+                else:
+                    embed.add_field(name=field['name'], value=field['value'], inline=False)
+        else:
+            raise TypeError(f'Argument "fields" should be "list" but {type(fields)} has been provided.')
 
     if user != None:
         embed.set_thumbnail(url=user.display_avatar.url)

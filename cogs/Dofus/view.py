@@ -39,10 +39,22 @@ class AlmanaxView(disnake.ui.View):
     @classmethod
     def data_to_embed(cls,data):
         if type(data) == list:
+            max_embed_size = 4000
+            offrandes = "\n".join([f"{d['date'].strftime('%d')} {cls.MONTHS[d['date'].strftime('%m')]} : **{d['item_quantity']}x** {d['item']}" for d in data])
+            size = len(offrandes)
+            offrandes = [offrandes[i: i + max_embed_size] for i in range(0, len(offrandes), max_embed_size)]
             embed =  new_embed(
                 title = f":calendar_spiral:__**Almanax des {len(data)} prochains jours**__:calendar_spiral:",
-                description = "\n".join([f"{d['date'].strftime('%d')} {cls.MONTHS[d['date'].strftime('%m')]} : **{d['item_quantity']}x** {d['item']}" for d in data])
+                description = offrandes[0]
             )
+            if len(offrandes) >= 2:
+                embeds = [embed]
+                offrandes.pop(0)
+                for offrande in offrandes:
+                    embeds.append(new_embed(
+                        description = offrande
+                    ))
+                return embeds
             return embed
         else:
             return new_embed(

@@ -3,20 +3,21 @@ from disnake import ApplicationCommandInteraction
 from utils.embed import new_embed
 from utils import data
 import asyncio
-from random import shuffle, sample
+from random import shuffle, choice
 from itertools import cycle
-from math import ceil
-from .model import Player, Carte 
+from .model import Player, Carte, regles
+from typing import List
+from operator import attrgetter
 
 class BangMenu(disnake.ui.View):
-    
-    
-    def __init__(self, author : disnake.member):
-        super().__init__(timeout=None)
-        self.players = [Player(author)]
-        self.cancelled =  True
+      
+    def __init__(self, inter : ApplicationCommandInteraction):
+        super().__init__(timeout=60*10)
+        self.players = [Player(inter.author)]
+        self.cancelled = False
         self.number_players_min = 1
         self.interaction = None
+        self.inter = inter
         self.play.disabled = not len(self.players) >= self.number_players_min
         
     @property   
@@ -39,18 +40,12 @@ class BangMenu(disnake.ui.View):
         return embed
             
     async def update(self, interaction : disnake.MessageInteraction):
-        if interaction.response.is_done():
-            await interaction.response.edit_message(
-                embed =self.embed,
-                view = self
-            )
-        else:
-            await interaction.response.send_message(
+        await interaction.response.edit_message(
                 embed =self.embed,
                 view = self
             )
         
-    @disnake.ui.button(emoji = "🍺", label = "Participer", style=disnake.ButtonStyle.primary)
+    @disnake.ui.button(emoji = "➕", label = "Participer", style=disnake.ButtonStyle.primary, row = 1)
     async def participer(self, button: disnake.ui.Button, interaction : disnake.MessageInteraction):
         if interaction.author in [m.member for m in self.players]:
             self.players.remove(next((p for p in self.players if p.member == interaction.author)))
@@ -62,87 +57,108 @@ class BangMenu(disnake.ui.View):
                 self.play.disabled = False
         await self.update(interaction)
         
-    @disnake.ui.button(emoji = "▶️", label = "Jouer", style=disnake.ButtonStyle.primary)
+    @disnake.ui.button(emoji = "📜", label = "Règles", style = disnake.ButtonStyle.secondary, row = 1)
+    async def regle(self, button : disnake.ui.Button, interaction : disnake.MessageInteraction):
+        await self.update(interaction)
+        await interaction.author.send(embed = regles)
+        
+    @disnake.ui.button(emoji = "▶", label = "Jouer", style=disnake.ButtonStyle.primary, row = 2)
     async def play(self, button: disnake.ui.Button, interaction : disnake.MessageInteraction):
         self.interaction = interaction
         self.stop()
         
-    @disnake.ui.button(emoji = "❌", label = "Stop", style=disnake.ButtonStyle.danger)
+    @disnake.ui.button(emoji = "❌", label = "Stop", style=disnake.ButtonStyle.danger, row = 2)
     async def arret(self, button: disnake.ui.Button, interaction : disnake.MessageInteraction):
         self.cancelled = True
-        await interaction.delete_original_message()
+        await self.inter.delete_original_message()
         self.stop()
         
-    """@disnake.ui.button(emoji = "🔁", label = "Reset", style=disnake.ButtonStyle.secondary)
-    async def reste(self, button disnake.ui.button, interaction : disnake.MessageInteraction):
-        for player"""
-            
+    async def on_timeout(self) -> None:
+        await self.inter.delete_original_message()
         
 class BangGame(disnake.ui.View):
-    def __init__(self, players : list[Player]):
-        super().__init__(timeout=None)
-        self.players = cycle(shuffle(players))
-        self.max_value = 6
+    def __init__(self, inter : ApplicationCommandInteraction, players : List[Player], max_value : int):
+        super().__init__(timeout=60*60)
+        self.inter = inter
+        self.players = players
+        self.max_value = max_value
+        
+    @property
+    def score_tab(self):
+        player_lines = []
+        for player in self.players:
+            if player == self.activePlayer:
+                line = ":small_orange_diamond:"
+            else:
+                line = ":black_medium_small_square:"
+            line += f"**{player.display_name}** : {player.points}"
+            if player.isCarreau:
+                line += ":diamonds:"
+            if player.isDoubleCarreau:
+                line += ":diamonds:"
+            player_lines.append(line)
+        return "/n".join(player_lines)
+    
+    @property
+    def footer(self):
+        return f"{self.max_value*4 - len(self.cartes)}/{self.max_value*4} cartes jouées"
+        
+    def embed(self, message : str = ""):
+        embed = new_embed(
+            title = "__**BANG - PARTIE**__"
+        )
+        if self.lastCarte == None:
+            embed.add_field(
+                name = '__Dernière carte jouée :__',
+                value = "*Les cartes jouées s'afficheront ici*",
+                inline = False
+            )
+            embed.set_thumbnail(url = data.images.cards['back'])
+        else:
+            embed.add_field(
+                name = '__Dernière carte jouée :__',
+                value = f"**{self.lastCarte}**\n*{self.lastCarte.effet}*",
+                inline = False
+            )
+            embed.set_thumbnail(url = self.lastCarte.image)
+        embed.add_field(
+            name = '__Score :__',
+            value = f"{self.score_tab}",
+                inline = False
+        )
+        if self.looser != None:
+            embed.add_field(
+                name = "__La partie est finie !__",
+                value = f"{self.looser.display_name} perd avec {self.looser.points} points",
+                inline = False
+            )
+        else:
+            embed.add_field(
+                name = "__Tour en cours :__",
+                value = f"C'est à **{self.activePlayer.display_name}** de jouer !\n{message}",
+                inline = False 
+            )
+            embed.set_footer(text = self.footer)
+        return embed
+        
+        
+    async def start_game(self, interaction : disnake.MessageInteraction):
+        [p.reset() for p in self.players]
+        shuffle(self.players)
+        self.players_iter = cycle(self.players)
         self.cartes = [Carte(number+1,color) for number in range(self.max_value) for color in ["pique","coeur","carreau","trefle"]]
         self.lastCarte = None
         self.lastBangedPlayer = None
         self.lastActivePlayer = None
+        self.looser = None
         self.mirror_players = [None,None]
-        self.activePlayer = None
-        self.activeCarte = None
-        self.playerSelection = None
         
-    @property
-    def score_tab(self):
-        return 'TODO'
-        
-    def embed(self, message : str = ""):
-        return new_embed(
-            name = "__**BANG - PARTIE**__",
-            fields = [
-                {
-                    'name' : "__Dernière carte jouée :__",
-                    'value' : f"**{self.lastCarte}**\n*{self.lastCarte.effet}*"
-                },
-                {
-                    'name' : "__Score :__",
-                    'value' : f"{self.score_tab}"
-                },
-                {
-                    'name' : "__Tour en cours :__",
-                    'value' : f"C'est a **{self.activePlayer.display_name}** de jouer !\n{message}"
-                }
-            ],
-            thumbnail = self.lastCarte.image,
-            footer = f"{len(self.cartes)}/{self.max_value} cartes joueés"
-        )
-        
-        
-    async def start_game(self, interaction : disnake.MessageInteraction):
-        self.activePlayer = next(self.players)
-        self.activeCarte = sample(self.cartes)
+        self.activePlayer = next(self.players_iter)
+        self.activeCarte = choice(self.cartes)
         self.playerSelection = PlayerSelection(self)
         self.add_item(self.playerSelection)
         await interaction.response.edit_message(
-            embed = new_embed(
-                name = "__**BANG - PARTIE**__",
-                fields = [
-                    {
-                        'name' : "__Dernière carte jouée :__",
-                        'value' : f"*Les cartes jouées s'afficheront ici*"
-                    },
-                    {
-                        'name' : "__Score :__",
-                        'value' : f"{self.score_tab}"
-                    },
-                    {
-                        'name' : "__Tour en cours :__",
-                        'value' : f"C'est a **{self.activePlayer.display_name}** de jouer !\n{message}"
-                    }
-                ],
-                thumbnail = data.images.cards['back'],
-                footer = f"{len(self.cartes)}/{self.max_value} cartes joueés"
-            ),
+            embed = self.embed(),
             view = self
         )
         await self.activePlayer.send(self.activeCarte)
@@ -154,21 +170,48 @@ class BangGame(disnake.ui.View):
         self.cartes.remove(self.activeCarte)
         self.lastActivePlayer = self.activePlayer
         self.lastCarte = self.activeCarte
-        self.activePlayer = next(self.players)
-        self.activeCarte = sample(self.cartes)
         self.remove_item(self.playerSelection)
-        self.playerSelection = PlayerSelection(self)
-        self.add_item(self.playerSelection)
-        await interaction.response.edit_message(
-            embed = self.embed(),
-            view = self
-        )
-        await self.activePlayer.send(self.activeCarte)
+        if len(self.cartes) > 0:
+            self.activePlayer = next(self.players_iter)
+            self.activeCarte = choice(self.cartes)
+            self.playerSelection = PlayerSelection(self)
+            self.add_item(self.playerSelection)
+            await interaction.response.edit_message(
+                embed = self.embed(),
+                view = self
+            )
+            await self.activePlayer.send(self.activeCarte)
+        else:
+            self.looser = max(self.players, key=attrgetter('points'))
+            await interaction.response.edit_message(
+                embed = self.embed(),
+                view = self
+            )     
         
     async def unautorized_interaction(self, interaction : disnake.MessageInteraction):
         await interaction.response.edit_message(
             embed = self.embed(f"⛔ *Ce n'est pas toi qui a les cartes * {interaction.author.mention} !")
         )
+    
+    @disnake.ui.button(emoji = "📜", label = "Règle", style = disnake.ButtonStyle.secondary, row = 2)
+    async def regle(self, button : disnake.ui.Button, interaction : disnake.MessageInteraction):
+        await interaction.response.defer(with_message=False)
+        await interaction.author.send(embed = regles)
+        
+    @disnake.ui.button(emoji = "🔁", label = "Replay", style = disnake.ButtonStyle.primary, row = 2)
+    async def replay(self, button : disnake.ui.Button, interaction : disnake.MessageInteraction):
+        if self.playerSelection in  self.children:
+            self.remove_item(self.playerSelection) 
+        await self.start_game(interaction)
+        
+    @disnake.ui.button(emoji = "❌", label = "Stop", style = disnake.ButtonStyle.danger, row = 2)
+    async def arret(self, button : disnake.ui.Button, interaction : disnake.MessageInteraction):
+        await self.inter.delete_original_message()
+        self.stop()
+        
+    async def on_timeout(self) -> None:
+        await self.inter.delete_original_message()
+        
         
  
 class PlayerSelection(disnake.ui.Select):
@@ -178,17 +221,19 @@ class PlayerSelection(disnake.ui.Select):
         self.activePlayer = game.activePlayer
         self.players = game.players
         super().__init__(
-            placeholder = "C'est {activePlayer.display_name} qui a le paquet de cartes",
+            placeholder = f"{self.game.activePlayer.display_name} : sélectionne la cible du bang",
             min_values = 1,
             max_values = 1,
-            options = [disnake.SelectOption(label=p.display_name) for p in players]
+            options = [disnake.SelectOption(label=p.display_name) for p in self.players]
         )
         
     async def callback(self, interaction: disnake.MessageInteraction):
         if interaction.author == self.activePlayer.member:
-            await self.game.play_turn(interaction, {self.players[self.values[0]]})
+            await self.game.play_turn(interaction, next((p for p in self.players if p.display_name == self.values[0])))
         else:
             await self.game.unautorized_interaction(interaction)
+            
+
 
         
         

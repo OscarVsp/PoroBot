@@ -36,15 +36,21 @@ class Dofus(commands.Cog):
         await inter.response.send_message(
             embed = new_embed(
                 title = "Consultation du Krosmoz en cours...",
-                description = "À chaque fois que l'almanax d'un jour est demander pour la première fois, cela peut prendre un peu de temps.\nL'almanax te sera envoyé en privé dès qu'il sera prêt.",
+                description = "À chaque fois que l'almanax d'un jour est demandé pour la première fois, cela peut prendre un peu de temps.\nL'almanax te sera envoyé en privé dès qu'il sera prêt.",
                 thumbnail = data.images.sablier
             ),
             delete_after = 10
         )
-        await inter.author.send(
-            embed = AlmanaxView.data_to_embed(Almanax_scraper.get_almanax(nombre_de_jours))
-        )
-        
+        embed_s = AlmanaxView.data_to_embed(await Almanax_scraper.get_almanax(nombre_de_jours))
+        if type(embed_s) == list:
+            for embed in embed_s:
+                await inter.author.send(
+                    embed = embed
+                )
+        else:
+            await inter.author.send(
+                embed = embed_s
+            )
 
 
     @tasks.loop(hours=24)
