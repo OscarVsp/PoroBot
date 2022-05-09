@@ -20,16 +20,13 @@ class Clicbang(commands.Cog):
         description = "Démarrer une partie de bang"
     )
     async def bang(self, inter : ApplicationCommandInteraction):
-        menu = BangMenu(inter)
-        await inter.response.send_message(
-            embed = menu.embed,
-            view = menu
-        )
-        await menu.wait()
-        if menu.start:
-            pass
-        else:
-            await menu.interaction.delete_original_message()
+        menu = BangMenu(inter.author)
+        await menu.update(inter)
+        timeout = await menu.wait()
+        if not timeout and not menu.cancelled:
+            game = BangGame(menu.players)
+            await game.start_game(menu.interaction)
+            
   
             
 def setup(bot):
