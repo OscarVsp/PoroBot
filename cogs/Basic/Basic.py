@@ -34,7 +34,27 @@ class Basic(commands.Cog):
         description = "Nourrir le poro avec des porosnacks jusqu'à le faire exploser"
     )
     async def porosnack(self, inter: ApplicationCommandInteraction):
-        await inter.response.send_message(embed = new_embed(description="Nourris le poro !", image=data.images.poros.growings[0], footer="0/10"), view=PoroFeed(inter))
+        await inter.response.send_message(
+            embed = new_embed(
+                description="Nourris le poro !",
+                image=data.images.poros.growings[0],
+                footer="0/10"
+            ),
+            view=PoroFeed(inter)
+        )
+        
+    @commands.slash_command(
+        description = "Créer un nouveau poll"
+    )
+    async def porosnack(self, inter: ApplicationCommandInteraction):
+        await inter.response.send_message(
+            embed = new_embed(
+                description="Nourris le poro !",
+                image=data.images.poros.growings[0],
+                footer="0/10"
+            ),
+            view=PoroFeed(inter)
+        )
         
         
     
@@ -53,6 +73,8 @@ class Basic(commands.Cog):
             embed = new_embed(
                 description = f":broom: {nombre} messages supprimés ! :broom:"),
             delete_after=3)
+        
+        
  
     @commands.user_command(
         name = "Voir le lore"
