@@ -9,15 +9,18 @@ import requests
 import os
 import sys
 import asyncio
-import shelve
 from utils.data import images
+import pickledb
+from json.decoder import JSONDecodeError
 
 
 class Almanax_scraper:
     
     scraper = cfscrape.create_scraper(sess=requests.Session())
     base_url = "http://www.krosmoz.com/fr/almanax/"
-    database = shelve.open("cogs/Dofus/almanax")
+    database = pickledb.load("cogs/Dofus/almanax.db", False)
+
+        
             
     @classmethod
     async def scrape_one_day(cls,date):
@@ -67,7 +70,7 @@ class Almanax_scraper:
             bonus = bonus.replace('<u>', '').replace('</u>', '')
 
             data = {
-                "date": date,
+                "date": date.strftime('%d-%m-%y'),
                 "item_quantity": offering_count,
                 "item": offering,
                 "description": bonus.replace('\n', " ").replace("\r\n", " "),
@@ -76,7 +79,7 @@ class Almanax_scraper:
             }
         except Exception:
             data = {
-                "date": date,
+                "date": date.strftime('%d-%m-%y'),
                 "item_quantity": "???",
                 "item": "???",
                 "description": "???",
@@ -84,7 +87,7 @@ class Almanax_scraper:
                 "item_picture_url": "???"
             }
         
-        cls.database[date.strftime('%d-%m-%y')] = data
+        cls.database.set(date.strftime('%d-%m-%y'), data)
         
         logging.info(f"Almanax data of {date.strftime('%d-%m-%y')} has been added to the database.")
         
@@ -95,10 +98,11 @@ class Almanax_scraper:
         """Check if the data is already scraped. If not, scrape it and add it to the database
         
         """
-        if date.strftime('%d-%m-%y') in list(cls.database.keys()):
-            return cls.database[date.strftime('%d-%m-%y')]
+        data = cls.database.get(date.strftime('%d-%m-%y'))
+        if data == False:
+            return (await cls.scrape_one_day(date))
         else:
-            return await cls.scrape_one_day(date)
+            return data
     
     @classmethod
     async def get_almanax(cls, advance : int = 0):
@@ -109,13 +113,13 @@ class Almanax_scraper:
             return a list of the data of the advance+1 next day
         """
         if advance == 0:
-            data = cls.get_one_day(date.today())
+            data = (await cls.get_one_day(date.today()))
             
         else:
             data = []
             for d in range(advance):
                 data.append(await cls.get_one_day((date.today() + timedelta(days = d))))
-        cls.database.sync()
+        cls.database.dump()
         return data
     
 #TODO async task

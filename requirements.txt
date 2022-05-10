@@ -5,3 +5,4 @@ requests
 cfscrape~=2.1.1
 bs4~=0.0.1
 beautifulsoup4~=4.10.0
+pickledb
