@@ -82,6 +82,8 @@ class BangGame(disnake.ui.View):
         self.inter = inter
         self.players = players
         self.max_value = max_value
+        [self.player_selection.add_option(label = p.display_name) for p in self.players]
+        
         
     @property
     def score_tab(self):
@@ -154,9 +156,8 @@ class BangGame(disnake.ui.View):
         self.mirror_players = [None,None]
         
         self.activePlayer = next(self.players_iter)
+        self.player_selection.placeholder = f"{self.activePlayer.display_name} : Sélectionne la cible du bang"
         self.activeCarte = choice(self.cartes)
-        self.playerSelection = PlayerSelection(self)
-        self.add_item(self.playerSelection)
         await interaction.response.edit_message(
             embed = self.embed(),
             view = self
@@ -170,12 +171,10 @@ class BangGame(disnake.ui.View):
         self.cartes.remove(self.activeCarte)
         self.lastActivePlayer = self.activePlayer
         self.lastCarte = self.activeCarte
-        self.remove_item(self.playerSelection)
         if len(self.cartes) > 0:
             self.activePlayer = next(self.players_iter)
             self.activeCarte = choice(self.cartes)
-            self.playerSelection = PlayerSelection(self)
-            self.add_item(self.playerSelection)
+            self.player_selection.placeholder = f"{self.activePlayer.display_name} : Sélectionne la cible du bang"
             await interaction.response.edit_message(
                 embed = self.embed(),
                 view = self
@@ -192,6 +191,13 @@ class BangGame(disnake.ui.View):
         await interaction.response.edit_message(
             embed = self.embed(f"⛔ *Ce n'est pas toi qui a les cartes * {interaction.author.mention} !")
         )
+        
+    @disnake.ui.select(min_values = 1, max_values = 1, row = 1)
+    async def player_selection(self, select : disnake.ui.Select, interaction : disnake.MessageInteraction):
+        if interaction.author == self.activePlayer.member:
+            await self.play_turn(interaction, next((p for p in self.players if p.display_name == select.values[0])))
+        else:
+            await self.unautorized_interaction(interaction)
     
     @disnake.ui.button(emoji = "📜", label = "Règle", style = disnake.ButtonStyle.secondary, row = 2)
     async def regle(self, button : disnake.ui.Button, interaction : disnake.MessageInteraction):
@@ -211,30 +217,5 @@ class BangGame(disnake.ui.View):
         
     async def on_timeout(self) -> None:
         await self.inter.delete_original_message()
-        
-        
- 
-class PlayerSelection(disnake.ui.Select):
-     
-    def __init__(self, game : BangGame):
-        self.game = game
-        self.activePlayer = game.activePlayer
-        self.players = game.players
-        super().__init__(
-            placeholder = f"{self.game.activePlayer.display_name} : sélectionne la cible du bang",
-            min_values = 1,
-            max_values = 1,
-            options = [disnake.SelectOption(label=p.display_name) for p in self.players]
-        )
-        
-    async def callback(self, interaction: disnake.MessageInteraction):
-        if interaction.author == self.activePlayer.member:
-            await self.game.play_turn(interaction, next((p for p in self.players if p.display_name == self.values[0])))
-        else:
-            await self.game.unautorized_interaction(interaction)
-            
-
-
-        
         
         

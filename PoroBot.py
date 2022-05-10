@@ -22,6 +22,7 @@ from disnake.ext.commands import Context
 
 from utils.embed import new_embed
 from utils.tools import tracebackEx
+from utils import data
 
 
 
@@ -50,22 +51,14 @@ def load_commands() -> None:
         except Exception as e:
             exception = f"{type(e).__name__}: {e}"
             logging.warning(f"Failed to load extension {extension}\n{exception}\n{tracebackEx(exception)}")
-            
 
-
-@bot.event
-async def on_slash_command_error(interaction: ApplicationCommandInteraction, error: Exception) -> None:
-    """
-    The code in this event is executed every time a valid slash command catches an error
-    :param interaction: The slash command that failed executing.
-    :param error: The error that has been faced.
-    """
+async def send_error_log(interaction: ApplicationCommandInteraction, error: Exception):
     tb = tracebackEx(error)
     await interaction.send(
         embed= new_embed(
             title=":x: __**ERROR**__: x:",
             description=f"Une erreur s'est produite lors de la commande **/{interaction.application_command.name}**\n{bot.owner.mention} a été prévenu et corrigera ce bug au plus vite !\nUtilise `/beer` pour un bière de consolation :beer:",
-            thumbnail = "https://i.imgur.com/U7rBtRu.png"),
+            thumbnail = data.images.poros.shock),
         delete_after=10)
     await bot.log_channel.send(
         embed= new_embed(
@@ -82,18 +75,19 @@ async def on_slash_command_error(interaction: ApplicationCommandInteraction, err
     logging.error(f"{error} raised on command /{interaction.application_command.name} from {interaction.channel.mention} by {interaction.author.mention}.\n{tb}")
 
 
+
 @bot.event
-async def on_command_completion(context: Context) -> None:
-    """
-    The code in this event is executed every time a normal command has been *successfully* executed
-    :param context: The context of the command that has been executed.
-    """
-    full_command_name = context.command.qualified_name
-    split = full_command_name.split(" ")
-    executed_command = str(split[0])
-    logging.debug(f"Executed {executed_command} command in {context.guild.name} (ID: {context.message.guild.id}) by {context.message.author} (ID: {context.message.author.id})")
-
-
+async def on_slash_command_error(interaction: ApplicationCommandInteraction, error: Exception) -> None:
+    await send_error_log(interaction, error)
+    
+@bot.event
+async def on_user_command_error(interaction: disnake.UserCommandInteraction, error: Exception) -> None:
+    await send_error_log(interaction, error)
+    
+@bot.event
+async def on_message_command_error(interaction: disnake.UserCommandInteraction, error: Exception) -> None:
+    await send_error_log(interaction, error)
+    
 
 if __name__ == "__main__":
     logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")

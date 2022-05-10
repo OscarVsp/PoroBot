@@ -10,6 +10,8 @@ from .watcher import ClashTeam,Watcher
 from .exceptions import *
 
 
+
+
 class Lol(commands.Cog):
     
         def __init__(self, bot):
@@ -26,7 +28,8 @@ class Lol(commands.Cog):
         async def clash(self, inter: ApplicationCommandInteraction,
                         summoner : str = commands.Param(
                                 description = "Le nom d'invocateur d'un des joueurs"
-                        )):
+                        )
+                ):
                 try:
                         team = self.watcher.get_clash_team(summoner)
                         await inter.response.send_message(
@@ -38,7 +41,7 @@ class Lol(commands.Cog):
                         await inter.response.send_message(
                                 embed = new_embed(
                                         title = f"__**Clash**__",
-                                        description = f"**{summoner}** is currently not register in any clash team...",
+                                        description = f"**{summoner}** ne fait pas parti d'une équipe clash actuellement...",
                                         thumbnail = "https://i.imgur.com/52zSz3H.png"
                                 ),
                                 delete_after = 10
@@ -47,7 +50,7 @@ class Lol(commands.Cog):
                         await inter.response.send_message(
                                 embed = new_embed(
                                         title = f"__**Clash**__",
-                                        description = f"**{summoner}** is not a valid summoner name, or there is an unexpected error...",
+                                        description = f"**{summoner}** n'a pas pu être trouvé...\nVérifiez que le nom d'invocateur soit correct.",
                                         thumbnail = "https://i.imgur.com/52zSz3H.png"
                                 ),
                                 delete_after = 10
@@ -60,7 +63,9 @@ class Lol(commands.Cog):
                 await inter.response.send_message(
                         embed = new_embed(
                                 title = "__**Wasted on Lol**__",
-                                description = "Utilise les liens ci-dessous pour découvrir combien de temps et/ou d'argent tu as dépensés dans League of Legends"
+                                description = "Utilise les liens ci-dessous pour découvrir combien de temps et/ou d'argent tu as dépensés dans League of Legends",
+                                thumbnail = data.iamges.poros.neutral
+                        
                         ),
                         components = [
                                 disnake.ui.Button(label="Temps passé sur lol", emoji= "⌛", style = disnake.ButtonStyle.link, url = "https://wol.gg/"),
@@ -73,14 +78,9 @@ class Lol(commands.Cog):
                 description = "Obtenir les règles de l'aram à boire"
         )
         async def drink(self, inter : ApplicationCommandInteraction):
-                drinkview = DrinkView(inter)
-                await inter.response.send_message(
-                        embeds = [drinkview.pre_embed,drinkview.embeds[0]],
-                        view = drinkview
-                )
+                await inter.response.send_message(embeds = drink_embeds)
                 
-        
-                        
+                       
 
 
 def setup(bot):

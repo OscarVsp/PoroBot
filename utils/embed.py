@@ -1,6 +1,6 @@
 import disnake
 
-def new_embed(title = None, description = None, color = disnake.Embed.Empty, user : disnake.Member = None, fields : dict = None, thumbnail = None, image : str = None, footer : str = None):
+def new_embed(title = None, description = None, color = disnake.Embed.Empty, author : dict = None, fields : dict = None, thumbnail = None, image : str = None, footer : str = None):
     """
 
     """
@@ -39,8 +39,11 @@ def new_embed(title = None, description = None, color = disnake.Embed.Empty, use
         else:
             raise TypeError(f'Argument "fields" should be "list" but {type(fields)} has been provided.')
 
-    if user != None:
-        embed.set_thumbnail(url=user.display_avatar.url)
+    if author != None:
+        embed.set_author(
+            name = author.get('name'),
+            icon_url = author.get('icon')
+        )
 
     if thumbnail != None:
         embed.set_thumbnail(url=thumbnail)
@@ -52,3 +55,4 @@ def new_embed(title = None, description = None, color = disnake.Embed.Empty, use
         embed.set_footer(text=footer)
     
     return embed
+#todo fields use kay and items directly

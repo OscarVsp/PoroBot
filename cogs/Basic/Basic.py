@@ -30,10 +30,10 @@ class Basic(commands.Cog):
         )
 
 
-    @commands.slash_command()
+    @commands.slash_command(
+        description = "Nourrir le poro avec des porosnacks jusqu'à le faire exploser"
+    )
     async def porosnack(self, inter: ApplicationCommandInteraction):
-        """Nourrir le poro
-        """
         await inter.response.send_message(embed = new_embed(description="Nourris le poro !", image=data.images.poros.growings[0], footer="0/10"), view=PoroFeed(inter))
         
         
@@ -53,31 +53,37 @@ class Basic(commands.Cog):
             embed = new_embed(
                 description = f":broom: {nombre} messages supprimés ! :broom:"),
             delete_after=3)
-        
-    @commands.slash_command(
-        description = "Lancer des dés"
+ 
+    @commands.user_command(
+        name = "Voir le lore"
     )
-    async def dice(self, inter : ApplicationCommandInteraction,
-        nombre_de_faces : int = commands.Param(
-            description = "le nombre de face des dés (6 par default)",
-            default = 6,
-            gt = 0
-            ),
-        nombre_de_des : int = commands.Param(
-            description = "le nombre dé à lancer (1 par default)",
-            default = 1,
-            gt = 0
+    async def lore(self, inter : disnake.UserCommandInteraction):
+        lore_embed = get_lore_embed(inter.target.name)
+        if lore_embed == False:
+            await inter.response.send_message(
+                embed = new_embed(
+                    description = f"{inter.target.name} n'a pas encore de lore...\nDemande à Hyksos de l'écrire !",
+                    thumbnail = data.images.poros.sweat
+                    ),
+                ephemeral = True
             )
-    ):
-        await inter.response.send_message(
-            embed = new_embed(
-                title = f"🎲 Lancé de {nombre_de_des} dé(s) à {nombre_de_faces} face(s)",
-                description = f"Utilise le bouton pour commencer à lancer les dés !"
-            ),
-            view = DiceView(inter, nombre_de_faces, nombre_de_des)
+        else:
+                await inter.response.send_message(
+                    embed = lore_embed,
+                    delete_after = 60*5
+                )
+                    
+    @commands.user_command(
+        name = "Créer / éditer le lore",
+        default_member_permissions=disnake.Permissions.all()
+    )
+    async def addlore(self, inter : disnake.UserCommandInteraction):
+        await inter.response.send_modal(
+            modal = loreModal(self.bot,inter.target)
         )
+                
         
-        
+    
     
                
 
