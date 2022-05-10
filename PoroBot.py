@@ -24,11 +24,14 @@ from utils.embed import new_embed
 from utils.tools import tracebackEx
 from utils import data
 
+config = dotenv_values(".env")
 
-
-
-bot = InteractionBot(intents=disnake.Intents.default(), test_guilds = [533360564878180382])
-
+if bool(config.get("TEST")):    
+    print("Starting in test mod...")
+    bot = InteractionBot(intents=disnake.Intents.default(), test_guilds = [533360564878180382])
+else:
+    print('starting in prod mod...')
+    bot = InteractionBot(intents=disnake.Intents.default())
 @bot.event
 async def on_ready() -> None:
     """
@@ -41,6 +44,9 @@ async def on_ready() -> None:
     logging.info(f"Python version: {platform.python_version()}")
     logging.info(f"Running on: {platform.system()} {platform.release()} ({os.name})")
     logging.info(f"Owner : {bot.owner}")
+    
+    await bot.change_presence(activity = disnake.Activity(name='"/" -> commandes', type=disnake.ActivityType.playing))
+    
     logging.info("-------------------")
 
 def load_commands() -> None:
@@ -97,9 +103,7 @@ if __name__ == "__main__":
     consoleHandler = logging.StreamHandler()
     consoleHandler.setFormatter(logFormatter)
     rootLogger.addHandler(consoleHandler)
-
     
-    config = dotenv_values(".env")
     bot.config = config
     bot.owner = disnake.AppInfo.owner
 

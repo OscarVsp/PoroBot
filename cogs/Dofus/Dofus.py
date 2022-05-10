@@ -70,7 +70,7 @@ class Dofus(commands.Cog):
             self.almanax.cancel()
         else:
             await self.almanax_channel.purge(limit=10)
-            self.almanax_message = await self.almanax_channel.send(embed = AlmanaxView.data_to_embed(Almanax_scraper.get_almanax()))
+            self.almanax_message = await self.almanax_channel.send(embed = AlmanaxView.data_to_embed(await Almanax_scraper.get_almanax()))
             logging.info("Almanax first tasks run at start.")
             time = datetime.now()
             time_to_wait = (23-time.hour)*3600 + (59-time.minute+1)*60 + (59-time.second)

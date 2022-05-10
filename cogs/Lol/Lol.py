@@ -64,7 +64,7 @@ class Lol(commands.Cog):
                         embed = new_embed(
                                 title = "__**Wasted on Lol**__",
                                 description = "Utilise les liens ci-dessous pour découvrir combien de temps et/ou d'argent tu as dépensés dans League of Legends",
-                                thumbnail = data.iamges.poros.neutral
+                                thumbnail = data.images.poros.neutral
                         
                         ),
                         components = [
