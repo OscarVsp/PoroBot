@@ -57,12 +57,12 @@ class PatchNote:
     def __init__(self):
         
         try:
-            data = requests.get(base_url+patch_notes_url+end_url, headers=headers).json()
+            articles = requests.get(base_url+patch_notes_url+end_url, headers=headers).json()
         except (Exception):
             raise PatchNoteException(f"Patch notes list request error for url: {base_url+patch_notes_url+end_url}")
         
         try:
-            last_article_url = data['result']['data']['articles']['nodes'][0]['url']['url']
+            last_article_url = articles['result']['data']['articles']['nodes'][0]['url']['url']
         except (Exception):
             raise PatchNoteException(f"Patch note url not found in patch notes list data")
         
@@ -100,7 +100,8 @@ class PatchNote:
             title = self.title,
             description = self.description,
             url = self.link,
-            image = self.image            
+            image = self.image,
+            color = disnake.Colour.dark_blue()        
         )
         
 class PatchNoteException(Exception):
