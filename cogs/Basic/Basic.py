@@ -43,19 +43,6 @@ class Basic(commands.Cog):
             view=PoroFeed(inter)
         )
         
-    @commands.slash_command(
-        description = "Créer un nouveau poll"
-    )
-    async def porosnack(self, inter: ApplicationCommandInteraction):
-        await inter.response.send_message(
-            embed = new_embed(
-                description="Nourris le poro !",
-                image=data.images.poros.growings[0],
-                footer="0/10"
-            ),
-            view=PoroFeed(inter)
-        )
-        
         
     
     @commands.slash_command(

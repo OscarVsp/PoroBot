@@ -83,10 +83,21 @@ class Lol(commands.Cog):
         @commands.slash_command(
                 description = "Obtenir le dernier patch the League of Legends"
         )
-        async def patchnote(self, inter : ApplicationCommandInteraction):
-                await inter.response.send_message(
-                        embed = PatchNote().embed
+        async def patchnote(self, inter : ApplicationCommandInteraction,
+                previous : int = commands.Param(
+                        description = "Nombre de patch en arrière (0 pour le patch en cours)",
+                        ge = 0,
+                        default = 0
                 )
+        ):
+                if inter.locale == disnake.Locale.fr:
+                        await inter.response.send_message(
+                                embed = PatchNoteView(previous).embed
+                        )
+                else:
+                        await inter.response.send_message(
+                                embed = PatchNoteView(previous,lang='en-gb').embed
+                        )
                 
                 
                        
