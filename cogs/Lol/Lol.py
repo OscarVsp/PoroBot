@@ -90,14 +90,11 @@ class Lol(commands.Cog):
                         default = 0
                 )
         ):
-                if inter.locale == disnake.Locale.fr:
-                        await inter.response.send_message(
-                                embed = PatchNoteView(previous).embed
-                        )
-                else:
-                        await inter.response.send_message(
-                                embed = PatchNoteView(previous,lang='en-gb').embed
-                        )
+                patch = PatchNoteView(inter, previous)
+                await inter.response.send_message(
+                        embed = patch.embed,
+                        view = patch
+                )
                 
                 
                        

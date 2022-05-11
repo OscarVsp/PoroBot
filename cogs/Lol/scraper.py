@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 from markdownify import markdownify
 
+
         
 headers = {'Accept': 'application/json'}
 
@@ -14,6 +15,7 @@ view_url = "https://www.leagueoflegends.com/"
 class PatchNote:
     
     def __init__(self, previous : int = 0, lang : str = 'en-gb'):
+   
         
         self.menu_request_url : str = base_url+lang+patchs_notes_menu_url+end_url
         
@@ -25,41 +27,44 @@ class PatchNote:
         try:
             patch_note_url = patch_notes_menu_data['result']['data']['articles']['nodes'][previous]['url']['url']
         except (Exception):
-            raise PatchNoteException(f"Patch note url not found in patch notes menu data")
+            raise PatchNoteException(f"Patch note url not found in patch notes menu data.")
         
-        self.link = view_url + lang + patch_note_url 
+        self.link :str = view_url + lang + patch_note_url 
         self.patch_request_url : str = base_url+lang+patch_note_url+end_url
         
         try:
             patch_note_data = requests.get(self.patch_request_url, headers=headers).json()
         except (Exception):
-            raise PatchNoteException(f"Patch note data request error for url: {reself.patch_request_urlquest_url}")
+            raise PatchNoteException(f"Patch note data request error for url: {self.patch_request_urlquest_url}")
         
         try:
-            self.title = patch_note_data['result']['data']['all']['nodes'][0]['description']
+            self.title : str = patch_note_data['result']['data']['all']['nodes'][0]['description']
         except (Exception):
-            raise PatchNoteException(f"Title not found")
-        
-        try:
-            self.label : str = patch_note_data['result']['data']['all']['nodes'][0]['title'].split(' ')[1]
-            self.season_number : int = int(self.label.split('.')[0])
-            self.patch_number : int = int(self.label.split('.')[1])
-        except (Exception):
-            raise PatchNoteException(f"Season and patch could not be retrieved from title")
+            self.title : str = "Title Not Found"
+            print(f"[Warning] Unable to found patch note title. Placeholder value used instead.")
     
         
+        try:
+            [self.season_number, self.patch_number] = patch_note_data['result']['data']['all']['nodes'][0]['url']['url'].split('/')[3].split('-')[1:3]
+        except (Exception):
+            [self.season_number, self.patch_number] = [0,0]
+            print(f"[Warning] Unable to found patch season_number and patch_number. Default values used instead.")
+            
+      
         soup = BeautifulSoup(patch_note_data['result']['data']['all']['nodes'][0]['patch_notes_body'][0]['patch_notes']['html'], 'html.parser')
         
 
         try:
             self.description : str = markdownify(str(soup.blockquote),  heading_style="ATX").replace('>','').strip().replace("\n \n", "\n")
         except (Exception):
-            raise PatchNoteException(f"Not able to retrieve desription from html")
+            self.description : str = "Description not found"
+            print(f"[Warning] Unable to found patch description. Placeholder values used instead.")
         
         try:
             self.overview_image : str = soup.find(attrs={"class": "skins cboxElement"}).img.get('src')
         except (Exception):
-            raise PatchNoteException(f"Not able to overview image from html")
+            self.overview_image : str = "https://images.contentstack.io/v3/assets/blt731acb42bb3d1659/blt8536634d0d5ace2a/5e4f14a406f84d0d618d93ea/LOL_PROMOART_12.jpg"
+            print(f"[Warning] Unable to found patch overview image. Placeholder values used instead.")
 
             
         
@@ -76,13 +81,8 @@ class PatchNoteException(Exception):
 
         
 if __name__ == '__main__':
-    patch = PatchNote(0)
+    patch = PatchNote()
     print(patch)
-    patch = PatchNote(1)
-    print(patch)
-    patch = PatchNote(2)
-    print(patch)
-    patch = PatchNote(3)
-    print(patch)
+
 
     

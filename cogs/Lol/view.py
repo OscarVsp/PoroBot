@@ -43,19 +43,40 @@ drink_embeds = [
 
 
         
-class PatchNoteView(PatchNote):
+class PatchNoteView(disnake.ui.View):
     
-    def __init__(self, previous : int = 0, lang : str = 'fr-fr'):
+    def __init__(self, inter : disnake.ApplicationCommandInteraction, previous : int = 0, lang : str = None):
+        super().__init__(timeout=60*10)
+        self.inter : disnake.ApplicationCommandInteraction = inter
         
-        super().__init__(previous, lang)
-        
-        self.embed : Embed = new_embed(
-            title = f"{self.label} : {self.title}",
-            description = self.description,
-            url = self.link,
-            image = self.overview_image,
+        if lang != None:
+            self.patch : PatchNote = PatchNote(previous = previous, lang = lang)
+        elif inter.locale == disnake.Locale.fr:
+            self.patch : PatchNote = PatchNote(previous = previous, lang = 'fr-fr')
+        else:
+            self.patch : PatchNote = PatchNote(previous = previous, lang = 'en-gb')
+            
+        self.embed : disnake.Embed = new_embed(
+            author_name = f"Patch {self.patch.season_number}.{self.patch.patch_number}",
+            title = f"{self.patch.title}",
+            description = self.patch.description,
+            url = self.patch.link,
+            image = self.patch.overview_image,
+            thumbnail = "https://i.imgur.com/0Fyu6yl.png",
             color = disnake.Colour.dark_blue()      
         )
+        self.add_item(
+            disnake.ui.Button(
+                style = disnake.ButtonStyle.link,
+                url = self.patch.link, 
+                label = f"Patch {self.patch.season_number}.{self.patch.patch_number}",
+                emoji = "<:Lol:658237632786071593>"
+            )
+        )
+
+        
+    async def on_timeout(self) -> None:
+        await self.inter.delete_original_message()
         
 
 

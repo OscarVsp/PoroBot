@@ -1,6 +1,6 @@
 import disnake
 
-def new_embed(title = disnake.Embed.Empty, description = disnake.Embed.Empty, color = disnake.Embed.Empty, author : dict = None, fields : dict = None, thumbnail = None, image : str = None, footer : str = None, url = disnake.Embed.Empty):
+def new_embed(title = disnake.Embed.Empty, description = disnake.Embed.Empty, color = disnake.Embed.Empty, author_name = disnake.Embed.Empty, author_icon_url = disnake.Embed.Empty, fields : dict = None, thumbnail = None, image : str = None, footer : str = None, url = disnake.Embed.Empty):
     """
 
     """
@@ -18,11 +18,10 @@ def new_embed(title = disnake.Embed.Empty, description = disnake.Embed.Empty, co
         else:
             raise TypeError(f'Argument "fields" should be "list" but {type(fields)} has been provided.')
 
-    if author != None:
-        embed.set_author(
-            name = author.get('name'),
-            icon_url = author.get('icon')
-        )
+    embed.set_author(
+        name = author_name,
+        icon_url = author_icon_url
+    )
 
     if thumbnail != None:
         embed.set_thumbnail(url=thumbnail)

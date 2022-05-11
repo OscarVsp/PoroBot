@@ -1,5 +1,5 @@
 """"
-Copyright © Krypton 2022 - https://github.com/OscarVsp/PoroBot
+Copyright © Oscar 2022 - https://github.com/OscarVsp/PoroBot
 Description:
 This is a private multipurpose bot for discord.
 Version: 3.0
@@ -24,14 +24,27 @@ from utils.embed import new_embed
 from utils.tools import tracebackEx
 from utils import data
 
+logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
+rootLogger = logging.getLogger()
+rootLogger.setLevel(logging.INFO)
+
+consoleHandler = logging.StreamHandler()
+consoleHandler.setFormatter(logFormatter)
+rootLogger.addHandler(consoleHandler)
+
 config = dotenv_values(".env")
 
 if bool(config.get("TEST")):    
-    print("Starting in test mod...")
+    logging.info("Starting in test mod...")
     bot = InteractionBot(intents=disnake.Intents.default(), test_guilds = [533360564878180382])
 else:
-    print('starting in prod mod...')
+    logging.info('Starting in prod mod...')
     bot = InteractionBot(intents=disnake.Intents.default())
+    
+bot.config = config
+bot.owner = disnake.AppInfo.owner
+
+    
 @bot.event
 async def on_ready() -> None:
     """
@@ -105,17 +118,6 @@ async def on_message_command_error(interaction: disnake.UserCommandInteraction, 
     await send_error_log(interaction, error)
     
 
-if __name__ == "__main__":
-    logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
-    rootLogger = logging.getLogger()
-    rootLogger.setLevel(logging.INFO)
-
-    consoleHandler = logging.StreamHandler()
-    consoleHandler.setFormatter(logFormatter)
-    rootLogger.addHandler(consoleHandler)
     
-    bot.config = config
-    bot.owner = disnake.AppInfo.owner
-
-    load_commands()
-    bot.run(config['DISCORD_TOKEN'])
+load_commands()
+bot.run(config['DISCORD_TOKEN'])
