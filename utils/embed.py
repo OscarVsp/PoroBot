@@ -1,33 +1,12 @@
 import disnake
 
-def new_embed(title = None, description = None, color = disnake.Embed.Empty, author : dict = None, fields : dict = None, thumbnail = None, image : str = None, footer : str = None):
+def new_embed(title = disnake.Embed.Empty, description = disnake.Embed.Empty, color = disnake.Embed.Empty, author : dict = None, fields : dict = None, thumbnail = None, image : str = None, footer : str = None, url = disnake.Embed.Empty):
     """
 
     """
 
     #use *arhs and **kwargs !!
-    if title != None:
-        if description != None:
-            if color != disnake.Embed.Empty:
-                embed = disnake.Embed(title=title, description=description, color=color)
-            else:
-                embed = disnake.Embed(title=title, description=description)
-        else:
-            if color != None:
-                embed = disnake.Embed(title=title, color=color)
-            else:
-                embed = disnake.Embed(title=title)
-    else:
-        if description != None:
-            if color != None:
-                embed = disnake.Embed(description=description, color=color)
-            else:
-                embed = disnake.Embed(description=description)
-        else:
-            if color != None:
-                embed = disnake.Embed(color=color)
-            else:
-                embed = disnake.Embed()
+    embed : disnake.Embed = disnake.Embed(title = title, description = description, color = color, url = url)
 
     if fields != None:
         if type(fields) == list:

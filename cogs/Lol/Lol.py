@@ -80,6 +80,15 @@ class Lol(commands.Cog):
         async def drink(self, inter : ApplicationCommandInteraction):
                 await inter.response.send_message(embeds = drink_embeds)
                 
+        @commands.slash_command(
+                description = "Obtenir le dernier patch the League of Legends"
+        )
+        async def patchnote(self, inter : ApplicationCommandInteraction):
+                await inter.response.send_message(
+                        embed = PatchNote().embed
+                )
+                
+                
                        
 
 

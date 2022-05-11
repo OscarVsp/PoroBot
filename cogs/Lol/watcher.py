@@ -6,8 +6,10 @@ import logging
 from disnake import Embed
 from datetime import datetime
 
+
 role_to_emote = {'UNSELECTED':"<:Missing:829247441278074891>",'TOP':'<:Top:797548227004071956>','JUNGLE':'<:Jungle:797548226998829078>','MIDDLE':'<:Mid:797548226944565298>','BOTTOM':'<:Bot:829047436563054632>','UTILITY':'<:Support:797548227347480593>',"FILL":"<:Fill:829062843717386261>"}
 rank_to_emote = {'UNRANKED':"<:Unranked:829242191020032001>",'IRON':"<:Iron:829240724871577600>",'BRONZE':"<:Bronze:829240724754792449>",'SILVER':"<:Silver:829240724867514378>",'GOLD':"<:Gold:829240724842872872>",'PLATINUM':"<:Platinum:829240724797128754>",'DIAMOND':"<:Diamond:829240724830027796>",'MASTER':"<:Master:829240724943405096>",'GRANDMASTER':"<:Grandmaster:829240724767768576>",'CHALLENGER':"<:Challenger:829240724712456193>"}
+
 
 
 class ClashTeam():
@@ -82,5 +84,12 @@ class Watcher(RiotGamesApi):
                 raise NoCurrentTeam
         except (RiotGamesApiException):
             raise SumomnerNotFound
+        
+        
+class WatcherException(Exception):
+    
+    def __init__(self, msg : str = None):
+        super().__init__(msg)
+    
 
         
