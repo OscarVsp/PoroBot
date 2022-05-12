@@ -5,7 +5,7 @@ from utils import data
 from utils.paginator import Paginator_short
 from utils.tools import tracebackEx
 import asyncio
-from .scraper import PatchNote, langs
+from modules.LolPatchNoteScraper.PatchNote import PatchNote
 
 
 drink_embeds = [
@@ -49,7 +49,7 @@ class PatchNoteView(disnake.ui.View):
         super().__init__(timeout=60*10)
         self.inter : disnake.ApplicationCommandInteraction = inter
         
-        if lang != None and lang in langs:
+        if lang != None and lang in PatchNote.langs:
             self.patch : PatchNote = PatchNote(previous = previous, lang = lang)
         elif inter.locale == disnake.Locale.fr:
             self.patch : PatchNote = PatchNote(previous = previous, lang = 'fr-fr')
