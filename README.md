@@ -8,4 +8,4 @@ I don't plan to make a well documented repo here, but feel free so check the cod
 
 ## Related project
 
-I write an python scraper to get data about League of legends patch notes. I use it in this project but he is also available [here](https://github.com/OscarVsp/Lol-PatchNote-Scraper) in a general purpose form.
+I write a simple python scraper module to get data about League of legends patch notes. I use it in this project but he is also available [here](https://github.com/OscarVsp/Lol-PatchNote-Scraper) in a general purpose form.
