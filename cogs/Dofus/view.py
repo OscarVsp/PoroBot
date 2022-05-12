@@ -56,15 +56,15 @@ class AlmanaxView(disnake.ui.View):
                     ))
                 return embeds
             return embed
-        else:
-            return FastEmbed(
-                title = f":calendar_spiral:__**Almanax du {data['date']}**__:calendar_spiral:",
-                fields = [
-                    {"name" : "__Offrande :__",
-                     "value" : f"**{data['item_quantity']}x** {data['item']}"},
-                    {"name" : "__Bonus :__",
-                     "value" : f"{data['description']}"}
-                ],
-                thumbnail = f"{data['item_picture_url']}"
-            )
+        
+        return FastEmbed(
+            title = f":calendar_spiral:__**Almanax du {data['date']}**__:calendar_spiral:",
+            fields = [
+                {"name" : "__Offrande :__",
+                    "value" : f"**{data['item_quantity']}x** {data['item']}"},
+                {"name" : "__Bonus :__",
+                    "value" : f"{data['description']}"}
+            ],
+            thumbnail = f"{data['item_picture_url']}"
+        )
         

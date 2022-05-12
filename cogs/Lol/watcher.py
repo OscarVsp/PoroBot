@@ -80,8 +80,7 @@ class Watcher(RiotGamesApi):
                     leagues = summoner.entries
                     clashTeam.addPlayer(ClashPlayer(player,leagues,summoner.name))
                 return clashTeam
-            else:
-                raise NoCurrentTeam
+            raise NoCurrentTeam
         except (RiotGamesApiException):
             raise SumomnerNotFound
         
@@ -91,5 +90,3 @@ class WatcherException(Exception):
     def __init__(self, msg : str = None):
         super().__init__(msg)
     
-
-        

@@ -7,4 +7,3 @@ class SumomnerNotFound(Exception):
     def __init__(self):
         self.message = "Data Not Found"
         super().__init__()
-

@@ -65,11 +65,11 @@ class Carte(object):
     def effet(self):
         if self.color == "pique":
             return f"Boit **{self.value}** 🍺"
-        elif self.color == "coeur":
+        if self.color == "coeur":
             return f"Distribue **{self.value}** 🍺"
-        elif self.color == "carreau":
+        if self.color == "carreau":
             return f"Boit **{self.value}** 🍺\net est en mirror avec la dernière personne à avoir eu un :diamonds:"
-        elif self.color == "trefle":
+        if self.color == "trefle":
             return f"Boit **{self.value}** 🍺\net les personnes adjacentes boivent également **{ceil(self.value/2)}** 🍺"
 
 

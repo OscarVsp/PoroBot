@@ -101,8 +101,7 @@ class Almanax_scraper:
         data = cls.database.get(date.strftime('%d-%m-%y'))
         if data == False:
             return (await cls.scrape_one_day(date))
-        else:
-            return data
+        return data
     
     @classmethod
     async def get_almanax(cls, advance : int = 0):
@@ -118,10 +117,10 @@ class Almanax_scraper:
         else:
             data = []
             for d in range(advance):
+                await asyncio.sleep(0.01)
                 data.append(await cls.get_one_day((date.today() + timedelta(days = d))))
         cls.database.dump()
         return data
     
-#TODO async task
 
-#TODO only one year data base ? XD    
+#TODO only one year data base ?

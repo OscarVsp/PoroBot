@@ -78,7 +78,3 @@ class PatchNoteView(disnake.ui.View):
     async def on_timeout(self) -> None:
         await self.inter.delete_original_message()
         
-
-
-
-        

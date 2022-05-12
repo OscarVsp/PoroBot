@@ -18,7 +18,7 @@ class BangMenu(disnake.ui.View):
         self.number_players_min = 1
         self.interaction = None
         self.inter = inter
-        self.play.disabled = not len(self.players) >= self.number_players_min
+        self.play.disabled = len(self.players) < self.number_players_min
         
     @property   
     def embed(self):
@@ -82,7 +82,8 @@ class BangGame(disnake.ui.View):
         self.inter = inter
         self.players = players
         self.max_value = max_value
-        [self.player_selection.add_option(label = p.display_name) for p in self.players]
+        for player in self.players:
+            self.player_selection.add_option(label = player.display_name)
         
         
     @property
@@ -145,7 +146,7 @@ class BangGame(disnake.ui.View):
         
         
     async def start_game(self, interaction : disnake.MessageInteraction):
-        [p.reset() for p in self.players]
+        self.reset_all_players()
         shuffle(self.players)
         self.players_iter = cycle(self.players)
         self.cartes = [Carte(number+1,color) for number in range(self.max_value) for color in ["pique","coeur","carreau","trefle"]]
@@ -186,6 +187,10 @@ class BangGame(disnake.ui.View):
                 embed = self.embed(),
                 view = self
             )     
+        
+    def reset_all_players(self):
+        for player in self.players:
+            player.reset()
         
     async def unautorized_interaction(self, interaction : disnake.MessageInteraction):
         await interaction.response.edit_message(
