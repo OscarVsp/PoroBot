@@ -23,50 +23,49 @@ from markdownify import markdownify
 import logging
 
 
-        
-headers = {'Accept': 'application/json'}
-
-base_url = "https://www.leagueoflegends.com/page-data/"
-patchs_notes_menu_url = '/news/tags/patch-notes/'
-end_url = "page-data.json"
-view_url = "https://www.leagueoflegends.com/"
-
-langs = [
-    'en-gb',
-    'fr-fr',
-    'de-de',
-    'es-es',
-    'en-us',
-    'it-it',
-    'en-pl',
-    'pl-pl',
-    'el-gr',
-    'ro-ro',
-    'hu-hu',
-    'cs-cz',
-    'es-mx',
-    'pt-br',
-    'ja-jp',
-    'ru-ru',
-    'tr-tr',
-    'en-au',
-    'ko-kr'
-    ]
-
-        
+                
 class PatchNote:
+    
+    headers = {'Accept': 'application/json'}
+
+    base_url = "https://www.leagueoflegends.com/page-data/"
+    patchs_notes_menu_url = '/news/tags/patch-notes/'
+    end_url = "page-data.json"
+    view_url = "https://www.leagueoflegends.com/"
+
+    langs = [
+        'en-gb',
+        'fr-fr',
+        'de-de',
+        'es-es',
+        'en-us',
+        'it-it',
+        'en-pl',
+        'pl-pl',
+        'el-gr',
+        'ro-ro',
+        'hu-hu',
+        'cs-cz',
+        'es-mx',
+        'pt-br',
+        'ja-jp',
+        'ru-ru',
+        'tr-tr',
+        'en-au',
+        'ko-kr'
+        ]
     
     def __init__(self, previous : int = 0, lang : str = 'en-gb'):
         
-        if lang not in langs:
-            logging.error(f"Specified langage is not available. The list of available lang is:\n{langs}")
+        if lang not in self.langs:
+            logging.error(f"Specified langage is not available. The list of available lang is:\n{self.langs}")
             raise ValueError
    
         
-        self.menu_request_url : str = base_url+lang+patchs_notes_menu_url+end_url
+        self.menu_request_url : str = self.base_url+lang+self.patchs_notes_menu_url+self.end_url
         
         try:
-            patch_notes_menu_data = requests.get(self.menu_request_url, headers=headers).json()
+            patch_notes_menu_data = requests.get(self.menu_request_url, headers=self.headers).json()
         except Exception:
             logging.error(f"An error occured during the requests of the patchnotes menu data at url '{self.menu_request_url}'. Maybe 'lang' is not correct.")
             raise
@@ -77,11 +76,11 @@ class PatchNote:
             logging.error(f"An error occured while extracting the patch note url from the patchnotes menu.")
             raise
         
-        self.link :str = view_url + lang + patch_note_url 
-        self.patch_request_url : str = base_url+lang+patch_note_url+end_url
+        self.link :str = self.view_url + lang + patch_note_url 
+        self.patch_request_url : str = self.base_url+lang+patch_note_url+self.end_url
         
         try:
-            patch_note_data = requests.get(self.patch_request_url, headers=headers).json()
+            patch_note_data = requests.get(self.patch_request_url, headers=self.headers).json()
         except Exception:
             logging.error(f"An error occured during the request of the patchnote data at url '{self.patch_request_urlquest_url}'")
             raise
