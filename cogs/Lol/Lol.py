@@ -2,7 +2,7 @@ import disnake
 from disnake.ext import commands
 from disnake import ApplicationCommandInteraction
 from random import randint,choices,sample
-from utils.embed import new_embed
+from utils.FastEmbed import FastEmbed
 from utils import data
 from .view import *
 import asyncio
@@ -39,7 +39,7 @@ class Lol(commands.Cog):
                         )
                 except (NoCurrentTeam):
                         await inter.response.send_message(
-                                embed = new_embed(
+                                embed = FastEmbed(
                                         title = f"__**Clash**__",
                                         description = f"**{summoner}** ne fait pas parti d'une équipe clash actuellement...",
                                         thumbnail = "https://i.imgur.com/52zSz3H.png"
@@ -48,7 +48,7 @@ class Lol(commands.Cog):
                         )
                 except (SumomnerNotFound):
                         await inter.response.send_message(
-                                embed = new_embed(
+                                embed = FastEmbed(
                                         title = f"__**Clash**__",
                                         description = f"**{summoner}** n'a pas pu être trouvé...\nVérifiez que le nom d'invocateur soit correct.",
                                         thumbnail = "https://i.imgur.com/52zSz3H.png"
@@ -61,7 +61,7 @@ class Lol(commands.Cog):
         )
         async def wasteonlol(self, inter : ApplicationCommandInteraction):
                 await inter.response.send_message(
-                        embed = new_embed(
+                        embed = FastEmbed(
                                 title = "__**Wasted on Lol**__",
                                 description = "Utilise les liens ci-dessous pour découvrir combien de temps et/ou d'argent tu as dépensés dans League of Legends",
                                 thumbnail = data.images.poros.neutral

@@ -1,21 +1,21 @@
 import disnake 
 from disnake import ApplicationCommandInteraction
-from utils.embed import new_embed
+from utils.FastEmbed import FastEmbed
 from utils import data
 from utils.paginator import Paginator_short
 from utils.tools import tracebackEx
 import asyncio
-from .scraper import PatchNote 
+from .scraper import PatchNote, langs
 
 
 drink_embeds = [
-    new_embed(
+    FastEmbed(
         title = "__**:underage: RÈGLES DE L'ARAM À BOIRE ! :beers:**__",
         description = """:white_check_mark: :arrow_right: Donner une gorgée :beers:
                         :o2: :arrow_right: Boire une gorgée :beers:
                         :vs: :arrow_right: :white_check_mark: ou :o2: en fonction."""
     ),
-    new_embed(
+    FastEmbed(
         title = "__Pendant la partie :__",
         description = """:black_medium_small_square::one: Faire un kill ...................................................... :white_check_mark::one:
                          :black_medium_small_square::two: Mourrir ............................................................. :o2::one:
@@ -26,7 +26,7 @@ drink_embeds = [
                          :black_medium_small_square::seven: Toucher le nexus ............................................ :o2::one:
                          :black_medium_small_square::eight: Dans la fontaine sur l'écran de victoire .... :white_check_mark::three:"""
     ),
-    new_embed(
+    FastEmbed(
         title = "__Après la partie :__",
         description = """:black_medium_small_square::one: Perfect game (0 mort) ................................. :white_check_mark::five:
                          :black_medium_small_square::two: 100% kill participation ................................. :white_check_mark::five:
@@ -34,7 +34,7 @@ drink_embeds = [
                          :black_medium_small_square::four: Abandon .......................................................... :o2::five:
                          :black_medium_small_square::five: Avoir tilt ........................................................... :o2::five:"""
     ),
-    new_embed(
+    FastEmbed(
         title = "__Spectateur :__",
         description = """S'il y a un spectateur,celui-ci doit choisir un joueur avant la partie. Chaque fois que ce joueur doit :white_check_mark: ou :o2:, le spectateur fait de même.
                          Celui-ci peut donner des gorgées à n'importe quel joueur et n'importe quel joueur pour lui donner des gorgées."""
@@ -49,14 +49,14 @@ class PatchNoteView(disnake.ui.View):
         super().__init__(timeout=60*10)
         self.inter : disnake.ApplicationCommandInteraction = inter
         
-        if lang != None:
+        if lang != None and lang in langs:
             self.patch : PatchNote = PatchNote(previous = previous, lang = lang)
         elif inter.locale == disnake.Locale.fr:
             self.patch : PatchNote = PatchNote(previous = previous, lang = 'fr-fr')
         else:
             self.patch : PatchNote = PatchNote(previous = previous, lang = 'en-gb')
             
-        self.embed : disnake.Embed = new_embed(
+        self.embed : disnake.Embed = FastEmbed(
             author_name = f"Patch {self.patch.season_number}.{self.patch.patch_number}",
             title = f"{self.patch.title}",
             description = self.patch.description,

@@ -2,7 +2,7 @@ import disnake
 from disnake.ext import commands
 from disnake import ApplicationCommandInteraction
 from random import randint,choices,sample
-from utils.embed import new_embed
+from utils.FastEmbed import FastEmbed
 from utils import data
 from .view import *
 import asyncio
@@ -21,7 +21,7 @@ class Basic(commands.Cog):
     )
     async def beer(self, inter: ApplicationCommandInteraction):
         await inter.response.send_message(
-            embed=new_embed(
+            embed=FastEmbed(
                 title="Voilà tes bières",
                 description=f":beer:\n Après {round(self.bot.latency,2)} secondes d'attente seulement !",
                 color = data.color.gold
@@ -35,10 +35,10 @@ class Basic(commands.Cog):
     )
     async def porosnack(self, inter: ApplicationCommandInteraction):
         await inter.response.send_message(
-            embed = new_embed(
+            embed = FastEmbed(
                 description="Nourris le poro !",
                 image=data.images.poros.growings[0],
-                footer="0/10"
+                footer_text="0/10"
             ),
             view=PoroFeed(inter)
         )
@@ -57,7 +57,7 @@ class Basic(commands.Cog):
         await inter.response.defer()
         await inter.channel.purge(limit=nombre)
         await inter.response.send_message(
-            embed = new_embed(
+            embed = FastEmbed(
                 description = f":broom: {nombre} messages supprimés ! :broom:"),
             delete_after=3)
         
@@ -70,7 +70,7 @@ class Basic(commands.Cog):
         lore_embed = get_lore_embed(inter.target.name)
         if lore_embed == False:
             await inter.response.send_message(
-                embed = new_embed(
+                embed = FastEmbed(
                     description = f"{inter.target.name} n'a pas encore de lore...\nDemande à Hyksos de l'écrire !",
                     thumbnail = data.images.poros.sweat
                     ),

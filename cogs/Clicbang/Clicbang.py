@@ -1,7 +1,7 @@
 import disnake
 from disnake.ext import commands
 from disnake import ApplicationCommandInteraction
-from utils.embed import new_embed
+from utils.FastEmbed import FastEmbed
 from utils import data
 from .view import *
 import asyncio

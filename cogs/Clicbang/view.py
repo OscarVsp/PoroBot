@@ -1,6 +1,6 @@
 import disnake 
 from disnake import ApplicationCommandInteraction
-from utils.embed import new_embed
+from utils.FastEmbed import FastEmbed
 from utils import data
 import asyncio
 from random import shuffle, choice
@@ -22,9 +22,9 @@ class BangMenu(disnake.ui.View):
         
     @property   
     def embed(self):
-        embed = new_embed(
+        embed = FastEmbed(
                 title = "__**BANG - MENU**__",
-                footer = f"Au moins {self.number_players_min} joueurs pour démarrer une partie.",
+                footer_text= f"Au moins {self.number_players_min} joueurs pour démarrer une partie.",
                 thumbnail = data.images.bang_6
         )
         if len(self.players) != 0:
@@ -106,7 +106,7 @@ class BangGame(disnake.ui.View):
         return f"{self.max_value*4 - len(self.cartes)}/{self.max_value*4} cartes jouées"
         
     def embed(self, message : str = ""):
-        embed = new_embed(
+        embed = FastEmbed(
             title = "__**BANG - PARTIE**__"
         )
         if self.lastCarte == None:

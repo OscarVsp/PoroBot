@@ -31,7 +31,7 @@ from disnake.ext import tasks, commands
 from disnake.ext.commands import InteractionBot
 from disnake.ext.commands import Context
 
-from utils.embed import new_embed
+from utils.FastEmbed import FastEmbed
 from utils.tools import tracebackEx
 from utils import data
 
@@ -62,16 +62,19 @@ async def on_ready() -> None:
     The code in this even is executed when the bot is ready
     """
     bot.log_channel = bot.get_channel(int(bot.config['LOG_CHANNEL']))
-    logging.info("-------------------")
-    logging.info(f"Logged in as {bot.user.name}")
-    logging.info(f"disnake API version: {disnake.__version__}")
-    logging.info(f"Python version: {platform.python_version()}")
-    logging.info(f"Running on: {platform.system()} {platform.release()} ({os.name})")
-    logging.info(f"Owner : {bot.owner}")
+    logging.info("-"*50)
+    logging.info("-"*50)
+    logging.info(f"| Logged in as {bot.user.name}")
+    logging.info(f"| disnake API version: {disnake.__version__}")
+    logging.info(f"| Python version: {platform.python_version()}")
+    logging.info(f"| Running on: {platform.system()} {platform.release()} ({os.name})")
+    logging.info(f"| Owner : {bot.owner}")
+    logging.info(f"| Ready !")
     
     await bot.change_presence(activity = disnake.Activity(name='"/" -> commandes', type=disnake.ActivityType.playing))
     
-    logging.info("-------------------")
+    logging.info("-"*50)
+    logging.info("-"*50)
 
 def load_commands() -> None:
     for extension in os.listdir(f"./cogs"):
@@ -85,19 +88,19 @@ def load_commands() -> None:
 async def send_error_log(interaction: ApplicationCommandInteraction, error: Exception):
     tb = tracebackEx(error)
     await interaction.send(
-        embed= new_embed(
+        embed= FastEmbed(
             title=":x: __**ERROR**__ :x:",
             description=f"Une erreur s'est produite lors de la commande **/{interaction.application_command.name}**\n{bot.owner.mention} a été prévenu et corrigera ce bug au plus vite !\nUtilise `/beer` pour un bière de consolation :beer:",
             thumbnail = data.images.poros.shock),
         delete_after=10)
     await bot.log_channel.send(
-        embed = new_embed(
+        embed = FastEmbed(
             title=f":x: __** ERROR**__ :x:",
             description=f"```{error}```",
             fields = [
                 {
                     'name':f"Raised on command :",
-                    'value':f"**/{interaction.application_command.name}** from {interaction.channel.mention} by {interaction.author.mention}."
+                    'value':f"**/{interaction.application_command.name}** from {interaction.guild.name} #{interaction.channel.mention} by {interaction.author.mention}."
                 }
             ]
         )
@@ -105,15 +108,26 @@ async def send_error_log(interaction: ApplicationCommandInteraction, error: Exce
     n = (len(tb) // 4090) 
     for i in range(n):
         await bot.log_channel.send(
-            embed=new_embed(
+            embed=FastEmbed(
                 description=f"```python\n{tb[4096*i:4096*(i+1)]}```")
         )
     await bot.log_channel.send(
-        embed=new_embed(
+        embed=FastEmbed(
             description=f"```python\n{tb[4096*n:]}```")
     )
-    logging.error(f"{error} raised on command /{interaction.application_command.name} from {interaction.channel.mention} by {interaction.author.mention}.\n{tb}")
+    logging.error(f"{error} raised on command /{interaction.application_command.name} from {interaction.guild.name} #{interaction.channel.name} by {interaction.author.name}.\n{tb}")
 
+@bot.event
+async def on_slash_command(interaction: disnake.ApplicationCommandInteraction) -> None:
+    logging.info(f"Slash command '{interaction.application_command.name}' from '{interaction.guild.name} #{interaction.channel.name}' by '{interaction.author.name}' started...")
+    
+@bot.event
+async def on_user_command(interaction: disnake.UserCommandInteraction) -> None:
+    logging.info(f"User command '{interaction.application_command.name}' from '{interaction.guild.name} #{interaction.channel.name}' by '{interaction.author.name}' started...")
+
+@bot.event
+async def on_message_command(interaction: disnake.MessageCommandInteraction) -> None:
+    logging.info(f"Message command '{interaction.application_command.name}' from '{interaction.guild.name} #{interaction.channel.name}' by '{interaction.author.name}' started...")
 
 
 @bot.event
@@ -125,10 +139,21 @@ async def on_user_command_error(interaction: disnake.UserCommandInteraction, err
     await send_error_log(interaction, error)
     
 @bot.event
-async def on_message_command_error(interaction: disnake.UserCommandInteraction, error: Exception) -> None:
+async def on_message_command_error(interaction: disnake.MessageCommandInteraction, error: Exception) -> None:
     await send_error_log(interaction, error)
     
+@bot.event
+async def on_slash_command_completion(interaction: disnake.ApplicationCommandInteraction) -> None:
+    logging.info(f"Slash command '{interaction.application_command.name}' from '{interaction.guild.name} #{interaction.channel.name} by '{interaction.author.name}' run with succes")
+    
+@bot.event
+async def on_user_command_completion(interaction: disnake.UserCommandInteraction) -> None:
+    logging.info(f"User command '{interaction.application_command.name}' from '{interaction.guild.name} #{interaction.channel.name}' by '{interaction.author.name}' run with succes")
 
+@bot.event
+async def on_message_command_completion(interaction: disnake.MessageCommandInteraction) -> None:
+    logging.info(f"Message command '{interaction.application_command.name}' from '{interaction.guild.name} #{interaction.channel.name}' by '{interaction.author.name}' run with succes")
+    
     
 load_commands()
 bot.run(config['DISCORD_TOKEN'])

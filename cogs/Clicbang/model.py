@@ -1,9 +1,9 @@
 from utils import data
-from utils.embed import new_embed
+from utils.FastEmbed import FastEmbed
 import disnake
 from math import ceil
 
-regles = new_embed(
+regles = FastEmbed(
     title = ":scroll: __**REGLES DU BANG**__ :scroll:",
     description = """Ce jeu reprend le principe de la roulette russe, avec des cartes. Chacun à son tour, on sera maitre du jeu et on tirera une carte (distribué automatiquement par le bot en message privé). Le nombre indiqué sur la carte correspond à la position de l'unique balle dans le barillet, et donc le nombre de *"coup à tiré"* avant que la balle sorte.
                      Le maitre du jeu choisit alors un autre joueur sur qui tirer, et annonce le résultat du tire (à faire oralement):
@@ -84,7 +84,7 @@ class Carte(object):
     
     @property
     def embed(self):
-        return new_embed(
+        return FastEmbed(
             title = f"{self}",
             thumbnail = self.image,
             fields = [{
@@ -116,7 +116,7 @@ class Player(object):
     
     def __init__(self,member : disnake.Member, looses : int = 0):
         """Initialize the "Player" object.
-        
+        thuml
         Args:
             member (discord.Member):    The discord member.
             looses (int, optional):     The intial looses (used to copy the player). Defaults to 0.

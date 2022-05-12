@@ -1,6 +1,6 @@
 import disnake 
 from disnake import ApplicationCommandInteraction
-from utils.embed import new_embed
+from utils.FastEmbed import FastEmbed
 from random import choices
 from utils import data
 import asyncio
@@ -12,14 +12,12 @@ def get_lore_embed(name):
     lore_data = loredb.get(name)
     if lore_data == False:
         return False
-    return new_embed(
-        author = {
-            'name' : lore_data.get('alias'),
-            'icon' : lore_data.get('icon')[5:-6]
-        },
+    return FastEmbed(
+        author_name = lore_data.get('alias'),
+        author_icon_url = lore_data.get('icon')[5:-6],
         description = f"*{lore_data.get('lore')}*",
         image = lore_data.get('image')[5:-6],
-        footer = f"Lore de {name}, créé par Hyksos"
+        footer_text = f"Lore de {name}, créé par Hyksos"
     )
 
 class PoroFeed(disnake.ui.View):
@@ -34,16 +32,16 @@ class PoroFeed(disnake.ui.View):
         if self.counter < 9:
             self.counter += 1
             await interaction.response.edit_message(
-                embed = new_embed(
+                embed = FastEmbed(
                     description="Continue à nourrir le poro !", 
                     image=data.images.poros.growings[self.counter], 
-                    footer = f"{self.counter}/10"),
+                    footer_text = f"{self.counter}/10"),
                 view=self)
         else:
             self.counter += 1
             self.remove_item(button)
             await interaction.response.edit_message(
-                embed = new_embed(
+                embed = FastEmbed(
                     description="*#Explosion de poros*", 
                     image=data.images.poros.growings[self.counter]),
                 view=self)
@@ -63,7 +61,7 @@ class Beer(disnake.ui.View):
         self.counter += 1
         if self.counter < 10:
             await interaction.response.edit_message(
-                embed=new_embed(
+                embed=FastEmbed(
                     title="Voilà tes bières",
                     description=f"{':beer:'*self.counter} \n Après {round(interaction.bot.latency,2)} secondes d'attente seulement !",
                     color = data.color.gold
@@ -74,7 +72,7 @@ class Beer(disnake.ui.View):
             button.disabled = True
             self.stop()
             await interaction.response.edit_message(
-                embed=new_embed(
+                embed=FastEmbed(
                     title="Déjà 10 bières ?! On va se calmer là...",
                     description=f"{':beer:'*self.counter} \n Après {round(interaction.bot.latency,2)} secondes d'attente seulement !",
                     color = data.color.gold

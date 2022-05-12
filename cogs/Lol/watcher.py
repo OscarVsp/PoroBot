@@ -1,7 +1,7 @@
 from riot_games_api import RiotGamesApi
 from riot_games_api.exceptions import RiotGamesApiException
 from .exceptions import NoCurrentTeam, SumomnerNotFound
-from utils.embed import new_embed
+from utils.FastEmbed import FastEmbed
 import logging
 from disnake import Embed
 from datetime import datetime
@@ -28,9 +28,9 @@ class ClashTeam():
 
     @property
     def embed(self) -> Embed:
-        return new_embed(
+        return FastEmbed(
             title = "__**{self.name} ({self.abbreviation})**__",
-            description = f"\n".join([f"{role_to_emote[p.position]}{rank_to_emote[p.tier]} {player.name}" for p in self.getPlayersSorted()]),
+            description = f"\n".join([f"{role_to_emote[p.position]}{rank_to_emote[p.tier]} {self.player.name}" for p in self.getPlayersSorted()]),
             thumbnail = self.icon
         )
         
@@ -40,7 +40,7 @@ class ClashTeam():
     
     @property
     def icon(self) -> str:
-        return f"https://raw.communitydragon.org/pbe/plugins/rcp-be-lol-game-data/global/default/assets/clash/roster-logos/{team.icon_id}/1.png"
+        return f"https://raw.communitydragon.org/pbe/plugins/rcp-be-lol-game-data/global/default/assets/clash/roster-logos/{self.team.icon_id}/1.png"
 
 class ClashPlayer():
 
