@@ -59,6 +59,7 @@ class images:
         smirk = "https://i.imgur.com/or3cvYB.png"
         xd = "https://i.imgur.com/BC0OBa6.png"
         ox = "https://i.imgur.com/CiZdJAd.png"
+        gragas = "https://i.imgur.com/fXf3GnC.png"
 
         growings = [
                 "https://i.imgur.com/Eex5g5J.png",

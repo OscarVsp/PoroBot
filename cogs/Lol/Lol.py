@@ -78,7 +78,7 @@ class Lol(commands.Cog):
                 description = "Obtenir les règles de l'aram à boire"
         )
         async def drink(self, inter : ApplicationCommandInteraction):
-                await inter.response.send_message(embeds = drink_embeds)
+                await inter.response.send_message(embed = drink_embed)
                 
         @commands.slash_command(
                 description = "Obtenir le dernier patch the League of Legends"

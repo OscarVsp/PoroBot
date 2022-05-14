@@ -56,7 +56,7 @@ class Basic(commands.Cog):
     ):
         await inter.response.defer()
         await inter.channel.purge(limit=nombre)
-        await inter.response.send_message(
+        await inter.channel.send(
             embed = FastEmbed(
                 description = f":broom: {nombre} messages supprimés ! :broom:"),
             delete_after=3)

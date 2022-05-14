@@ -53,7 +53,7 @@ class FastEmbed(Embed):
         A special sentinel value used by ``EmbedProxy`` and this class
         to denote that the value or attribute is empty.
     """
-    
+       
     
     def __init__(self,
         *,
