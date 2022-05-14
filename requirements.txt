@@ -21,7 +21,7 @@ PyNaCl==1.4.0
 python-dotenv==0.20.0
 pytz==2022.1
 requests==2.27.1
-riot-games-api==1.0.3
+riotwatcher
 six==1.16.0
 soupsieve==2.3.2.post1
 typing_extensions==4.2.0

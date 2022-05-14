@@ -2,7 +2,6 @@ import disnake
 from disnake import ApplicationCommandInteraction
 from utils.FastEmbed import FastEmbed
 from utils import data
-from utils.paginator import Paginator_short
 from utils.tools import tracebackEx
 import asyncio
 from modules.LolPatchNoteScraper.PatchNote import PatchNote

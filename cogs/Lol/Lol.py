@@ -20,7 +20,7 @@ class Lol(commands.Cog):
                 Get the member dict for the lore from the "Members.json" file next to it.
                 """
                 self.bot = bot
-                self.watcher = Watcher(bot.config["RIOT_APIKEY"])
+                self.watcher = Watcher(bot.config["RIOT_APIKEY"],"euw1")
 
         @commands.slash_command(
                 description = "Scouter une team clash à partir du nom d'un des joueurs"
@@ -31,7 +31,7 @@ class Lol(commands.Cog):
                         )
                 ):
                 try:
-                        team = self.watcher.get_clash_team(summoner)
+                        team = await self.watcher.get_clash_team(summoner)
                         await inter.response.send_message(
                                 embed= team.embed,
                                 components = disnake.ui.Button(label="OPGG", emoji= "<:Opgg:948174103557312563>", style = disnake.ButtonStyle.link, url = team.opgg),
