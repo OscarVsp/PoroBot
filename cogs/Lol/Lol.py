@@ -30,30 +30,28 @@ class Lol(commands.Cog):
                                 description = "Le nom d'invocateur d'un des joueurs"
                         )
                 ):
+                await inter.response.defer()
                 try:
                         team = await self.watcher.get_clash_team(summoner)
-                        await inter.response.send_message(
+                        await inter.edit_original_message(
                                 embed= team.embed,
-                                components = disnake.ui.Button(label="OPGG", emoji= "<:Opgg:948174103557312563>", style = disnake.ButtonStyle.link, url = team.opgg),
-                                delete_after = 1200
+                                components = disnake.ui.Button(label="OPGG", emoji= "<:Opgg:948174103557312563>", style = disnake.ButtonStyle.link, url = team.opgg)
                         )
                 except (NoCurrentTeam):
-                        await inter.response.send_message(
+                        await inter.edit_original_message(
                                 embed = FastEmbed(
                                         title = f"__**Clash**__",
                                         description = f"**{summoner}** ne fait pas parti d'une équipe clash actuellement...",
                                         thumbnail = "https://i.imgur.com/52zSz3H.png"
-                                ),
-                                delete_after = 10
+                                )
                         )
                 except (SumomnerNotFound):
-                        await inter.response.send_message(
+                        await inter.edit_original_message(
                                 embed = FastEmbed(
                                         title = f"__**Clash**__",
                                         description = f"**{summoner}** n'a pas pu être trouvé...\nVérifiez que le nom d'invocateur soit correct.",
                                         thumbnail = "https://i.imgur.com/52zSz3H.png"
-                                ),
-                                delete_after = 10
+                                )
                         )
         
         @commands.slash_command(
