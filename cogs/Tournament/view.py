@@ -3,7 +3,7 @@ from disnake import ApplicationCommandInteraction
 from cogs.Tournament.classes import Tournament2v2Roll
 from utils.FastEmbed import FastEmbed
 from random import choices
-from utils.data import emotes
+from utils.data import emotes,color
 from .classes import *
 import asyncio
 import pickledb
@@ -100,7 +100,9 @@ class Tournament2v2RollView(disnake.ui.View):
         
         self.message_rank = await self.channel_rank.send(embed=self.rank)
         self.message_rounds = await self.channel_rounds.send(embed=FastEmbed(
-            title="📅 Rounds",description="Les rounds seront affichés ici une fois que le tournoi aura commencé"
+            title="📅 Rounds",
+            description="Les rounds seront affichés ici une fois que le tournoi aura commencé",
+            color = color.Gold
         ))
         await self.channel_rules.send(embed=self.rules)
         self.message_dashboard = await self.channel_dashboard.send(embeds=self.embeds,view=self)

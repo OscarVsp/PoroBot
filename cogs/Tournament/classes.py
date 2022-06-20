@@ -1,6 +1,6 @@
 #import the required modules
 import random
-from utils.data import emotes
+from utils.data import emotes,color
 from utils.FastEmbed import FastEmbed
 
 
@@ -187,11 +187,13 @@ class Round:
         if len(self.matches) == 1:
             return FastEmbed(
             title=f"__**ROUND **__{emotes.num[self.number+1]}",
-            description= self.matches[0].field
+            description= self.matches[0].field,
+            color = color.Gold
             )
         else:
             return FastEmbed(
             title=f"__**ROUND **__{emotes.num[self.number+1]}",
+            color = color.Gold,
             fields = [{'name':f"__MATCH __{emotes.alpha[i]}", 'value': match.field,'inline':False} for i, match in enumerate(self.matches)]
             )
         
@@ -314,6 +316,7 @@ class Tournament2v2Roll:
                 ranks.append(f"{emotes.rank[i]}")
         return FastEmbed(
             title = "__**CLASSEMENT**__",
+            color = color.Gold,
             fields=[
                 {'name':"__**Rank**__",'value':"\n".join([f"{ranks[i]}" for i in range(len(sorted_player))]),'inline':True},
                 {'name':"__**Players**__",'value':"\n".join([f"**{p.name}**" for p in sorted_player]),'inline':True},
@@ -335,6 +338,7 @@ class Tournament2v2Roll:
                 ranks.append(f"{emotes.rank[i]}")
         return FastEmbed(
             title = "__**CLASSEMENT**__",
+            color = color.Gold,
             fields=[
                 {'name':"__**Rank**__",'value':"\n".join([f"{ranks[i]}" for i in range(len(sorted_player))]),'inline':True},
                 {'name':"__**Players**__",'value':"\n".join([f"**{p.name}**" for p in sorted_player]),'inline':True},
@@ -347,6 +351,7 @@ class Tournament2v2Roll:
     def rules(self):
         return FastEmbed(
             title = ":scroll: __**RÈGLES**__ :scroll:",
+            color = color.Gold,
             fields = [
                 {
                     'name':"__**Format du tournoi**__",
@@ -388,8 +393,8 @@ class Tournament2v2Roll:
                 {
                     'name':"__**Phase finale**__",
                     'value':f"""À la fin des {self.nb_rounds} rounds, un BO5 en __1v1__ sera joué entre le 1er et le 2ème du classement pour derterminer le grand vainqueur. Pour chaque deux points d'écart, un match d'avance sera accordé au 1er du classement (jusqu'à un maximum de 2 matchs d'avance).
-                    __Exemple :__
-                    **Lỳf** est premier avec __14 points__ mais **Gay Prime** est deuxième avec __11 points__ ⏭️ BO5 commençant à 1-0 en faveur de **Lỳf**."""
+                    *__Exemple :__
+                    **Lỳf** est premier avec __14 points__ mais **Gay Prime** est deuxième avec __11 points__ ⏭️ BO5 commençant à **1-0** en faveur de **Lỳf**.*"""
                 }
             ]
         )
