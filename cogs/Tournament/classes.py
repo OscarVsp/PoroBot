@@ -378,8 +378,11 @@ class Tournament2v2Roll:
                 {
                     'name':"__**Score personnel**__",
                     'value':f"""Les points obtenus en équipe lors d'un match sont ajoutés au score personnel de chaque joueur (indépendamment de qui a marqué le point).
-                            À la fin des {self.nb_rounds} rounds, c'est les points personnels qui détermineront le classement. 
-                            En cas d'égalité, on départage avec __kills > Tourelles > 100cs__.
+                            À la fin des {self.nb_rounds} rounds, c'est les points personnels qui détermineront le classement."""
+                },
+                {
+                    'name':"__**Égalité**__",
+                    'value':f"""En cas d'égalité, on départage avec __kills > Tourelles > 100cs__.
                             En cas d'égalité parfaite pour la première ou deuxième place, un __1v1__ en BO1 est organisé (même règles, mais _1 point__ suffit pour gagner)."""
                 },
                 {

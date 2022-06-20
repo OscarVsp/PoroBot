@@ -52,6 +52,7 @@ class Tournament2v2RollView(disnake.ui.View):
                     value=str(i)
                 ) for i in range(self.tournament.nb_matchs_per_round)
             ]
+            self.match_selection.placeholder = f"Select a match"
             self.set_team_1_score.disabled = True
             self.set_team_1_score.placeholder = "Select a match first."
             self.set_team_2_score.disabled = True
