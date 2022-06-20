@@ -102,7 +102,7 @@ class Tournament2v2RollView(disnake.ui.View):
         self.message_rounds = await self.channel_rounds.send(embed=FastEmbed(
             title="📅 Rounds",
             description="Les rounds seront affichés ici une fois que le tournoi aura commencé",
-            color = color.Gold
+            color = color.gold
         ))
         await self.channel_rules.send(embed=self.rules)
         self.message_dashboard = await self.channel_dashboard.send(embeds=self.embeds,view=self)

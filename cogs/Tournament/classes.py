@@ -188,12 +188,12 @@ class Round:
             return FastEmbed(
             title=f"__**ROUND **__{emotes.num[self.number+1]}",
             description= self.matches[0].field,
-            color = color.Gold
+            color = color.gold
             )
         else:
             return FastEmbed(
             title=f"__**ROUND **__{emotes.num[self.number+1]}",
-            color = color.Gold,
+            color = color.gold,
             fields = [{'name':f"__MATCH __{emotes.alpha[i]}", 'value': match.field,'inline':False} for i, match in enumerate(self.matches)]
             )
         
@@ -316,7 +316,7 @@ class Tournament2v2Roll:
                 ranks.append(f"{emotes.rank[i]}")
         return FastEmbed(
             title = "__**CLASSEMENT**__",
-            color = color.Gold,
+            color = color.gold,
             fields=[
                 {'name':"__**Rank**__",'value':"\n".join([f"{ranks[i]}" for i in range(len(sorted_player))]),'inline':True},
                 {'name':"__**Players**__",'value':"\n".join([f"**{p.name}**" for p in sorted_player]),'inline':True},
@@ -338,7 +338,7 @@ class Tournament2v2Roll:
                 ranks.append(f"{emotes.rank[i]}")
         return FastEmbed(
             title = "__**CLASSEMENT**__",
-            color = color.Gold,
+            color = color.gold,
             fields=[
                 {'name':"__**Rank**__",'value':"\n".join([f"{ranks[i]}" for i in range(len(sorted_player))]),'inline':True},
                 {'name':"__**Players**__",'value':"\n".join([f"**{p.name}**" for p in sorted_player]),'inline':True},
@@ -351,7 +351,7 @@ class Tournament2v2Roll:
     def rules(self):
         return FastEmbed(
             title = ":scroll: __**RÈGLES**__ :scroll:",
-            color = color.Gold,
+            color = color.gold,
             fields = [
                 {
                     'name':"__**Format du tournoi**__",
