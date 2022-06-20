@@ -209,7 +209,7 @@ class Tournament2v2RollView(disnake.ui.View):
             for channel in self.category.channels:
                 await channel.delete()
             await self.category.delete()
-            await self.bot.change_presence(activity=disnake.Game(name="Training for next tournament..."))
+            await self.bot.change_presence(activity=disnake.Game(name='"/" -> commandes'))
             self.stop()
         else:
             await self.update_dashboard(interaction)      

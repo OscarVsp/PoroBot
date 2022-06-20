@@ -45,12 +45,15 @@ rootLogger.addHandler(consoleHandler)
 
 config = dotenv_values(".env")
 
+intents = disnake.Intents.default()  # Allow the use of custom intents
+intents.members = True
+
 if bool(config.get("TEST")):    
     logging.info("Starting in test mod...")
-    bot = InteractionBot(intents=disnake.Intents.default(), test_guilds = [533360564878180382])
+    bot = InteractionBot(intents=intents, test_guilds = [533360564878180382])
 else:
     logging.info('Starting in prod mod...')
-    bot = InteractionBot(intents=disnake.Intents.default())
+    bot = InteractionBot(intents=intents)
     
 bot.config = config
 bot.owner = disnake.AppInfo.owner
