@@ -166,7 +166,7 @@ class Match:
             indicators = ['❌','✅']
         else:
             indicators = ['⬛','⬛']
-        return f"{indicators[0]}{emotes.num[round(self.entities[0].points)]} {self.entities[0]} \n {indicators[1]}{emotes.num[round(self.entities[1].points)]} {self.entities[1]}"
+        return f"{indicators[0]}{emotes.num[round(self.entities[0].points)]} {self.entities[0]}\n{indicators[1]}{emotes.num[round(self.entities[1].points)]} {self.entities[1]}"
             
             
         
@@ -365,11 +365,11 @@ class Tournament2v2Roll:
                     'value':"""Les matchs sont en __BO1__ se jouant en 2v2 selon le format suivant :
                             🌍 __Map__ : Abime hurlante
                             👓 __Mode__ : Blind
-                            ❌ __Bans__ : 3 par équipe (à faire via le chat dans le lobby pré-game)"""
+                            ❌ __Bans__ : 3 par équipe (à faire via le chat dans le lobby **pré-game**)"""
                 },
                 {
                     'name':"__**Règles d'un match**__",
-                    'value':"""⛔ Interdiction de prendre les healts __extérieurs__ (ceux entre la T1 et la T2).
+                    'value':"""⛔ Interdiction de prendre les healts __extérieurs__ (ceux entre la **T1** et la **T2**).
                             ✅ Le suicide est autorisé et ne compte pas comme un kill.
                             ✅ L'achat d'objet lors d'une mort est autorisé."""
                 },
@@ -394,7 +394,7 @@ class Tournament2v2Roll:
                     'name':"__**Phase finale**__",
                     'value':f"""À la fin des {self.nb_rounds} rounds, un BO5 en __1v1__ sera joué entre le 1er et le 2ème du classement pour derterminer le grand vainqueur. Pour chaque deux points d'écart, un match d'avance sera accordé au 1er du classement (jusqu'à un maximum de 2 matchs d'avance).
                     *__Exemple :__
-                    **Lỳf** est premier avec __14 points__ mais **Gay Prime** est deuxième avec __11 points__ ⏭️ BO5 commençant à **1-0** en faveur de **Lỳf**.*"""
+                    **Lỳf** est premier avec __14 points__ mais **Gay Prime** est deuxième avec __11 points__\n⏭️ BO5 commençant à **1-0** en faveur de **Lỳf**.*"""
                 }
             ]
         )
