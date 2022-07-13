@@ -6,7 +6,6 @@ from utils.FastEmbed import FastEmbed
 from random import choices
 from utils.data import emotes,color
 from .classes import *
-import asyncio
 import pickledb
 
 tournamentdb = pickledb.load("cogs/Basic/tournament.db", False)
