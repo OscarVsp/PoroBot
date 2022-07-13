@@ -1,94 +1,127 @@
-#import the required modules
+
+from faulthandler import disable
 import random
+
+import disnake
 from utils.data import emotes,color
 from utils.FastEmbed import FastEmbed
+import json
+from datetime import datetime
+from typing import List, Union
 
 
 # Class for the players with attribut name and points
 class Player:
-    def __init__(self, member):
-        self.member = member
-        self.kills = 0
-        self.turrets = 0
-        self.cs = 0
+    def __init__(self, member : disnake.Member):
+        self.member : disnake.Member = member
+        self.kills : int = 0
+        self.turrets : int = 0
+        self.cs : int = 0
     
     @property
-    def name(self):
+    def name(self) -> str:
         return self.member.display_name
+    
+    @property
+    def identity(self) -> str:
+        return f"Player {self.name}"
+    
+    @property
+    def id(self) -> int:
+        return self.member.id
     
     def __str__(self):
         return f"**{self.name}**"
     
-    def addKills(self, kills = 1):
+    def addKills(self, kills = 1) -> None:
         self.kills += kills
     
-    def addTurrets(self, turrets = 1):
+    def addTurrets(self, turrets = 1) -> None:
         self.turrets += turrets
         
     def addCS(self, cs = 1):
         self.cs += cs
         
-    def removeKills(self, kills = 1):
+    def removeKills(self, kills = 1) -> None:
         if self.kills >= kills:
             self.kills -= kills
         else:
             self.kills = 0
         
-    def removeTurrets(self, turret = 1):
+    def removeTurrets(self, turret = 1) -> None:
         if self.turrets >= turret:
             self.turrets -= turret
         else:  
             self.turrets = 0
         
-    def removeCS(self, cs = 1):
+    def removeCS(self, cs = 1) -> None:
         if self.cs >= cs:
             self.cs -= cs
         else:  
             self.cs = 0
                     
     @property
-    def points(self):
+    def points(self) -> int:
         return self.kills + self.turrets * 0.99 + self.cs * 0.98
     
-    async def move_to(self, channel):
+    async def move_to(self, channel) -> None:
         try:
             await self.member.move_to(channel)
         except:
             pass
+        
+    def to_dict(self) -> dict:
+        return {
+            'display_name':self.name,
+            'name':self.member.name,
+            'id':self.id,
+            'points':self.points,
+            'kills':self.kills,
+            'turrets':self.turrets,
+            'cs':self.cs
+        }
     
 
 # Class for the teams of two players, with attribut points
 class Team:
-    def __init__(self, players):
-        self.players = players
-        self.kills = 0
-        self.turrets = 0
-        self.cs = 0
+    
+    def __init__(self, players : List[Player], round_n : int, match_n : int, team_n : int):
+        self.players : List[Player] = players
+        self.round_n : int = round_n
+        self.match_n : int = match_n
+        self.team_n : int = team_n
+        self.kills : int = 0
+        self.turrets : int = 0
+        self.cs : int = 0
         
     def __str__(self):
         return " & ".join(f"**{p.name}**" for p in self.players)
     
     @property
-    def name(self):
+    def name(self) -> str:
         return " & ".join(p.name for p in self.players)
     
+    @property
+    def identity(self) -> str:
+        return f"Round {self.round_n}, match {self.match_n}, team {self.team_n} : {self.name}"
+    
             
-    def addKills(self,kills = 1):
+    def addKills(self,kills = 1) -> None:
         self.kills += kills
         for player in self.players:
             player.addKills(kills)
     
-    def addTurrets(self, turrets = 1):
+    def addTurrets(self, turrets = 1) -> None:
         self.turrets += turrets
         for player in self.players:
             player.addTurrets(turrets)
         
-    def addCS(self, cs = 1):
+    def addCS(self, cs = 1) -> None:
         self.cs += cs
         for player in self.players:
             player.addCS(cs)
         
-    def removeKills(self, kills = 1):
+    def removeKills(self, kills = 1) -> None:
         if self.kills >= kills:
             self.kills -= kills
         else:
@@ -96,7 +129,7 @@ class Team:
         for player in self.players:
             player.removeKills(kills)
         
-    def removeTurrets(self, turrets = 1):
+    def removeTurrets(self, turrets = 1) -> None:
         if self.turrets >= turrets:
             self.turrets -= turrets
         else:
@@ -104,7 +137,7 @@ class Team:
         for player in self.players:
             player.removeTurrets(turrets)
         
-    def removeCS(self, cs = 1):
+    def removeCS(self, cs = 1) -> None:
         if self.cs >= cs:
             self.cs -= cs
         else:
@@ -112,13 +145,13 @@ class Team:
         for player in self.players:
             player.removeCS(cs)
                 
-    def reset_score(self):
+    def reset_score(self) -> None:
         self.removeKills(self.kills)
         self.removeTurrets(self.turrets)
         self.removeCS(self.cs)
         
     @property
-    def score(self):
+    def score(self) -> str:
         score = ""
         if self.kills > 0:
             score += f"{self.kills} kills & "
@@ -133,33 +166,46 @@ class Team:
         return score
         
     @property
-    def points(self):
+    def points(self) -> int:
         return self.kills + self.turrets * 0.99 + self.cs * 0.98
             
     async def move_to(self, channel):
         for player in self.players:
             await player.move_to(channel)
+            
+    def to_dict(self) -> dict:
+        return {
+            'round_id':self.round_n,
+            'match_id':self.match_n,
+            'team_id':self.team_n,
+            'players':self.name,
+            'points':self.points,
+            'kills':self.kills,
+            'turrets':self.turrets,
+            'cs':self.cs
+        }
     
     
 #Class for a match between two teams, with attributs for the teams and the winner, and method to add points to a team
 class Match:
-    def __init__(self, entities):
-        self.entities = entities
+    def __init__(self, number : int, entities : Union[List[Player],List[Team]]):
+        self.number : int = number
+        self.entities : Union[List[Player],List[Team]] = entities
         
     def __str__(self):
         return " vs ".join([f"{entitie}" for entitie in self.entities])
 
     @property
-    def teams(self):
+    def teams(self) -> List[Team]:
         return self.entities
     
     @property
-    def player(self):
+    def player(self) -> List[Player]:
         return self.entities
             
     #property to convert the match to a fields
     @property
-    def field(self):
+    def field(self) -> dict:
         if round(self.entities[0].points) == 2:
             indicators = ['✅','❌']
         elif round(self.entities[1].points) == 2:
@@ -169,6 +215,11 @@ class Match:
         return f"{indicators[0]}{emotes.num[round(self.entities[0].points)]} {self.entities[0]}\n{indicators[1]}{emotes.num[round(self.entities[1].points)]} {self.entities[1]}"
             
             
+    def to_dict(self) -> dict:
+        return {
+            'number':self.number,
+            'entities':[e.to_dict() for e in self.entities],
+        }
         
 #Class for rounds, with attributs for the matches
 class Round:
@@ -183,7 +234,7 @@ class Round:
 
     
     @property
-    def embed(self):
+    def embed(self) -> disnake.Embed:
         if len(self.matches) == 1:
             return FastEmbed(
             title=f"__**ROUND **__{emotes.num[self.number+1]}",
@@ -196,12 +247,18 @@ class Round:
             color = color.gold,
             fields = [{'name':f"__MATCH __{emotes.alpha[i]}", 'value': match.field,'inline':False} for i, match in enumerate(self.matches)]
             )
+            
+    def to_dict(self) -> dict:
+        return {
+            'number':self.number,
+            'matches':[m.to_dict() for m in self.matches],
+        }
         
     
 #Class for the tournament, with attributs for the rounds and the players, and a method to get the players sorted by points 
 class Tournament2v2Roll:
     
-    seeding_4 = [
+    seeding_4 : List[List[List[int]]] = [
         [
             [[2, 3],[1, 4]]
         ],[
@@ -211,7 +268,7 @@ class Tournament2v2Roll:
         ]
     ]
     
-    seeding_5 = [
+    seeding_5 : List[List[List[int]]] = [
         [
             [[4, 5],[2, 3]]
         ],[
@@ -225,7 +282,7 @@ class Tournament2v2Roll:
         ]
     ]
     
-    seeding_8 = [
+    seeding_8 : List[List[List[int]]] = [
         [
             [[3, 4],[7, 8]],
             [[5, 6],[1, 2]]
@@ -250,11 +307,16 @@ class Tournament2v2Roll:
         ]
     ]
     
-    def __init__(self, players):
-        self.players = players
-        self.teams = []
-        self.rounds = []
-        self.current_round = None
+    def __init__(self, players : List[Player], name: str, ordered : bool = False):
+        self.players : List[Player] = players
+        self.name : str = name
+        self.ordered : bool = ordered
+        self.teams : List[Team] = []
+        self.rounds : List[Match] = []
+        self.current_round : int = None
+        date = datetime.now()
+        self.state_file : str = f"cogs/Tournament/{self.name}_state-{date}.json"
+        self.logs_file : str = f"cogs/Tournament/{self.name}_logs-{date}.logs"
         
         if len(self.players) == 4:
             self.seeding = Tournament2v2Roll.seeding_4
@@ -263,16 +325,21 @@ class Tournament2v2Roll:
         elif len(self.players) == 8:
             self.seeding = Tournament2v2Roll.seeding_8
             
-        self.nb_rounds = len(self.seeding)
-        self.nb_matchs_per_round = len(self.seeding[0])
+        self.nb_rounds : int = len(self.seeding)
+        self.nb_matchs_per_round : int = len(self.seeding[0])
+        
+        self.log(f"Initializing tournament {self.name} of {len(self.players)} players.")
+        
         
     def __str__(self):
         return str(self.rounds) + " " + str(self.players)
 
 
+
     #method to class to split the players into seven rounds of two match of two teams containing exactly once each player
-    def generate(self):
-        random.shuffle(self.players)
+    def generate(self) -> None:
+        if not self.ordered:
+            random.shuffle(self.players)
         #round loop
         for i in range(self.nb_rounds):
             matches = []
@@ -282,29 +349,64 @@ class Tournament2v2Roll:
                 #team loop
                 for k in range(2):
                     teams.append(Team([self.players[self.seeding[i][j][k][0]-1],
-                                      self.players[self.seeding[i][j][k][1]-1]]))
-                matches.append(Match(teams))
+                                       self.players[self.seeding[i][j][k][1]-1]],
+                                       i,j,k))
+                matches.append(Match(j,teams))
+                self.teams += teams
             self.rounds.append(Round(i, matches))
         self.current_round = self.rounds[0]
+        self.log(f"Round generated using the following players order: " + ",".join([str(p.id) for p in self.players]))
+        self.save_state()
+            
                 
             
     #method to get the players sorted by points then by name   
-    def getRanking(self):
+    def getRanking(self) -> List[Player]:
         return sorted(self.players, key=lambda x: (x.points, x.name), reverse=True)
                 
     #method to get the next round
-    def getNextRound(self):
+    def getNextRound(self) -> Round:
         self.current_round = self.rounds[self.rounds.index(self.current_round) + 1]
         return self.current_round
     
     #method to get the previous round
-    def getPreviousRound(self):
+    def getPreviousRound(self) -> Round:
         self.current_round = self.rounds[self.rounds.index(self.current_round) - 1]
         return self.current_round
+    
+    def reset_score(self, entity : Union[Player,Team]) -> None:
+        entity.reset_score()
+        self.save_state()
+        self.log(f"Score reset for {entity.identity}")
+        
+    def addKills(self, entity : Union[Player,Team], kills : int) -> None:
+        entity.addKills(kills)
+        self.save_state()
+        self.log(f"{kills} kills added to {entity.identity}")
+        
+    def addCS(self, entity : Union[Player,Team], cs : int) -> None:
+        entity.addCS(cs)
+        self.save_state()
+        self.log(f"{cs} cs added to {entity.identity}")
+        
+    def addKills(self, entity : Union[Player,Team], turret : int) -> None:
+        entity.addTurrets(turret)
+        self.save_state()
+        self.log(f"{turret} turret added to {entity.identity}")
+        
+        
+    def setScore(self, entity : Union[Player,Team], kills : int, turret : int, cs : int) -> None:
+        entity.reset_score()
+        entity.addKills(kills)
+        entity.addTurrets(turret)
+        entity.addCS(cs)
+        self.save_state()
+        self.log(f"Score set for {entity.identity} : kills {kills} | turrets {turret} | cs {cs}.")
+        
                 
     #property to convert the classement to an embed
     @property
-    def classement(self):
+    def classement(self) -> disnake.Embed:
         sorted_player = self.getRanking()
         ranks = []
         for i in range(len(sorted_player)):
@@ -326,7 +428,7 @@ class Tournament2v2Roll:
    
     #property to convert the classement to a embed
     @property
-    def detailedClassement(self):
+    def detailedClassement(self) -> disnake.Embed:
         sorted_player = self.getRanking()
         ranks = []
         for i in range(len(sorted_player)):
@@ -348,7 +450,7 @@ class Tournament2v2Roll:
         
     #property that return the rules of the tournament as an embed
     @property
-    def rules(self):
+    def rules(self) -> disnake.Embed:
         return FastEmbed(
             title = ":scroll: __**RÈGLES**__ :scroll:",
             color = color.gold,
@@ -398,6 +500,30 @@ class Tournament2v2Roll:
                 }
             ]
         )
+        
+    def to_dict(self) -> dict:
+        return {
+            'time':str(datetime.now()),
+            'name':self.name,
+            'nb_players':str(len(self.players)),
+            'nb_rounds':str(self.nb_rounds),
+            'nb_matches_per_round':str(self.nb_rounds),
+            'current_round_index':str(self.rounds.index(self.current_round)),
+            'players':[p.to_dict() for p in self.players],
+            'teams':[t.to_dict() for t in self.teams],
+            'rounds':[r.to_dict() for r in self.rounds]
+        }
+        
+        
+    def save_state(self) -> None:
+        with open(self.state_file, 'w') as fp:
+            json.dump(self.to_dict(), fp, indent=4)
+            
+    def log(self, txt : str) -> None:
+        with open(self.logs_file, 'a') as fp:
+            fp.write(f"[{datetime.now()}] " + txt + '\n')
+    
+        
 
         
         

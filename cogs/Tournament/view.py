@@ -1,3 +1,4 @@
+import os
 import disnake 
 from disnake import ApplicationCommandInteraction
 from cogs.Tournament.classes import Tournament2v2Roll
@@ -13,14 +14,14 @@ tournamentdb = pickledb.load("cogs/Basic/tournament.db", False)
         
 class Tournament2v2RollView(disnake.ui.View):
       
-    def __init__(self, inter : ApplicationCommandInteraction, bot, role : disnake.Role, name : str = "Tournament"):
+    def __init__(self, inter : ApplicationCommandInteraction, bot, role : disnake.Role, players : List[Player], ordered : bool = False, name : str = "Tournament"):
         super().__init__(timeout=None)
         self.bot = bot
         self.inter = inter
         self.name = name
         self.role = role
-        self.players = [Player(p) for p in role.members]
-        self.tournament = Tournament2v2Roll(self.players)
+        self.players = players
+        self.tournament = Tournament2v2Roll(self.players,self.name,ordered)
         self.tournament.generate()
         
         
@@ -208,12 +209,26 @@ class Tournament2v2RollView(disnake.ui.View):
     async def arret(self, button: disnake.ui.Button, interaction : disnake.MessageInteraction):
         if self.is_admin(interaction):
             await interaction.response.defer()
-            await self.admin.send(embeds=self.embeds)
+            self.stop()
+            try:
+                files = [disnake.File(self.tournament.state_file),
+                        disnake.File(self.tournament.logs_file)]
+                await self.admin.send(embeds=self.embeds, files=files)
+                if os.path.exists(self.tournament.state_file):
+                    os.remove(self.tournament.state_file)
+                if os.path.exists(self.tournament.logs_file):
+                    os.remove(self.tournament.logs_file) 
+            except:
+                await self.admin.send(embeds=self.embeds)
+                await self.admin.send(embed = FastEmbed(title=":x: ERROR :x:", description="Not able to load the files to discord.\nYou can acces them on the host local file and you should to delete them manually once you don't need them anymore."))
             for channel in self.category.channels:
                 await channel.delete()
             await self.category.delete()
-            await self.bot.change_presence(activity=disnake.Game(name='"/" -> commandes'))
-            self.stop()
+            self.bot.tournaments_name.remove(self.name)
+            if len(self.bot.tournaments_name) > 0:
+                await self.bot.change_presence(activity = disnake.Activity(name=", ".join(self.bot.tournaments_name), type=disnake.ActivityType.playing)) 
+            else:
+                await self.bot.change_presence(activity=disnake.Game(name='"/" -> commandes'))
         else:
             await self.update_dashboard(interaction)      
  
@@ -237,11 +252,8 @@ class Tournament2v2RollView(disnake.ui.View):
     async def set_team_1_score(self, select : disnake.ui.Select, interaction : disnake.MessageInteraction):
         if self.is_admin(interaction):
             team = self.match_selected.teams[0]
-            team.reset_score()
             scores = select.values[0]
-            team.addKills(int(scores[0]))
-            team.addTurrets(int(scores[1]))
-            team.addCS(int(scores[2]))
+            self.tournament.setScore(team,int(scores[0]),int(scores[1]),int(scores[2]))
             self.update_button.disabled = False
         await self.update_dashboard(interaction)
         
@@ -258,11 +270,8 @@ class Tournament2v2RollView(disnake.ui.View):
     async def set_team_2_score(self, select : disnake.ui.Select, interaction : disnake.MessageInteraction):
         if self.is_admin(interaction):
             team = self.match_selected.teams[1]
-            team.reset_score()
             scores = select.values[0]
-            team.addKills(int(scores[0]))
-            team.addTurrets(int(scores[1]))
-            team.addCS(int(scores[2]))
+            self.tournament.setScore(team,int(scores[0]),int(scores[1]),int(scores[2]))
             self.update_button.disabled = False
         await self.update_dashboard(interaction)
   
