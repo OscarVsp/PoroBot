@@ -54,9 +54,6 @@ class Dofus(commands.Cog):
                 embed = embed_s
             )
 
-
-    #TODO No network case
-
     @tasks.loop(hours=24)
     async def almanax_task(self):
         logging.info("Almanax tasks run")

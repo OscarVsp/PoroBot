@@ -79,7 +79,7 @@ class Basic(commands.Cog):
                    )):
         await inter.response.defer(ephemeral=True)
         if previous == 1:
-            file = disnake.File(f"logs/{level}.log.blabl")
+            file = disnake.File(f"logs/{level}.log")
             await inter.author.send(
                 file = file
             )
