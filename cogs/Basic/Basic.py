@@ -61,6 +61,39 @@ class Basic(commands.Cog):
                 description = f":broom: {nombre} messages supprimés ! :broom:"),
             delete_after=3)
         
+    @commands.slash_command(
+        description = "Voir les logs du bot",
+        default_member_permissions=disnake.Permissions.all()
+    )
+    async def logs(self, inter : disnake.UserCommandInteraction,
+                   level : str = commands.Param(
+                       description = "Le level des logs à obtenir.",
+                       choices = ["debug","info"],
+                       default = "info"
+                   ),
+                   previous : int = commands.Param(
+                       description="Le nombre de fichier en arrière à obtenir",
+                       ge = 1,
+                       le = 5,
+                       default = 1
+                   )):
+        await inter.response.defer(ephemeral=True)
+        if previous == 1:
+            file = disnake.File(f"logs/{level}.log.blabl")
+            await inter.author.send(
+                file = file
+            )
+        else:
+            files = [disnake.File(f"logs/{level}.log")]
+            for i in range(1, previous):
+                try:
+                    files.append(disnake.File(f"logs/{level}.log.{i}"))
+                except FileNotFoundError as ex:
+                    logging.debug(f"logsCmd: file 'logs/{level}.log.{i}' skipped because not found")
+            await inter.author.send(
+                files = files
+            )
+        await inter.edit_original_message(embed=FastEmbed(description="Logs sent on private !"))
         
  
     @commands.user_command(
@@ -77,10 +110,10 @@ class Basic(commands.Cog):
                 ephemeral = True
             )
         else:
-                await inter.response.send_message(
-                    embed = lore_embed,
-                    delete_after = 60*5
-                )
+            await inter.response.send_message(
+                embed = lore_embed,
+                delete_after = 60*5
+            )
                     
     @commands.user_command(
         name = "Créer / éditer le lore",
@@ -89,12 +122,10 @@ class Basic(commands.Cog):
     async def addlore(self, inter : disnake.UserCommandInteraction):
         await inter.response.send_modal(
             modal = loreModal(self.bot,inter.target)
-        )
-                
+        )               
         
     
-    
-               
+
 
 def setup(bot):
     bot.add_cog(Basic(bot))

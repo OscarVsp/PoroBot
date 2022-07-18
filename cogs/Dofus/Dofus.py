@@ -10,6 +10,7 @@ from .scraper import Almanax_scraper
 import asyncio
 import logging
 from datetime import datetime
+import asyncpg
 
 
 class Dofus(commands.Cog):
@@ -21,6 +22,7 @@ class Dofus(commands.Cog):
         self.bot = bot
         self.scraper = Almanax_scraper()
         self.almanax_message = None
+        self.almanax_task.add_exception_type(asyncpg.PostgresConnectionError)
         self.almanax_task.start()
         
     @commands.slash_command(
@@ -52,6 +54,8 @@ class Dofus(commands.Cog):
                 embed = embed_s
             )
 
+
+    #TODO No network case
 
     @tasks.loop(hours=24)
     async def almanax_task(self):

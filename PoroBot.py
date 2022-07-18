@@ -23,6 +23,7 @@ import platform
 import random
 import sys
 import logging
+import logging.handlers
 import asyncio
 
 import disnake
@@ -37,11 +38,24 @@ from utils import data
 
 logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
 rootLogger = logging.getLogger()
-rootLogger.setLevel(logging.INFO)
+rootLogger.setLevel(logging.DEBUG)
 
 consoleHandler = logging.StreamHandler()
 consoleHandler.setFormatter(logFormatter)
+consoleHandler.setLevel(logging.INFO)
 rootLogger.addHandler(consoleHandler)
+
+fileInfoHandler = logging.handlers.RotatingFileHandler(filename="logs/info.log",mode='w',encoding="UTF-8", delay = True, backupCount = 5)
+fileInfoHandler.setFormatter(logFormatter)
+fileInfoHandler.setLevel(logging.INFO)
+fileInfoHandler.doRollover()
+rootLogger.addHandler(fileInfoHandler)
+
+fileDebugHandler = logging.handlers.RotatingFileHandler(filename="logs/debug.log",mode='w',encoding="UTF-8", delay = True, backupCount = 5)
+fileDebugHandler.setFormatter(logFormatter)
+fileDebugHandler.setLevel(logging.DEBUG)
+fileDebugHandler.doRollover()
+rootLogger.addHandler(fileDebugHandler)
 
 config = dotenv_values(".env")
 
@@ -90,6 +104,7 @@ def load_commands() -> None:
 
 async def send_error_log(interaction: ApplicationCommandInteraction, error: Exception):
     tb = tracebackEx(error)
+    logging.error(f"{error} raised on command /{interaction.application_command.name} from {interaction.guild.name} #{interaction.channel.name} by {interaction.author.name}.\n{tb}")
     await interaction.send(
         embed= FastEmbed(
             title=":x: __**ERROR**__ :x:",
@@ -118,8 +133,7 @@ async def send_error_log(interaction: ApplicationCommandInteraction, error: Exce
         embed=FastEmbed(
             description=f"```python\n{tb[4096*n:]}```")
     )
-    logging.error(f"{error} raised on command /{interaction.application_command.name} from {interaction.guild.name} #{interaction.channel.name} by {interaction.author.name}.\n{tb}")
-
+    
 @bot.event
 async def on_slash_command(interaction: disnake.ApplicationCommandInteraction) -> None:
     logging.info(f"Slash command '{interaction.application_command.name}' from '{interaction.guild.name} #{interaction.channel.name}' by '{interaction.author.name}' started...")

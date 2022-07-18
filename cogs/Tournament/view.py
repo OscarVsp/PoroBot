@@ -86,6 +86,7 @@ class Tournament2v2RollView(disnake.ui.View):
         
         voice_perm = disnake.PermissionOverwrite()
         voice_perm.connect = True
+        voice_perm.send_messages = True
         self.voice_general = await self.category.create_voice_channel(name="🏆 General")
         await self.voice_general.set_permissions(everyone,overwrite=voice_perm)
         self.voices = []
@@ -220,7 +221,7 @@ class Tournament2v2RollView(disnake.ui.View):
                     os.remove(self.tournament.logs_file) 
             except:
                 await self.admin.send(embeds=self.embeds)
-                await self.admin.send(embed = FastEmbed(title=":x: ERROR :x:", description="Not able to load the files to discord.\nYou can acces them on the host local file and you should to delete them manually once you don't need them anymore."))
+                await self.admin.send(embed = FastEmbed(title=":x: ERROR :x:", description="Not able to load the files to discord.\nYou can acces them on the host machine and you should to delete them manually once you don't need them anymore."))
             for channel in self.category.channels:
                 await channel.delete()
             await self.category.delete()

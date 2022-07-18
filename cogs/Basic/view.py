@@ -5,6 +5,7 @@ from random import choices
 from utils import data
 import asyncio
 import pickledb
+import logging
 
 loredb = pickledb.load("cogs/Basic/lore.db", False)
 
@@ -29,8 +30,9 @@ class PoroFeed(disnake.ui.View):
 
     @disnake.ui.button(emoji = "<:porosnack:908477364135161877>", label = "Donner un porosnack", style=disnake.ButtonStyle.primary)
     async def feed(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
-        if self.counter < 9:
-            self.counter += 1
+        self.counter += 1
+        logging.debug(f"PoroFeedView#{self.id} counter is now {self.counter}.")
+        if self.counter < 10:
             await interaction.response.edit_message(
                 embed = FastEmbed(
                     description="Continue à nourrir le poro !", 
@@ -38,7 +40,7 @@ class PoroFeed(disnake.ui.View):
                     footer_text = f"{self.counter}/10"),
                 view=self)
         else:
-            self.counter += 1
+            logging.debug(f"PoroFeedView#{self.id} is at max ({self.counter}).")
             self.remove_item(button)
             await interaction.response.edit_message(
                 embed = FastEmbed(
@@ -48,6 +50,7 @@ class PoroFeed(disnake.ui.View):
 
     async def on_timeout(self) -> None:
         await self.inter.delete_original_message()
+        logging.debug(f"PoroFeedView#{self.id} timeout")
 
 class Beer(disnake.ui.View):
         
@@ -59,6 +62,7 @@ class Beer(disnake.ui.View):
     @disnake.ui.button(emoji = "🍺", label = "Boire une bière", style=disnake.ButtonStyle.primary)
     async def beer(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
         self.counter += 1
+        logging.debug(f"BeerView#{self.id} counter is now {self.counter}.")
         if self.counter < 10:
             await interaction.response.edit_message(
                 embed=FastEmbed(
@@ -69,6 +73,7 @@ class Beer(disnake.ui.View):
                 view = self
             )
         else:
+            logging.debug(f"BeerView#{self.id} counter is at max ({self.counter}).")
             button.disabled = True
             self.stop()
             await interaction.response.edit_message(
@@ -82,13 +87,15 @@ class Beer(disnake.ui.View):
         
     async def on_timeout(self) -> None:
         await self.inter.delete_original_message()
+        logging.debug(f"BeerView#{self.id} timeout.")
  
 class loreModal(disnake.ui.Modal):
     def __init__(self,bot,member) -> None:
         self.bot = bot
         self.member = member
         data = loredb.get(self.member.name)
-        if data == False:
+        if data == False: 
+            logging.debug(f"loreModalView#{self.id} : Member {self.member.name} don't have lore yet.")
             components = [
                 disnake.ui.TextInput(
                     label="alias",
@@ -118,6 +125,7 @@ class loreModal(disnake.ui.Modal):
             ]
             super().__init__(title = f"Créer un lore pour {self.member.name}", custom_id="create_lore", components=components)
         else:
+            logging.debug(f"loreModalView#{self.id} : Member {self.member.name} already has some lore.")
             components = [
                 disnake.ui.TextInput(
                     label="alias",
@@ -157,6 +165,7 @@ class loreModal(disnake.ui.Modal):
             inter.text_values
         )
         loredb.dump()
+        logging.debug(f"loreModalView#{self.id} : Member {self.member.name} lore is set to\n{inter.text_values}")
         await inter.response.send_message(
             embed = get_lore_embed(self.member.name),
             ephemeral = True
