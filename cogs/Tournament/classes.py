@@ -1,7 +1,5 @@
 
-from faulthandler import disable
 import random
-
 import disnake
 from utils.data import emotes,color
 from utils.FastEmbed import FastEmbed

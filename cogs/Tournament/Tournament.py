@@ -1,4 +1,3 @@
-from ast import Param
 import disnake
 from disnake.ext import commands
 from disnake import ApplicationCommandInteraction
