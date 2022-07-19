@@ -1,6 +1,7 @@
 import disnake
 from disnake.ext import commands
 from disnake import ApplicationCommandInteraction
+from disnake.ext.commands import InteractionBot
 from random import randint,choices,sample
 from utils.FastEmbed import FastEmbed
 from utils.data import emotes, color
@@ -19,7 +20,7 @@ class Tournament(commands.Cog):
     def __init__(self, bot):
         """Initialize the cog
         """
-        self.bot = bot
+        self.bot : InteractionBot = bot
         self.bot.tournaments_name : List[str] = []
         
     @commands.slash_command(name="tournament",     
@@ -45,41 +46,39 @@ class Tournament(commands.Cog):
                     color = color.rouge,
                     ), ephemeral = True)
             return 
-        players : List[Player] = [Player(p) for p in role.members]
         if order == "Random":
+            members = role.members
             ordered = False 
         else:
             ids = order.split(',')
-            if len(ids) != len(players):
+            if len(ids) != len(role.members):
                 await inter.response.send_message(
                     embed = FastEmbed(
                         description=f"Nombre d'IDs donnés ({len(ids)}) est différent du nombre de membre ({len(role.members)}) ayant le rôle {role.name}.",
                         color = color.rouge,
                         ),  ephemeral = True)
                 return  
-            ordered_players = []
+            ordered_members = []
             for id in ids:
-                player = next((p for p in players if p.id == int(id)), None)
-                if player == None:
+                member = next((m for m in role.members if m.id == int(id)), None)
+                if member == None:
                     await inter.response.send_message(
                         embed = FastEmbed(
                             description=f"L'ID {id} ne correspond à aucun des membres dans le role {role.name}.",
                             color = color.rouge,
                             ), ephemeral = True)
                     return 
-                ordered_players.append(player)
-            players = ordered_players 
+                ordered_members.append(member)
+            members = ordered_members 
             ordered = True            
-        await inter.response.defer()
+        await inter.response.defer(ephemeral=True)
         self.bot.tournaments_name += [name]
         await self.bot.change_presence(activity = disnake.Activity(name=", ".join(self.bot.tournaments_name), type=disnake.ActivityType.playing))       
-        new_tournament = Tournament2v2RollView(inter, self.bot, role, players, ordered, name)
+        new_tournament = Tournament2v2RollView(inter, self.bot, role, members, ordered, name)
         await new_tournament.makeChannels()
         await inter.edit_original_message(
-            embed = FastEmbed(description=f"Tournois {name} créé.")
+            embed = FastEmbed(description=f"Tournois {name} créé.\n[Dashboard]({new_tournament.channel_dashboard.jump_url})")
         )
-        await asyncio.sleep(5)
-        await inter.delete_original_message()
         
     
 

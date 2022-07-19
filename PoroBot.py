@@ -16,25 +16,20 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-import json
 from dotenv import dotenv_values
 import os
 import platform
-import random
-import sys
 import logging
 import logging.handlers
-import asyncio
 
 import disnake
 from disnake import ApplicationCommandInteraction
-from disnake.ext import tasks, commands
 from disnake.ext.commands import InteractionBot
 from disnake.ext.commands import Context
 
 from utils.FastEmbed import FastEmbed
 from utils.tools import tracebackEx
-from utils import data
+from utils.data import *
 
 
 class PoroBot(InteractionBot):
@@ -93,7 +88,7 @@ class PoroBot(InteractionBot):
             embed= FastEmbed(
                 title=":x: __**ERROR**__ :x:",
                 description=f"Une erreur s'est produite lors de la commande **/{interaction.application_command.name}**\n{self.owner.mention} a été prévenu et corrigera ce bug au plus vite !\nUtilise `/beer` pour un bière de consolation :beer:",
-                thumbnail = data.images.poros.shock),
+                thumbnail = images.poros.shock),
             delete_after=10)
         await self.log_channel.send(
             embed = FastEmbed(

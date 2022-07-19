@@ -1,6 +1,7 @@
 import os
 import disnake 
 from disnake import ApplicationCommandInteraction
+from disnake.ext.commands import InteractionBot
 from cogs.Tournament.classes import Tournament2v2Roll
 from utils.FastEmbed import FastEmbed
 from random import choices
@@ -13,27 +14,27 @@ tournamentdb = pickledb.load("cogs/Basic/tournament.db", False)
         
 class Tournament2v2RollView(disnake.ui.View):
       
-    def __init__(self, inter : ApplicationCommandInteraction, bot, role : disnake.Role, players : List[Player], ordered : bool = False, name : str = "Tournament"):
+    def __init__(self, inter : ApplicationCommandInteraction, bot, role : disnake.Role, members : List[disnake.Member], ordered : bool = False, name : str = "Tournament"):
         super().__init__(timeout=None)
-        self.bot = bot
-        self.inter = inter
-        self.name = name
-        self.role = role
-        self.players = players
-        self.tournament = Tournament2v2Roll(self.players,self.name,ordered)
+        self.bot : InteractionBot = bot
+        self.inter : ApplicationCommandInteraction = inter
+        self.name : str = name
+        self.role : disnake.Role = role
+        self.tournament : Tournament2v2Roll = Tournament2v2Roll(self.name,members,ordered)
         self.tournament.generate()
         
         
-        self.admin = self.inter.author
-        self.match_selected = None
-        self.team_selected = None
-        self.max_round = 0
+        self.admin : disnake.Member = self.inter.author
+        self.match_selected : Match = None
+        self.team_selected : Team = None
+        self.max_round : int = 0
+        self.current_round : int = 0
         
         self.make_options()
         
     def make_options(self):
         self.previous.disabled = True
-        if self.tournament.nb_matchs_per_round == 1:
+        if self.tournament.nb_matches_per_round == 1:
             self.match_selected = self.tournament.current_round.matches[0] 
             self.match_selection.disabled = True 
             self.match_selection.options = [disnake.SelectOption(
@@ -50,7 +51,7 @@ class Tournament2v2RollView(disnake.ui.View):
                 disnake.SelectOption(
                     label=f"{emotes.alpha[i]} Match {chr(ord('A') + i)}",
                     value=str(i)
-                ) for i in range(self.tournament.nb_matchs_per_round)
+                ) for i in range(self.tournament.nb_matches_per_round)
             ]
             self.match_selection.placeholder = f"Select a match"
             self.set_team_1_score.disabled = True
@@ -89,12 +90,12 @@ class Tournament2v2RollView(disnake.ui.View):
         self.voice_general = await self.category.create_voice_channel(name="🏆 General")
         await self.voice_general.set_permissions(everyone,overwrite=voice_perm)
         self.voices = []
-        if self.tournament.nb_matchs_per_round == 1:
+        if self.tournament.nb_matches_per_round == 1:
             self.voices.append([])
             for j in range(2):
                 self.voices[0].append(await self.category.create_voice_channel(name=f"Team {j+1}"))
         else:      
-            for i in range(self.tournament.nb_matchs_per_round):
+            for i in range(self.tournament.nb_matches_per_round):
                 self.voices.append([])
                 for j in range(2):
                     self.voices[i].append(await self.category.create_voice_channel(name=f"Match {chr(ord('A') + i)} Team {j+1}"))
@@ -106,18 +107,17 @@ class Tournament2v2RollView(disnake.ui.View):
             color = color.gold
         ))
         await self.channel_rules.send(embed=self.rules)
-        self.message_dashboard = await self.channel_dashboard.send(embeds=self.embeds,view=self)
+        self.message_dashboard = await self.channel_dashboard.send(embeds=self.dashboard_embeds,view=self)
         
-    def is_admin(self, inter):
+    def is_admin(self, inter : disnake.MessageInteraction):
         return inter.author.id == self.admin.id
         
 
     @property   
-    def embeds(self): 
+    def dashboard_embeds(self): 
         embeds = []       
         embeds.append(self.tournament.detailedClassement)
-        for i in range(self.tournament.rounds.index(self.tournament.current_round)+1):
-            embeds.append(self.tournament.rounds[i].embed)
+        embeds += self.tournament.rounds_embeds(max = self.max_round, detailled= True)
         return embeds
     
     @property
@@ -130,14 +130,11 @@ class Tournament2v2RollView(disnake.ui.View):
     
     @property
     def rounds(self):
-        embeds = []       
-        for i in range(self.max_round+1):
-            embeds.append(self.tournament.rounds[i].embed)
-        return embeds
+        return self.tournament.rounds_embeds(max = self.max_round)
             
     async def update_dashboard(self, interaction : disnake.MessageInteraction):
         if self.match_selected is not None:
-            if self.tournament.nb_matchs_per_round > 1:
+            if self.tournament.nb_matches_per_round > 1:
                 self.match_selection.placeholder = f"{emotes.alpha[int(self.tournament.current_round.matches.index(self.match_selected))]} Match {chr(ord('A') + int(self.tournament.current_round.matches.index(self.match_selected)))}"
             self.set_team_1_score.disabled = False
             self.set_team_1_score.placeholder = f"{self.match_selected.teams[0].name} : {self.match_selected.teams[0].score}"
@@ -150,13 +147,11 @@ class Tournament2v2RollView(disnake.ui.View):
             self.set_team_2_score.disabled = True
             self.set_team_2_score.placeholder = f"No match selected"
         await interaction.response.edit_message(
-                embeds = self.embeds,
+                embeds = self.dashboard_embeds,
                 view = self
             ) 
         
     async def update_infos(self):
-        if self.tournament.rounds.index(self.tournament.current_round) > self.max_round: 
-                self.max_round = self.tournament.rounds.index(self.tournament.current_round)
         await self.message_rank.edit(embed=self.rank)
         await self.message_rounds.edit(embeds=self.rounds)
         self.update_button.disabled = True
@@ -164,11 +159,12 @@ class Tournament2v2RollView(disnake.ui.View):
     @disnake.ui.button(emoji = "⏮️", label = "Previous", style=disnake.ButtonStyle.primary, row = 1)
     async def previous(self, button: disnake.ui.Button, interaction : disnake.MessageInteraction):
         if self.is_admin(interaction):
-            self.tournament.getPreviousRound()
-            if self.tournament.rounds.index(self.tournament.current_round) == 0:
+            self.tournament.previousRound()
+            self.current_round -= 1
+            if self.current_round == 0:
                 self.previous.disabled = True
             self.next.disabled = False
-            if self.tournament.nb_matchs_per_round == 1:
+            if self.tournament.nb_matches_per_round == 1:
                 self.match_selected = self.tournament.current_round.matches[0]
             else:
                 self.match_selected = None
@@ -178,13 +174,15 @@ class Tournament2v2RollView(disnake.ui.View):
     @disnake.ui.button(emoji = "⏭️", label = "Next", style=disnake.ButtonStyle.primary, row = 1)
     async def next(self, button: disnake.ui.Button, interaction : disnake.MessageInteraction):
         if self.is_admin(interaction):
-            self.tournament.getNextRound()
-            if self.tournament.rounds.index(self.tournament.current_round) == len(self.tournament.rounds) - 1:
+            self.tournament.nextRound()
+            self.current_round += 1
+            if self.current_round == self.tournament.nb_rounds - 1:
                 self.next.disabled = True
-            if self.tournament.rounds.index(self.tournament.current_round) > self.max_round: 
+            if self.current_round > self.max_round: 
                 self.update_button.disabled = False
+                self.max_round = self.current_round
             self.previous.disabled = False
-            if self.tournament.nb_matchs_per_round == 1:
+            if self.tournament.nb_matches_per_round == 1:
                 self.match_selected = self.tournament.current_round.matches[0] 
             else:
                 self.match_selected = None
@@ -195,7 +193,7 @@ class Tournament2v2RollView(disnake.ui.View):
     async def start(self, button: disnake.ui.Button, interaction : disnake.MessageInteraction):
         await self.update_dashboard(interaction)
         if self.is_admin(interaction):
-            for i in range(self.tournament.nb_matchs_per_round):
+            for i in range(self.tournament.nb_matches_per_round):
                 for j in range(2):
                     await self.tournament.current_round.matches[i].teams[j].move_to(self.voices[i][j])
                     
@@ -211,15 +209,12 @@ class Tournament2v2RollView(disnake.ui.View):
             await interaction.response.defer()
             self.stop()
             try:
-                files = [disnake.File(self.tournament.state_file),
-                        disnake.File(self.tournament.logs_file)]
-                await self.admin.send(embeds=self.embeds, files=files)
+                file = disnake.File(self.tournament.state_file)
+                await self.admin.send(content=f'**__Tournois *"{self.tournament.name}"*__**',embeds=self.dashboard_embeds, file=file)
                 if os.path.exists(self.tournament.state_file):
                     os.remove(self.tournament.state_file)
-                if os.path.exists(self.tournament.logs_file):
-                    os.remove(self.tournament.logs_file) 
             except:
-                await self.admin.send(embeds=self.embeds)
+                await self.admin.send(embeds=self.dashboard_embeds)
                 await self.admin.send(embed = FastEmbed(title=":x: ERROR :x:", description="Not able to load the files to discord.\nYou can acces them on the host machine and you should to delete them manually once you don't need them anymore."))
             for channel in self.category.channels:
                 await channel.delete()
@@ -251,9 +246,8 @@ class Tournament2v2RollView(disnake.ui.View):
                             ])
     async def set_team_1_score(self, select : disnake.ui.Select, interaction : disnake.MessageInteraction):
         if self.is_admin(interaction):
-            team = self.match_selected.teams[0]
-            scores = select.values[0]
-            self.tournament.setScore(team,int(scores[0]),int(scores[1]),int(scores[2]))
+            scores = [int(s) for s in select.values[0]]
+            self.tournament.set_scores(self.current_round, self.match_selected, self.match_selected.teams[0], scores)
             self.update_button.disabled = False
         await self.update_dashboard(interaction)
         
@@ -269,9 +263,8 @@ class Tournament2v2RollView(disnake.ui.View):
                             ])
     async def set_team_2_score(self, select : disnake.ui.Select, interaction : disnake.MessageInteraction):
         if self.is_admin(interaction):
-            team = self.match_selected.teams[1]
-            scores = select.values[0]
-            self.tournament.setScore(team,int(scores[0]),int(scores[1]),int(scores[2]))
+            scores = [int(s) for s in select.values[0]]
+            self.tournament.set_scores(self.current_round, self.match_selected, self.match_selected.teams[1], scores)
             self.update_button.disabled = False
         await self.update_dashboard(interaction)
   
