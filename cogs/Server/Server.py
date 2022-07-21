@@ -57,7 +57,8 @@ class Server(commands.Cog):
     
     
     @commands.slash_command(
-        description = "Supprimer les derniers messages du channel"
+        description = "Supprimer les derniers messages du channel",
+        default_member_permissions=disnake.Permissions.all()
     )
     async def clear(self, inter : ApplicationCommandInteraction,
         nombre : int = commands.Param(
