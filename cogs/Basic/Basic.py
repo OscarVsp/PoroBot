@@ -1,7 +1,6 @@
 import disnake
 from disnake.ext import commands
 from disnake import ApplicationCommandInteraction
-from random import randint,choices,sample
 from utils.FastEmbed import FastEmbed
 from utils import data
 from .view import *
@@ -45,21 +44,7 @@ class Basic(commands.Cog):
         
         
     
-    @commands.slash_command(
-        description = "Supprimer les derniers messages du channel"
-    )
-    async def clear(self, inter : ApplicationCommandInteraction,
-        nombre : int = commands.Param(
-            description = "le nombre de message à supprimer",
-            gt = 0
-        )
-    ):
-        await inter.response.defer()
-        await inter.channel.purge(limit=nombre)
-        await inter.channel.send(
-            embed = FastEmbed(
-                description = f":broom: {nombre} messages supprimés ! :broom:"),
-            delete_after=3)
+    
         
     @commands.slash_command(
         description = "Voir les logs du bot",

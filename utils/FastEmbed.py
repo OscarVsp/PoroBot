@@ -86,16 +86,22 @@ class FastEmbed(Embed):
             
             if type(fields) == list:
                 for i, field in enumerate(fields):
+                    value = field.get('value',f"Field value")
+                    if value == "":
+                        value = "Field value"
                     self.add_field(
                         name=field.get('name',f"Field name {i+1}"),
-                        value=field.get('value',f"Field value {i+1}"),
+                        value=value,
                         inline=field.get('inline',False)
                     )
                     
             elif type(fields) == dict:
+                value = fields.get('value',f"Field value")
+                if value == "":
+                    value = "Field value"
                 self.add_field(
                     name=fields.get('name',f"Field name"),
-                    value=fields.get('value',f"Field value"),
+                    value=value,
                     inline=fields.get('inline',False)
                 )
                 

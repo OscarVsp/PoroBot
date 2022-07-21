@@ -1,7 +1,6 @@
 import disnake 
 from disnake import ApplicationCommandInteraction
 from utils.FastEmbed import FastEmbed
-from random import choices
 from utils import data
 import asyncio
 import pickledb
