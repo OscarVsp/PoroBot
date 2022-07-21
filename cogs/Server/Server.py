@@ -106,6 +106,7 @@ class Server(commands.Cog):
                         'value':new_locked_channel.reason
                     }]
             ),ephemeral=True)
+            await channel.edit(name = "🔒 "+channel.name)
         else:
             await inter.response.send_message(embed=FastEmbed(
                 description=f"Channel {channel.name} est déjà verrouillé !"
@@ -127,6 +128,8 @@ class Server(commands.Cog):
             await inter.response.send_message(embed=FastEmbed(
                 description=f"Channel {channel.name} déverrouilé !"
             ), ephemeral=True)
+            if channel.name.startswith("🔒 "):
+                await channel.edit(name=channel.name[2:])
         else:
             await inter.response.send_message(embed=FastEmbed(
                 description=f"Channel {channel.name} n'est pas actuellement verrouillé !"
