@@ -40,6 +40,7 @@ class PoroBot(InteractionBot):
         self.config = config
         self.logger = logger
         self.logFormatter = logFormatter
+        self.test_mode = test_mode
 
         intents = disnake.Intents.default()  # Allow the use of custom intents
         intents.members = True

@@ -5,6 +5,10 @@ from utils.FastEmbed import FastEmbed
 from utils import data
 from .view import *
 import asyncio
+import subprocess
+
+async def is_owner(ctx):
+    return ctx.author.id == 281401408597655552
 
 
 class Basic(commands.Cog):
@@ -42,14 +46,56 @@ class Basic(commands.Cog):
             view=PoroFeed(inter)
         )
         
+    @commands.slash_command(
+        description="Update the bot",
+        default_member_permissions=disnake.Permissions.all()
+    )
+    @commands.check(is_owner)
+    async def update(self, inter : disnake.ApplicationCommandInteraction):
+        await inter.response.defer(ephemeral=True)
+        completedProcess = subprocess.run("git pull origin master",text=True,capture_output=True)
+        if completedProcess.returncode == 0:
+            await inter.edit_original_message(embed=FastEmbed(
+                title=f"✅ Update succes",
+                description=f"```{completedProcess.stdout}```"
+            ))
+        else :
+            await inter.edit_original_message(embed=FastEmbed(
+                title=f"❌ Update failed with status code {data.emotes.number_to_emotes[completedProcess.returncode]}",
+                description=f"```{completedProcess.stdout}```"
+            ))
+            
+    @commands.slash_command(
+        description="Restart the bot",
+        default_member_permissions=disnake.Permissions.all()
+    )
+    @commands.check(is_owner)
+    async def restart(self, inter : disnake.ApplicationCommandInteraction):
+        await inter.response.defer(ephemeral=True)
+        if self.bot.test_mode:
+            await inter.edit_original_message(embed=FastEmbed(
+                description=f"Cannot restart in test mode."
+            ))
+        else:
+            completedProcess = subprocess.run("pm2 restart poro",text=True,capture_output=True)
+            if completedProcess.returncode == 0:
+                await inter.edit_original_message(embed=FastEmbed(
+                    title=f"✅ Restart succes",
+                    description=f"```{completedProcess.stdout}```"
+                ))
+            else :
+                await inter.edit_original_message(embed=FastEmbed(
+                    title=f"❌ Restart failed with status code {data.emotes.number_to_emotes[completedProcess.returncode]}",
+                    description=f"```{completedProcess.stdout}```"
+                ))
         
-    
     
         
     @commands.slash_command(
         description = "Voir les logs du bot",
         default_member_permissions=disnake.Permissions.all()
     )
+    @commands.check(is_owner)
     async def logs(self, inter : disnake.UserCommandInteraction,
                    level : str = commands.Param(
                        description = "Le level des logs à obtenir.",
