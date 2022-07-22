@@ -53,7 +53,7 @@ class Basic(commands.Cog):
     @commands.check(is_owner)
     async def update(self, inter : disnake.ApplicationCommandInteraction):
         await inter.response.defer(ephemeral=True)
-        completedProcess = subprocess.run("git pull origin master",text=True,capture_output=True)
+        completedProcess = subprocess.run("cd ~/PoroBot/ && git pull origin master",text=True,capture_output=True)
         if completedProcess.returncode == 0:
             await inter.edit_original_message(embed=FastEmbed(
                 title=f"✅ Update succes",
