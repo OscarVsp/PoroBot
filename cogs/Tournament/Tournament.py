@@ -107,19 +107,12 @@ class Tournament(commands.Cog):
             return 
         await inter.response.defer(ephemeral=True)  
         file = await file.to_file()          
-        new_tournament = Tournament2v2RollView.load_from_save(inter, role, file)
+        new_tournament : Tournament2v2RollView = await Tournament2v2RollView.load_from_save(inter, role, file)
         self.bot.tournaments_name += [new_tournament.name]
         await self.bot.change_presence(activity = disnake.Activity(name=", ".join(self.bot.tournaments_name), type=disnake.ActivityType.playing))       
-        await new_tournament.makeChannels()
         await inter.edit_original_message(
             embed = FastEmbed(description=f"Tournois {new_tournament.name} créé.\n[Dashboard]({new_tournament.channel_dashboard.jump_url})")
         )
-        
-        #command to create a new tournament
-    @commands.slash_command(name='test_file', description="test")
-    async def test_file(self, inter : ApplicationCommandInteraction, file : disnake.Attachment = commands.Param(description="The content of the file to upload")):
-
-        await inter.response.send_message("File received !")
         
     
 

@@ -20,21 +20,24 @@ class Tournament2v2RollView(disnake.ui.View):
         self.match_selected : Match = None
         self.team_selected : Team = None
         self.role : disnake.Role = role
-        self.max_round : int = 0
-        self.current_round : int = 0
         
         if not loaded_from_save:
+            self.max_round : int = 0
+            self.current_round : int = 0
             self.name : str = name
             self.tournament : Tournament2v2Roll = Tournament2v2Roll(self.name,members,ordered)
             self.tournament.generate()
             self.make_options()
             
     @staticmethod
-    async def load_from_save(inter, role : disnake.Role, file : disnake.File) -> disnake.ui.view:
+    async def load_from_save(inter, role : disnake.Role, file : disnake.File) -> disnake.ui.View:
         tournamentView : Tournament2v2RollView = Tournament2v2RollView(inter, inter.bot, role, loaded_from_save=True)
         tournamentView.tournament : Tournament2v2Roll = await Tournament2v2Roll.load_from_save(inter, file)
         tournamentView.name : str = tournamentView.tournament.name
+        tournamentView.current_round : int = tournamentView.tournament.rounds.index(tournamentView.tournament.current_round)
+        tournamentView.max_round : int = tournamentView.current_round
         tournamentView.make_options()
+        await tournamentView.makeChannels()
         return tournamentView
         
     def make_options(self):

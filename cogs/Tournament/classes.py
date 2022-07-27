@@ -53,7 +53,8 @@ class Player(ShadowMember):
     def add_scores(self, values : List[int]):
         if len(self._scores) == len(values):
             for i,value in enumerate(values):
-                self._scores[i] += values
+                self._scores[i] += value
+        else:
             logging.error(f"{self.log_id} Error on adding scores : list of values is not the same size than the number of score ({len(self._scores)}).")
             
     def remove_score(self, value : int = 1, index : int = 0) -> None:
@@ -190,17 +191,19 @@ class Team:
         
     def set_score(self, value : int, index : int) -> None:
         if len(self._scores) > index:
-            self._scores[index] = value
             for player in self._players:
-                player.set_score(value=value, index=index)
+                player.remove_score(value=self._scores[index], index=index)
+                player.add_score(value=value, index=index)
+            self._scores[index] = value
         else:
             logging.error(f"{self.log_id} Error on setting score : index {index} is not initialized in the score.")
             
     def set_scores(self, values : List[int]) -> None:
         if len(self._scores) == len(values):
-            self._scores = values
             for player in self._players:
-                player.set_scores(values=values)
+                player.remove_scores(values=self._scores)
+                player.add_scores(values=values)
+            self._scores = values
         else:
             logging.error(f"{self.log_id} Error on setting scores : list of values is not the same size than the number of score ({len(self._scores)}).") 
     
@@ -971,7 +974,7 @@ class Tournament:
     
     def save_state(self) -> None:
         with open(self.state_file, 'w') as fp:
-            json.dump(dict(self), fp, indent=None)
+            json.dump(dict(self), fp, indent=1)
 
 
 seeding = List[List[List[List[int]]]]    
@@ -1181,33 +1184,35 @@ class Tournament2v2Roll(Tournament):
     
     @staticmethod
     async def load_from_save(inter : disnake.ApplicationCommandInteraction, file : disnake.File) -> Optional[Tournament]:
-        with open(file.fp, 'rb') as fp:
-            try:
-                save : dict = json.loads(fp.read())
-                members : List[disnake.Member] = []
-                for member in save.get("players"):
-                    members.append(await inter.guild.fetch_member(member.get("id")))
-                tournament : Tournament2v2Roll = Tournament2v2Roll(save.get("name"), members, ordered = True)
-                tournament.generate()
-                for round in save.get('rounds'):
-                    for match in round.get('entities'):
-                        for team in match.get("entities"):
-                            players : List[dict] = team.get('players')
-                            if (players[0].get('id') == tournament.rounds[round.get('round_idx')].matches[match.get('match_idx')].teams[team.get("team_idx")].players[0].id
-                            and players[0].get('id') == tournament.rounds[round.get('round_idx')].matches[match.get('match_idx')].teams[team.get("team_idx")].players[0].id):
-                                tournament.add_scores(round.get("round_idx"),match.get('match_idx'),team.get("team_idx"),team.get('scores'))
-                                raise KeyError
+        try:
+            save : dict = json.loads(file.fp.read())
+            members : List[disnake.Member] = []
+            for member in save.get("players"):
+                members.append(await inter.guild.fetch_member(member.get("id")))
+            tournament : Tournament2v2Roll = Tournament2v2Roll(save.get("name"), members, ordered = True)
+            tournament.generate()
+            for round in save.get('rounds'):
+                for match in round.get('entities'):
+                    for team in match.get("entities"):
+                        players : List[dict] = team.get('players')
+                        if (players[0].get('id') == tournament.rounds[round.get('round_idx')].matches[match.get('match_idx')].teams[team.get("team_idx")].players[0].id
+                        and players[1].get('id') == tournament.rounds[round.get('round_idx')].matches[match.get('match_idx')].teams[team.get("team_idx")].players[1].id):
+                            tournament.add_scores(round.get("round_idx"),match.get('match_idx'),team.get("team_idx"),team.get('scores'))
                             
-                for player in tournament.players:
-                    for player_dict in save.get('players'):
-                        if player.id == player_dict.get('id') and player.scores != player_dict.get('scores'):
-                                raise ValueError
-                for round in tournament.rounds:
-                    if not round.is_played:
-                        tournament._current_round = round
-                return tournament
-            except:
-                return None
+                        else:
+                            raise KeyError
+                        
+            for player in tournament.players:
+                for player_dict in save.get('players'):
+                    if player.id == player_dict.get('id') and player.scores != player_dict.get('scores'):
+                            raise ValueError
+            for round in tournament.rounds:
+                if not round.is_played:
+                    tournament._current_round = round
+                    break
+            return tournament
+        except:
+            return None
                 
             
             
