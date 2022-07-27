@@ -116,8 +116,8 @@ class Tournament(commands.Cog):
         )
         
         #command to create a new tournament
-    @commands.slash_command(name='test_file')
-    async def test_file(self, inter : ApplicationCommandInteraction, text : str = commands.Param(description="The content of the file to upload")):
+    @commands.slash_command(name='test_file', description="test")
+    async def test_file(self, inter : ApplicationCommandInteraction, file : disnake.Attachment = commands.Param(description="The content of the file to upload")):
 
         await inter.response.send_message("File received !")
         
