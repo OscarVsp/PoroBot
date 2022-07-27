@@ -367,7 +367,7 @@ FodyWeavers.xsd
 *.pyproj
 *.sln
 .env
-.json
+*.json
 .vscode/
 cogs/Dofus/almanax.db
 cogs/Basic/lore.db
