@@ -219,6 +219,7 @@ class Tournament2v2RollView(disnake.ui.View):
             try:
                 file = disnake.File(self.tournament.state_file)
                 await self.admin.send(content=f'**__Tournois *"{self.tournament.name}"*__**',embeds=self.dashboard_embeds, file=file)
+                await self.admin.send(content=f"MSE = {self.tournament.MSE}")
                 if os.path.exists(self.tournament.state_file):
                     os.remove(self.tournament.state_file)
             except:

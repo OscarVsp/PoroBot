@@ -957,6 +957,14 @@ class Tournament:
         self.save_state()
         
     @property
+    def MSE(self) -> int:
+        points_diff = []
+        for i in range(len(self.players)):
+            for j in range(len(self.players) - i -1):
+                points_diff.append(pow(self.players[i].points-self.players[j].points,2))
+        return sum(points_diff)/len(points_diff)
+        
+    @property
     def state_file(self) -> str:
         return f"cogs/Tournament/saves/{self._name}_state-{self._start_time}.json" 
     

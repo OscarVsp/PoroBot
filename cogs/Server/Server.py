@@ -1,7 +1,7 @@
 import logging
 import disnake
 from disnake.ext import commands
-from disnake import ApplicationCommandInteraction, ChannelFlags
+from disnake import ApplicationCommandInteraction, ChannelFlags, UserCommandInteraction
 from utils.FastEmbed import FastEmbed
 from typing import List, Optional
 
@@ -42,6 +42,10 @@ class Server(commands.Cog):
             if role.name == f"{Server.original_name(channel)} authorized":
                 return True
         return False
+    
+    @staticmethod
+    def get_authorized_role(channel : disnake.VoiceChannel) -> Optional[disnake.Role]:
+        return next((role for role in channel.guild.roles if role.name == f"{Server.original_name(channel)} authorized"), None)
             
     
     @commands.slash_command(
@@ -114,11 +118,11 @@ class Server(commands.Cog):
         perm_everyone = disnake.PermissionOverwrite()
         perm_everyone.speak = True
         await channel.set_permissions(everyone,overwrite=perm_everyone)
-        authorized_role = next((role for role in channel.guild.roles if role.name == f"{self.original_name(channel)} authorized"), None)
+        authorized_role = self.get_authorized_role(channel)
         await authorized_role.delete(reason="Unlock channel")
         for member in channel.members:
             if member.voice.suppress or member.voice.mute:
-                await member.edit(mute=False)           #TODO check if dangerous to automatically unmute ?
+                await member.move_to(channel)
                 await member.send(embed=FastEmbed(
                     title="🔓 Channel vocal déverrouillé",
                     description="Le channel vocal dans lequel tu te trouves vient d'être déverrouillé !\n\nTu peux à nouveau parler normalement."      
@@ -180,6 +184,42 @@ class Server(commands.Cog):
         if before != None and before.channel != None:
             if self.is_locked(before.channel):
                 await self.on_disconnect_from_locked_channel(before.channel)
+                
+    @commands.user_command(name="Channel authorisé", default_member_permissions=disnake.Permissions.all())
+    async def authorize_member(self, inter : UserCommandInteraction):
+        await inter.response.defer(ephemeral=True)
+        if inter.target.voice != None and inter.target.voice.channel != None:
+            if self.is_locked(inter.target.voice.channel):
+                if not self.is_authorized(inter.target, inter.target.voice.channel):
+                    await inter.target.add_roles(self.get_authorized_role(inter.target.voice.channel), reason="Channel authorized UserCmd")
+                    await inter.target.move_to(inter.target.voice.channel)
+                    await inter.target.send(embed=FastEmbed(title="🔓 Autorisé", description="Tu as été autorisé à parler dans le channel vocal verrouillé dans lequel tu te trouve actuellement."))
+                    await inter.edit_original_message(embed=FastEmbed(title="✅ Autorisé", description=f"{inter.target.display_name} a bien été authorisé à parler dans le channel verrouillé."))
+                else:
+                    await inter.edit_original_message(embed=FastEmbed(title="✅ Déjà autorisé", description=f"{inter.target.display_name} était déjà authorisé à parler dans le channel verrouillé."))
+            else:
+                await inter.edit_original_message(embed=FastEmbed(title="❌ Non verrouillé", description=f"Le channel vocal dans lequel se trouve {inter.target.display_name} n'est pas verrouillé."))
+        else:
+            await inter.edit_original_message(embed=FastEmbed(title="❌ Non connecté", description=f"{inter.target.display_name} n'est connecter dans aucun channel vocal actuellement."))
+                
+    
+    @commands.user_command(name="Channel restreint", default_member_permissions=disnake.Permissions.all())
+    async def unauthorize_member(self, inter : UserCommandInteraction):
+        await inter.response.defer(ephemeral=True)
+        if inter.target.voice != None and inter.target.voice.channel != None:
+            if self.is_locked(inter.target.voice.channel):
+                if self.is_authorized(inter.target, inter.target.voice.channel):
+                    await inter.target.remove_roles(self.get_authorized_role(inter.target.voice.channel), reason="Channel authorized UserCmd")
+                    await inter.target.move_to(inter.target.voice.channel)
+                    await inter.target.send(embed=FastEmbed(title="🔒 Restreint", description="Tu as été restreint à ne pas pouvoir parler dans le channel vocal verrouillé dans lequel tu te trouve actuellement.\nJe te préviendrais quand celui-ci sera déverrouillé."))
+                    await inter.edit_original_message(embed=FastEmbed(title="✅ Restreint", description=f"{inter.target.display_name} a bien été restreint à ne pas pouvoir parler dans le channel verrouillé."))
+                else:
+                    await inter.edit_original_message(embed=FastEmbed(title="✅ Déjà restreint", description=f"{inter.target.display_name} était déjà restreint à na pas pouvoir parler dans le channel verrouillé."))
+            else:
+                await inter.edit_original_message(embed=FastEmbed(title="❌ Non verrouillé", description=f"Le channel vocal dans lequel se trouve {inter.target.display_name} n'est pas verrouillé."))
+        else:
+            await inter.edit_original_message(embed=FastEmbed(title="❌ Non connecté", description=f"{inter.target.display_name} n'est connecter dans aucun channel vocal actuellement."))
+            
                 
             
 def setup(bot):
