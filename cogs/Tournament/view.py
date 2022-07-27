@@ -7,30 +7,35 @@ from utils.FastEmbed import FastEmbed
 from random import choices
 from utils.data import emotes,color
 from .classes import *
-import pickledb
 
-tournamentdb = pickledb.load("cogs/Basic/tournament.db", False)
         
         
 class Tournament2v2RollView(disnake.ui.View):
       
-    def __init__(self, inter : ApplicationCommandInteraction, bot, role : disnake.Role, members : List[disnake.Member], ordered : bool = False, name : str = "Tournament"):
+    def __init__(self, inter : ApplicationCommandInteraction, bot, role : disnake.Role, members : List[disnake.Member] = None, ordered : bool = False, name : str = "Tournament", loaded_from_save : bool = False):
         super().__init__(timeout=None)
         self.bot : InteractionBot = bot
         self.inter : ApplicationCommandInteraction = inter
-        self.name : str = name
-        self.role : disnake.Role = role
-        self.tournament : Tournament2v2Roll = Tournament2v2Roll(self.name,members,ordered)
-        self.tournament.generate()
-        
-        
         self.admin : disnake.Member = self.inter.author
         self.match_selected : Match = None
         self.team_selected : Team = None
+        self.role : disnake.Role = role
         self.max_round : int = 0
         self.current_round : int = 0
         
-        self.make_options()
+        if not loaded_from_save:
+            self.name : str = name
+            self.tournament : Tournament2v2Roll = Tournament2v2Roll(self.name,members,ordered)
+            self.tournament.generate()
+            self.make_options()
+            
+    @staticmethod
+    async def load_from_save(inter, role : disnake.Role, file : disnake.File) -> disnake.ui.view:
+        tournamentView : Tournament2v2RollView = Tournament2v2RollView(inter, inter.bot, role, loaded_from_save=True)
+        tournamentView.tournament : Tournament2v2Roll = await Tournament2v2Roll.load_from_save(inter, file)
+        tournamentView.name : str = tournamentView.tournament.name
+        tournamentView.make_options()
+        return tournamentView
         
     def make_options(self):
         self.previous.disabled = True

@@ -42,8 +42,7 @@ class PoroBot(InteractionBot):
         self.logFormatter = logFormatter
         self.test_mode = test_mode
 
-        intents = disnake.Intents.default()  # Allow the use of custom intents
-        intents.members = True
+        intents = disnake.Intents.all()  # Allow the use of custom intents
         
         if test_mode:    
             logging.info("Starting in test mod...")
