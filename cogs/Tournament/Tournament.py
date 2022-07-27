@@ -93,21 +93,13 @@ class Tournament(commands.Cog):
     @tournamant2v2Roll.sub_command(
         name="load", description="Load un tournois 2v2 roll de 4, 5 ou 8 joueurs"
     )
-    async def loadTournament2v2Roll(self, inter: ApplicationCommandInteraction, 
-                                role : disnake.Role = commands.Param(description="Role contenant les participants."),
+    async def loadTournament2v2Roll(self, inter: ApplicationCommandInteraction,
                                 file : disnake.Attachment = commands.Param(description="Le fichier .json depuis lequel load le tournois.")):
         """Load a tournament 2v2 roll of 4, 5 or 8 players
         """
-        if len(role.members) not in [4,5,8]:
-            await inter.response.send_message(
-                embed = FastEmbed(
-                    description=f"Ce type de tournois nécessite 4, 5 ou 8 joueurs, mais le role spécifié ({role.name}) ne contient que {len(role.members)} membres.",
-                    color = color.rouge,
-                    ), ephemeral = True)
-            return 
         await inter.response.defer(ephemeral=True)  
         file = await file.to_file()          
-        new_tournament : Tournament2v2RollView = await Tournament2v2RollView.load_from_save(inter, role, file)
+        new_tournament : Tournament2v2RollView = await Tournament2v2RollView.load_from_save(inter, file)
         self.bot.tournaments_name += [new_tournament.name]
         await self.bot.change_presence(activity = disnake.Activity(name=", ".join(self.bot.tournaments_name), type=disnake.ActivityType.playing))       
         await inter.edit_original_message(

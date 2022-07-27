@@ -1,4 +1,7 @@
 from abc import abstractmethod
+from ctypes.wintypes import MSG
+from enum import Enum
+from http.client import HTTPException
 import random
 import disnake
 from utils.data import emotes,color
@@ -8,7 +11,10 @@ import json
 import logging
 from datetime import datetime
 from typing import List, Union, Optional, Sequence, overload
-               
+
+class SaveLoadError(Exception):
+    pass
+
 
 class Player(ShadowMember):
     
@@ -148,6 +154,19 @@ class Team:
         return self._scores
     
     @property
+    def scores_description(self) -> str:
+        descriptor = self.tournament._scores_descriptor
+        if descriptor:      
+            text = ""
+            for i in range(len(self._scores)):
+                if self._scores[i]:
+                    text += f"{self._scores[i]} {descriptor[i]}, "
+            if text == "":
+                return "Nothing"
+            return text[:len(text)-2]
+        return str(self._scores)
+    
+    @property
     def points(self) -> int:
         return sum([self._scores[i]*self.tournament.weights[i] for i in range(len(self._scores))])
     
@@ -220,21 +239,13 @@ class Team:
         for player in self._players:
             player.clear_scores()
             
-    async def move_to(self, channel : VocalGuildChannel = None, channels : List[VocalGuildChannel] = None):
-        if channel and not channels:
-            for player in self._players:
+    async def move_to(self, channel : VocalGuildChannel):
+        for player in self._players:
+            try:
                 await player.move_to(channel)
-        elif channels and not channel:
-            if len(channels) == len(self._players):
-                for i,player in enumerate(self._players):
-                    await player.move_to(channels[i])
-            else:
-                logging.error(f"{self.log_id} Error on moving players : size of 'channels' is not compatible with the number of players")
-        elif channel and channels:
-            logging.error(f"{self.log_id} Error on moving players : Only one of 'channel' or 'channels' should be used.")
-        else:
-            
-            logging.error(f"{self.log_id} Error on moving players : 'channel' and 'channels' are both None. One has to be set.'")
+            except disnake.errors.HTTPException:
+                pass
+    
             
     @overload
     async def send(
@@ -511,10 +522,7 @@ class Match:
     
     @property
     def title(self) -> str:
-        if self.is_played:
-            return f"~~__MATCH __{emotes.alpha[self._match_idx]}~~"
-        else:
-            return f"__MATCH __{emotes.alpha[self._match_idx]}"
+        return f"__MATCH __{emotes.alpha[self._match_idx]}"
 
     @property
     def field(self) -> dict:
@@ -525,7 +533,7 @@ class Match:
         for i,entity in enumerate(self._entities):
             if round(entity.points) >= self._point_to_win:
                 indicators[i] = '✅'
-        return {'name':self.title,'value':"\n".join([f"{indicators[i]}{emotes.num[round(e.points)]} {e.display}" for i,e in enumerate(self._entities)])}
+        return {'name':self.title,'value':"\n".join([f"{indicators[i]}{emotes.num[round(e.points)]} {e.display}" for i,e in enumerate(self._entities)]),'inline':True}
       
     @property
     def field_detailled(self) -> dict:
@@ -536,7 +544,7 @@ class Match:
         for i,entity in enumerate(self._entities):
             if round(entity.points) >= self._point_to_win:
                 indicators[i] = '✅'
-        return {'name':self.title,'value':"\n".join([f"{indicators[i]}{''.join([emotes.num[round(score)] for score in e.scores])} {e.display}" for i,e in enumerate(self._entities)])}
+        return {'name':self.title,'value':"\n".join([f"{indicators[i]}{''.join([emotes.num[round(score)] for score in e.scores])} {e.display}" for i,e in enumerate(self._entities)]),'inline':True}
       
         
     @property
@@ -656,16 +664,13 @@ class Round:
     
     @property
     def title(self) -> str:
-        if self.is_played:
-            return f"~~__**ROUND **__{emotes.num[self._round_idx+1]}~~"
-        else:
-            return f"__**ROUND **__{emotes.num[self._round_idx+1]}"
+        return f"__**ROUND **__{emotes.num[self._round_idx+1]}"
 
     @property
     def embed(self) -> disnake.Embed:
         return FastEmbed(
         title = self.title,
-        color = color.gold,
+        color = self.embed_color,
         fields = [m.field for m in self._matches]
         )
             
@@ -673,9 +678,18 @@ class Round:
     def embed_detailled(self) -> disnake.Embed:
         return FastEmbed(
         title = self.title,
-        color = color.gold,
+        color = self.embed_color,
         fields = [m.field_detailled for m in self._matches]
         )
+        
+    @property
+    def embed_color(self) -> disnake.Color:
+        if self.is_played:
+            return color.vert
+        elif self.round_idx == 0 or self._tournament.rounds[self._tournament.rounds.index(self)-1].is_played:
+            return color.gold
+        return color.gris
+        
             
     @property
     def log_id(self) -> str:
@@ -687,6 +701,8 @@ class Round:
         for match in self._matches:
             played = played and match.is_played
         return played
+    
+    
     
     def get_match(self, match : Union[Match,int]) -> Optional[Match]:
         if isinstance(match, Match):
@@ -781,7 +797,7 @@ class Round:
 
 class Tournament:
     
-    def __init__(self, name : str, members : List[disnake.Member], nb_round : int = None, nb_matches_per_round : int = None, nb_teams_per_match : int = None, nb_players_per_team : int = None, size_of_scores : int = 1, weigths : List[float] = [1]):
+    def __init__(self, name : str, members : List[disnake.Member], nb_round : int = None, nb_matches_per_round : int = None, nb_teams_per_match : int = None, nb_players_per_team : int = None, size_of_scores : int = 1, weigths : List[float] = [1], scores_descriptor : List[str] = None):
         if len(weigths) != size_of_scores:
             raise ValueError('"Size of scores" and "weights" are not compatible.')
         
@@ -791,13 +807,14 @@ class Tournament:
             player.set_tournament(self)
         self._start_time : datetime = datetime.now()
         self._rounds : List[Round] = None
-        self._current_round : Round = None
         self._size_of_scores : int = size_of_scores
+        self._scores_descriptor : List[str] = scores_descriptor
         self._weights : List[float] = weigths
         self._nb_rounds : int = nb_round
         self._nb_matches_per_round : int = nb_matches_per_round
         self._nb_teams_per_match : int = nb_teams_per_match
         self._nb_players_per_team : int = nb_players_per_team
+        self._last_state : dict = None
 
     @property
     def name(self) -> str:
@@ -816,8 +833,11 @@ class Tournament:
         return self._start_time
     
     @property
-    def current_round(self) -> Round:
-        return self._current_round
+    def current_round(self) -> Optional[Round]:
+        for round in self._rounds:
+            if round.is_played == False:
+                return round
+        return None
     
     @property
     def size_of_scores(self) -> int:
@@ -848,6 +868,10 @@ class Tournament:
         return f"[TOURNAMENT {self._name}]"
     
     @property
+    def last_state(self) -> dict:
+        return self._last_state
+    
+    @property
     def classement(self) -> disnake.Embed:
         pass
         
@@ -855,16 +879,14 @@ class Tournament:
     def rules(self) -> disnake.Embed:
         pass
     
-    def rounds_embeds(self, max : int = None, detailled : bool = False) -> List[disnake.Embed]:
-        if max == None:
-            max = self.nb_rounds
+    def rounds_embeds(self, detailled : bool = False) -> List[disnake.Embed]:
         embeds : List[disnake.Embed] = []
         if detailled:
-            for i in range(max+1):
-                embeds.append(self.rounds[i].embed_detailled)
+            for round in self.rounds:
+                embeds.append(round.embed_detailled)
         else:
-            for i in range(max+1):
-                embeds.append(self.rounds[i].embed)
+            for round in self.rounds:
+                embeds.append(round.embed)
         return embeds
     
     @abstractmethod
@@ -898,7 +920,6 @@ class Tournament:
             round.add_score(match, entity, value, index)   
         else:
             logging.error(f"{self.log_id} The above error occurred during adding score.")
-        self.save_state()
         
     def add_scores(self, round : Union[Round,int], match : Union[Match,int], entity : Union[Entity,int], values : List[int]):
         round = self.get_round(round)
@@ -906,7 +927,6 @@ class Tournament:
             round.add_scores(match, entity, values)   
         else:
             logging.error(f"{self.log_id} The above error occurred during adding scores.")
-        self.save_state()
     
     def remove_score(self, round : Union[Round,int], match : Union[Match,int], entity : Union[Entity,int], value : int = 1, index : int = 0) -> None:
         round = self.get_round(round)
@@ -914,7 +934,6 @@ class Tournament:
             round.remove_score(match, entity, value, index)   
         else:
             logging.error(f"{self.log_id} The above error occurred during removing score.")
-        self.save_state()
     
     def remove_scores(self, round : Union[Round,int], match : Union[Match,int], entity : Union[Entity,int], values : List[int]) -> None:
         round = self.get_round(round)
@@ -922,7 +941,6 @@ class Tournament:
             round.remove_scores(match, entity, values)   
         else:
             logging.error(f"{self.log_id} The above error occurred during removing scores.")
-        self.save_state()
                 
     def set_score(self, round : Union[Round,int],  match : Union[Match,int], entity : Union[Entity,int], value : int = 1, index : int = 0) -> None:
         round = self.get_round(round)
@@ -930,7 +948,6 @@ class Tournament:
             round.set_score(match, entity, value, index)   
         else:
             logging.error(f"{self.log_id} The above error occurred during setting score.")
-        self.save_state()
     
     def set_scores(self, round : Union[Round,int],  match : Union[Match,int], entity : Union[Entity,int], values : List[int]) -> None:
         round = self.get_round(round)
@@ -938,7 +955,6 @@ class Tournament:
             round.set_scores(match, entity, values)   
         else:
             logging.error(f"{self.log_id} The above error occurred during setting scores.")
-        self.save_state()
     
     def clear_score(self, round : Union[Round,int],  match : Union[Match,int], entity : Union[Entity,int], index : int = 0) -> None:
         round = self.get_round(round)
@@ -946,7 +962,6 @@ class Tournament:
             round.clear_score(match, entity, index)   
         else:
             logging.error(f"{self.log_id} The above error occurred during clearing score.")
-        self.save_state()
             
     def clear_scores(self, round : Union[Round,int],  match : Union[Match,int], entity : Union[Entity,int],) -> None:
         round = self.get_round(round)
@@ -954,7 +969,6 @@ class Tournament:
             round.clear_scores(match, entity)   
         else:
             logging.error(f"{self.log_id} The above error occurred during clearing scores.")
-        self.save_state()
         
     @property
     def MSE(self) -> int:
@@ -971,18 +985,19 @@ class Tournament:
     def __iter__(self):
         yield 'name', self._name
         yield 'start_time', str(self._start_time)
+        yield 'guild_id', self._players[0].guild.id
         yield 'nb_players', len(self._players)
         yield 'nb_rounds', self._nb_rounds
         yield 'nb_matches_per_round', self._nb_matches_per_round
         yield 'nb_teams_per_match', self._nb_teams_per_match
         yield 'nb_players_per_team', self._nb_players_per_team
-        yield 'current_round_idx', self._rounds.index(self._current_round)
         yield 'players', [dict(p) for p in self._players]
         yield 'rounds', [dict(r) for r in self._rounds]
     
     def save_state(self) -> None:
+        self._last_state : dict = dict(self)
         with open(self.state_file, 'w') as fp:
-            json.dump(dict(self), fp, indent=1)
+            json.dump(self._last_state, fp, indent=1)
 
 
 seeding = List[List[List[List[int]]]]    
@@ -1057,13 +1072,15 @@ class Tournament2v2Roll(Tournament):
             self._seeding : seeding = Tournament2v2Roll.Seeding.S8 
 
         
-        super().__init__(name, members,
+        super().__init__(name,
+                         members,
                          nb_round=len(self._seeding), 
                          nb_matches_per_round=len(self._seeding[0]), 
                          nb_teams_per_match=2,
                          nb_players_per_team=2, 
                          size_of_scores=3, 
-                         weigths=[1.01,1,0.99])
+                         weigths=[1.01,1,0.99],
+                         scores_descriptor=["kill(s)","turret(s)","cs"])
         
         logging.info(f"{self.log_id} Initializing tournament {self._name} of {len(self._players)} players.")
         
@@ -1079,7 +1096,6 @@ class Tournament2v2Roll(Tournament):
                     teams.append(Team(self,[self._players[self._seeding[round_idx][match_idx][team_idx][0]-1],self._players[self._seeding[round_idx][match_idx][team_idx][1]-1]],round_idx,match_idx,team_idx,3))
                 matches.append(Match(self, round_idx, match_idx, teams))
             self._rounds.append(Round(self, round_idx, matches))
-        self._current_round = self._rounds[0]
         if self._ordered:
             logging.info(f"{self.log_id} Round generated using the following players order: " + ",".join([str(p.id) for p in self._players]))
         else:
@@ -1125,7 +1141,8 @@ class Tournament2v2Roll(Tournament):
                 {'name':"__**Rank**__",'value':"\n".join([f"{ranks[i]}" for i in range(len(sorted_player))]),'inline':True},
                 {'name':"__**Players**__",'value':"\n".join([f"**{p.display}**" for p in sorted_player]),'inline':True},
                 {'name':"__**Scores**__",'value':"\n".join([f"**{round(p.points)}** *({p.scores[self.Score.KILLS]}-{p.scores[self.Score.TURRETS]}-{p.scores[self.Score.CS]})*" for p in sorted_player]),'inline':True}
-            ]
+            ],
+            footer_text=f"MSE = {self.MSE}"
         )
         
     @property
@@ -1180,47 +1197,49 @@ class Tournament2v2Roll(Tournament):
             ]
         )
         
+    def restore_from_last_state(self) -> None:
+        for round in self.last_state.get('rounds'):
+            for match in round.get('entities'):
+                for team in match.get("entities"):
+                    players : List[dict] = team.get('players')
+                    if (players[0].get('id') == self.rounds[round.get('round_idx')].matches[match.get('match_idx')].teams[team.get("team_idx")].players[0].id
+                    and players[1].get('id') == self.rounds[round.get('round_idx')].matches[match.get('match_idx')].teams[team.get("team_idx")].players[1].id):
+                        self.set_scores(round.get("round_idx"),match.get('match_idx'),team.get("team_idx"),team.get('scores'))
 
-    def nextRound(self) -> Round:
-        self._current_round = self._rounds[self._rounds.index(self._current_round) + 1]
-        return self._current_round
-    
-    def previousRound(self) -> Round:
-        self._current_round = self._rounds[self._rounds.index(self._current_round) - 1]
-        return self._current_round
-    
-    
     @staticmethod
     async def load_from_save(inter : disnake.ApplicationCommandInteraction, file : disnake.File) -> Optional[Tournament]:
-        try:
-            save : dict = json.loads(file.fp.read())
-            members : List[disnake.Member] = []
-            for member in save.get("players"):
-                members.append(await inter.guild.fetch_member(member.get("id")))
-            tournament : Tournament2v2Roll = Tournament2v2Roll(save.get("name"), members, ordered = True)
-            tournament.generate()
-            for round in save.get('rounds'):
-                for match in round.get('entities'):
-                    for team in match.get("entities"):
-                        players : List[dict] = team.get('players')
-                        if (players[0].get('id') == tournament.rounds[round.get('round_idx')].matches[match.get('match_idx')].teams[team.get("team_idx")].players[0].id
-                        and players[1].get('id') == tournament.rounds[round.get('round_idx')].matches[match.get('match_idx')].teams[team.get("team_idx")].players[1].id):
-                            tournament.add_scores(round.get("round_idx"),match.get('match_idx'),team.get("team_idx"),team.get('scores'))
-                            
-                        else:
-                            raise KeyError
-                        
-            for player in tournament.players:
-                for player_dict in save.get('players'):
-                    if player.id == player_dict.get('id') and player.scores != player_dict.get('scores'):
-                            raise ValueError
-            for round in tournament.rounds:
-                if not round.is_played:
-                    tournament._current_round = round
-                    break
-            return tournament
-        except:
-            return None
+        save : dict = json.loads(file.fp.read())
+        
+        if inter.guild.id != save.get('guild_id'):
+            raise SaveLoadError
+        
+        members : List[disnake.Member] = []
+        for member in save.get("players"):
+            fetched_member = await inter.guild.fetch_member(member.get("id"))
+            if fetched_member != None:
+                members.append(fetched_member)
+            else:
+                raise SaveLoadError
+            
+        tournament : Tournament2v2Roll = Tournament2v2Roll(save.get("name"), members, ordered = True)
+        tournament.generate()
+        for round in save.get('rounds'):
+            for match in round.get('entities'):
+                for team in match.get("entities"):
+                    players : List[dict] = team.get('players')
+                    if (players[0].get('id') == tournament.rounds[round.get('round_idx')].matches[match.get('match_idx')].teams[team.get("team_idx")].players[0].id
+                    and players[1].get('id') == tournament.rounds[round.get('round_idx')].matches[match.get('match_idx')].teams[team.get("team_idx")].players[1].id):
+                        tournament.set_scores(round.get("round_idx"),match.get('match_idx'),team.get("team_idx"),team.get('scores'))
+                    else:
+                        raise SaveLoadError
+                    
+        for player in tournament.players:
+            for player_dict in save.get('players'):
+                if player.id == player_dict.get('id') and player.scores != player_dict.get('scores'):
+                        raise SaveLoadError
+                    
+
+        return tournament
                 
             
             
