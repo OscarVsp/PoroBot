@@ -1,7 +1,7 @@
 import logging
 import disnake
 from disnake.ext import commands
-from disnake import ApplicationCommandInteraction, ChannelFlags, UserCommandInteraction
+from disnake import ApplicationCommandInteraction, ChannelFlags, NotFound, UserCommandInteraction
 from utils.FastEmbed import FastEmbed
 from typing import List, Optional
 
@@ -49,22 +49,44 @@ class Server(commands.Cog):
             
     
     @commands.slash_command(
-        description = "Supprimer les derniers messages du channel",
-        default_member_permissions=disnake.Permissions.all()
+        name="clear",
+        default_member_permissions=disnake.Permissions.all())
+    async def clear(self, inter):
+        pass
+        
+        
+    @clear.sub_command(
+        name='message',
+        description = "Supprimer les derniers messages du channel"
     )
-    async def clear(self, inter : ApplicationCommandInteraction,
+    async def clearMessage(self, inter : ApplicationCommandInteraction,
         nombre : int = commands.Param(
             description = "le nombre de message à supprimer",
             gt = 0
         )
     ):
-        await inter.response.defer()
+        await inter.response.defer(ephemeral=True)
         await inter.channel.purge(limit=nombre)
-        await inter.channel.send(
-            embed = FastEmbed(
-                description = f":broom: {nombre} messages supprimés ! :broom:"),
-            delete_after=3)
-    
+        await inter.edit_original_message(embed = FastEmbed(description = f":broom: {nombre} messages supprimés ! :broom:"))
+        
+        
+    @clear.sub_command(
+        name='category',
+        description = "Supprimer channels d'une category"
+    )
+    async def clearCat(self, inter : ApplicationCommandInteraction,
+        categorie : disnake.CategoryChannel = commands.Param(description = "Choisissez category à suppimer"),
+        confirmation : disnake.CategoryChannel = commands.Param(description = "Confirmez la catégorie à suppimer"),
+    ):
+        await inter.response.defer(ephemeral=True)
+        if categorie == confirmation:
+            for channel in categorie.channels:
+                await channel.delete()
+            await categorie.delete()
+            try:
+                await inter.edit_original_message(embed=FastEmbed(description = f":broom: Catégorie {categorie.name} supprimé ! :broom:"))
+            except NotFound:
+                pass
 
     @commands.slash_command(
         name="channel",     
