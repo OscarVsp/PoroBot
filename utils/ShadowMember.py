@@ -360,7 +360,7 @@ class ShadowMember:
         HTTPException
             Adding roles failed.
         """
-        return await self.member.add_roles(roles=roles, reason=reason, atomic=atomic)
+        return await self.member.add_roles(*roles, reason=reason, atomic=atomic)
        
     async def ban(self, *, delete_message_days=1, reason=None) -> None:
         """|coro|
