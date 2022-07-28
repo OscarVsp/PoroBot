@@ -1,4 +1,4 @@
-[![CodeFactor](https://www.codefactor.io/repository/github/oscarvsp/lol-patchnote-scraper/badge)](https://www.codefactor.io/repository/github/oscarvsp/lol-patchnote-scraper)
+[![CodeFactor](https://www.codefactor.io/repository/github/oscarvsp/porobot/badge)](https://www.codefactor.io/repository/github/oscarvsp/porobot)
 
 # PoroBot
 
