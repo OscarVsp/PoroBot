@@ -63,7 +63,7 @@ class Tournament(commands.Cog):
                     embed = FastEmbed(
                         description=f"Nombre d'IDs donnés ({len(ids)}) est différent du nombre de membre ({len(role.members)}) ayant le rôle {role.name}.",
                         color = color.rouge,
-                        ),  ephemeral = True)
+                        ), ephemeral = True)
                 return  
             ordered_members = []
             for id in ids:

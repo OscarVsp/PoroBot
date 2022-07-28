@@ -33,11 +33,11 @@ class emotes:
 
 class images:
     cards = {
-        "coeur":    ["https://i.imgur.com/sSNc54Q.png","https://i.imgur.com/q4M9V3l.png","https://i.imgur.com/OldvcEy.png","https://i.imgur.com/wj1GoO9.png","https://i.imgur.com/0B2Ud1T.png","https://i.imgur.com/eCliqU4.png","https://i.imgur.com/lMbRY2r.png","https://i.imgur.com/cuG1fqu.png","https://i.imgur.com/4NwgCla.png","https://i.imgur.com/2SR4Ial.png"],
-        "pique":    ["https://i.imgur.com/lrkEiPh.png","https://i.imgur.com/FLWt3us.png","https://i.imgur.com/SlHZ8t4.png","https://i.imgur.com/1mfYaX7.png","https://i.imgur.com/QBHcYfF.png","https://i.imgur.com/q2FfmBf.png","https://i.imgur.com/Hl2Du9R.png","https://i.imgur.com/QDFqD4S.png","https://i.imgur.com/gU5ajry.png","https://i.imgur.com/flk2YDF.png"],
-        "carreau":  ["https://i.imgur.com/O7cv7tN.png","https://i.imgur.com/kV9fwxW.png","https://i.imgur.com/VLOfZ7b.png","https://i.imgur.com/tVON7pX.png","https://i.imgur.com/gzzilPT.png","https://i.imgur.com/1TdAJDG.png","https://i.imgur.com/tdC9dvu.png","https://i.imgur.com/FilOYsA.png","https://i.imgur.com/pYmcUhJ.png","https://i.imgur.com/hDeAMFI.png"],
-        "trefle":   ["https://i.imgur.com/QBjfMLu.png","https://i.imgur.com/EF7xnGq.png","https://i.imgur.com/uQ3BIys.png","https://i.imgur.com/z6nYDmr.png","https://i.imgur.com/d3jR6aw.png","https://i.imgur.com/xeNNQKK.png","https://i.imgur.com/HXUu8pk.png","https://i.imgur.com/rHgZm4v.png","https://i.imgur.com/iPpeZmv.png","https://i.imgur.com/idF7THF.png"],
-        "back":     "https://i.imgur.com/xAegVLz.png"
+        "coeur": ["https://i.imgur.com/sSNc54Q.png","https://i.imgur.com/q4M9V3l.png","https://i.imgur.com/OldvcEy.png","https://i.imgur.com/wj1GoO9.png","https://i.imgur.com/0B2Ud1T.png","https://i.imgur.com/eCliqU4.png","https://i.imgur.com/lMbRY2r.png","https://i.imgur.com/cuG1fqu.png","https://i.imgur.com/4NwgCla.png","https://i.imgur.com/2SR4Ial.png"],
+        "pique": ["https://i.imgur.com/lrkEiPh.png","https://i.imgur.com/FLWt3us.png","https://i.imgur.com/SlHZ8t4.png","https://i.imgur.com/1mfYaX7.png","https://i.imgur.com/QBHcYfF.png","https://i.imgur.com/q2FfmBf.png","https://i.imgur.com/Hl2Du9R.png","https://i.imgur.com/QDFqD4S.png","https://i.imgur.com/gU5ajry.png","https://i.imgur.com/flk2YDF.png"],
+        "carreau": ["https://i.imgur.com/O7cv7tN.png","https://i.imgur.com/kV9fwxW.png","https://i.imgur.com/VLOfZ7b.png","https://i.imgur.com/tVON7pX.png","https://i.imgur.com/gzzilPT.png","https://i.imgur.com/1TdAJDG.png","https://i.imgur.com/tdC9dvu.png","https://i.imgur.com/FilOYsA.png","https://i.imgur.com/pYmcUhJ.png","https://i.imgur.com/hDeAMFI.png"],
+        "trefle": ["https://i.imgur.com/QBjfMLu.png","https://i.imgur.com/EF7xnGq.png","https://i.imgur.com/uQ3BIys.png","https://i.imgur.com/z6nYDmr.png","https://i.imgur.com/d3jR6aw.png","https://i.imgur.com/xeNNQKK.png","https://i.imgur.com/HXUu8pk.png","https://i.imgur.com/rHgZm4v.png","https://i.imgur.com/iPpeZmv.png","https://i.imgur.com/idF7THF.png"],
+        "back": "https://i.imgur.com/xAegVLz.png"
     }
 
     class poros:
@@ -76,7 +76,7 @@ class images:
                 ]
         
     sablier = "https://i.imgur.com/2V0xDMW.png"
-    placeholder  = "https://i.imgur.com/n8NfUD3.png"
+    placeholder = "https://i.imgur.com/n8NfUD3.png"
     
     bang_6 = "https://i.imgur.com/aMhejbX.png"
 

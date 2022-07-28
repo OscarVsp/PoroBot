@@ -454,8 +454,9 @@ class Team:
         :class:`.Message`
             The message that was sent.
         """
+        msg = None
         for player in self._players:
-            await player.send(
+            msg = await player.send(
                 content=content,
                 tts=tts, embed=embed,
                 embeds=embeds,
@@ -470,6 +471,7 @@ class Team:
                 mention_author=mention_author,
                 view=view,
                 components=components)   
+        return msg
         
     def __iter__(self):
         yield 'round_idx', self.round_idx
@@ -942,28 +944,28 @@ class Tournament:
         else:
             logging.error(f"{self.log_id} The above error occurred during removing scores.")
                 
-    def set_score(self, round : Union[Round,int],  match : Union[Match,int], entity : Union[Entity,int], value : int = 1, index : int = 0) -> None:
+    def set_score(self, round : Union[Round,int], match : Union[Match,int], entity : Union[Entity,int], value : int = 1, index : int = 0) -> None:
         round = self.get_round(round)
         if round:
             round.set_score(match, entity, value, index)   
         else:
             logging.error(f"{self.log_id} The above error occurred during setting score.")
     
-    def set_scores(self, round : Union[Round,int],  match : Union[Match,int], entity : Union[Entity,int], values : List[int]) -> None:
+    def set_scores(self, round : Union[Round,int], match : Union[Match,int], entity : Union[Entity,int], values : List[int]) -> None:
         round = self.get_round(round)
         if round:
             round.set_scores(match, entity, values)   
         else:
             logging.error(f"{self.log_id} The above error occurred during setting scores.")
     
-    def clear_score(self, round : Union[Round,int],  match : Union[Match,int], entity : Union[Entity,int], index : int = 0) -> None:
+    def clear_score(self, round : Union[Round,int], match : Union[Match,int], entity : Union[Entity,int], index : int = 0) -> None:
         round = self.get_round(round)
         if round:
             round.clear_score(match, entity, index)   
         else:
             logging.error(f"{self.log_id} The above error occurred during clearing score.")
             
-    def clear_scores(self, round : Union[Round,int],  match : Union[Match,int], entity : Union[Entity,int],) -> None:
+    def clear_scores(self, round : Union[Round,int], match : Union[Match,int], entity : Union[Entity,int],) -> None:
         round = self.get_round(round)
         if round:
             round.clear_scores(match, entity)   
@@ -1101,46 +1103,44 @@ class Tournament2v2Roll(Tournament):
         else:
             logging.info(f"{self.log_id} Round generated using random order")
         self.save_state()
-             
-    @property
-    def classement(self) -> disnake.Embed:
-        sorted_player = self.getRanking()
+    
+    @staticmethod
+    def rank_emotes(sorted_players : List[Player]) -> List[str]:
         ranks = []
-        for i in range(len(sorted_player)):
+        for i in range(len(sorted_players)):
             if i == 0:
                 ranks.append(f"{emotes.rank[i]}")
-            elif sorted_player[i].points == sorted_player[i-1].points:
+            elif sorted_players[i].points == sorted_players[i-1].points:
                 ranks.append(ranks[-1])
             else:
                 ranks.append(f"{emotes.rank[i]}")
+        return ranks
+             
+    @property
+    def classement(self) -> disnake.Embed:
+        sorted_players = self.getRanking()
+        ranks = Tournament2v2Roll.rank_emotes(sorted_players)
         return FastEmbed(
             title = "__**CLASSEMENT**__",
             color = color.gold,
             fields=[
-                {'name':"__**Rank**__",'value':"\n".join([f"{ranks[i]}" for i in range(len(sorted_player))]),'inline':True},
-                {'name':"__**Players**__",'value':"\n".join([f"**{p.display}**" for p in sorted_player]),'inline':True},
-                {'name':"__**Scores**__",'value':"\n".join([f"**{round(p.points)}**" for p in sorted_player]),'inline':True}
+                {'name':"__**Rank**__",'value':"\n".join([f"{ranks[i]}" for i in range(len(sorted_players))]),'inline':True},
+                {'name':"__**Players**__",'value':"\n".join([f"**{p.display}**" for p in sorted_players]),'inline':True},
+                {'name':"__**Scores**__",'value':"\n".join([f"**{round(p.points)}**" for p in sorted_players]),'inline':True}
             ]
         )
    
     @property
     def detailedClassement(self) -> disnake.Embed:
-        sorted_player = self.getRanking()
-        ranks = []
-        for i in range(len(sorted_player)):
-            if i == 0:
-                ranks.append(f"{emotes.rank[i]}")
-            elif sorted_player[i].points == sorted_player[i-1].points:
-                ranks.append(ranks[-1])
-            else:
-                ranks.append(f"{emotes.rank[i]}")
+        sorted_players = self.getRanking()
+        ranks = Tournament2v2Roll.rank_emotes(sorted_players)
         return FastEmbed(
             title = "__**CLASSEMENT**__",
             color = color.gold,
             fields=[
-                {'name':"__**Rank**__",'value':"\n".join([f"{ranks[i]}" for i in range(len(sorted_player))]),'inline':True},
-                {'name':"__**Players**__",'value':"\n".join([f"**{p.display}**" for p in sorted_player]),'inline':True},
-                {'name':"__**Scores**__",'value':"\n".join([f"**{round(p.points)}** *({p.scores[self.Score.KILLS]}-{p.scores[self.Score.TURRETS]}-{p.scores[self.Score.CS]})*" for p in sorted_player]),'inline':True}
+                {'name':"__**Rank**__",'value':"\n".join([f"{ranks[i]}" for i in range(len(sorted_players))]),'inline':True},
+                {'name':"__**Players**__",'value':"\n".join([f"**{p.display}**" for p in sorted_players]),'inline':True},
+                {'name':"__**Scores**__",'value':"\n".join([f"**{round(p.points)}** *({p.scores[self.Score.KILLS]}-{p.scores[self.Score.TURRETS]}-{p.scores[self.Score.CS]})*" for p in sorted_players]),'inline':True}
             ],
             footer_text=f"MSE = {self.MSE}"
         )

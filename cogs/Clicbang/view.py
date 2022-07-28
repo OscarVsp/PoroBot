@@ -211,7 +211,7 @@ class BangGame(disnake.ui.View):
         
     @disnake.ui.button(emoji = "🔁", label = "Replay", style = disnake.ButtonStyle.primary, row = 2)
     async def replay(self, button : disnake.ui.Button, interaction : disnake.MessageInteraction):
-        if self.playerSelection in  self.children:
+        if self.playerSelection in self.children:
             self.remove_item(self.playerSelection) 
         await self.start_game(interaction)
         

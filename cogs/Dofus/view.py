@@ -43,7 +43,7 @@ class AlmanaxView(disnake.ui.View):
             offrandes = "\n".join([f"{d['date']} : **{d['item_quantity']}x** {d['item']}" for d in data])
             size = len(offrandes)
             offrandes = [offrandes[i: i + max_embed_size] for i in range(0, len(offrandes), max_embed_size)]
-            embed =  FastEmbed(
+            embed = FastEmbed(
                 title = f":calendar_spiral:__**Almanax des {len(data)} prochains jours**__:calendar_spiral:",
                 description = offrandes[0]
             )
