@@ -50,7 +50,8 @@ class Server(commands.Cog):
     
     @commands.slash_command(
         name="clear",
-        default_member_permissions=disnake.Permissions.all())
+        default_member_permissions=disnake.Permissions.all(),
+        dm_permission=False)
     async def clear(self, inter):
         pass
         
@@ -90,7 +91,8 @@ class Server(commands.Cog):
 
     @commands.slash_command(
         name="channel",     
-        default_member_permissions=disnake.Permissions.all()
+        default_member_permissions=disnake.Permissions.all(),
+        dm_permission=False
     )
     async def channel(self, inter : ApplicationCommandInteraction):
         pass

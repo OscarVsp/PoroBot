@@ -17,7 +17,8 @@ class Clicbang(commands.Cog):
 
 
     @commands.slash_command(
-        description = "Démarrer une partie de bang"
+        description = "Démarrer une partie de bang",
+        dm_permission=False
     )
     async def bang(self, inter : ApplicationCommandInteraction,
         valeur_max : int = commands.Param(

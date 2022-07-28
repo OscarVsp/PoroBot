@@ -24,7 +24,9 @@ class Tournament(commands.Cog):
         self.bot.tournaments_name : List[str] = []
         
     @commands.slash_command(name="tournament",     
-        default_member_permissions=disnake.Permissions.all())
+        default_member_permissions=disnake.Permissions.all(),
+        dm_permission=False
+    )
     async def tournament(self, inter):
         pass
     
