@@ -1,11 +1,12 @@
 import logging
+from pydoc import describe
 import disnake
 from disnake.ext import commands
 from disnake import ApplicationCommandInteraction, ChannelFlags, NotFound, UserCommandInteraction, VoiceChannel
 from utils.FastEmbed import FastEmbed
 from typing import List, Optional
 from .view import Locker
-
+from enum import Enum
 
 
 class Server(commands.Cog):
@@ -74,8 +75,10 @@ class Server(commands.Cog):
         )
     async def channel_lock(self, inter : ApplicationCommandInteraction,
                            channel : str = commands.Param(description="Le channel vocal à verrouiller"),
-                           raison : str = commands.Param(description="La raison du verrouillage (Tournois, Tryhard, ...)", default="Non spécifié")
-                           ):  
+                           raison : str = commands.Param(description='La raison du verrouillage à préciser aux spectateurs (défaut : "Focus")', default="Focus"),
+                           parler : int = commands.Param(description="Est-ce que les spectateurs on le droit de parler (défaut : non).", choices = {"Oui":1,"Non":0}, default = 0),
+                           streamer : int = commands.Param(description="Est-ce que les spectateurs ont le droit de streamer (défaut : non).", choices= {"Oui":1,"Non":0}, default = 0)
+        ):  
         await inter.response.defer(ephemeral=True)
         for chan in inter.guild.voice_channels:
             if chan.name == channel:  
@@ -84,7 +87,7 @@ class Server(commands.Cog):
         if not locked_channel.permissions_for(inter.guild.default_role).speak:
             await inter.edit_original_message(embed=FastEmbed(description=f"Le channel vocal doit initialement permettre au role {inter.guild.default_role.mention} de parler."))
             return
-        newLocker = Locker(inter, self, locked_channel,raison)
+        newLocker = Locker(inter, self, locked_channel,raison,timeout_on_no_participants=1, parler=bool(parler), streamer = bool(streamer))
         await newLocker.lock(inter)
         
             

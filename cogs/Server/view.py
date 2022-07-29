@@ -30,7 +30,17 @@ class Locker(disnake.ui.View):
     
     
         
-    def __init__(self, inter : disnake.ApplicationCommandInteraction, server : commands.Cog, channel : disnake.VoiceChannel, reason : str, timeout_on_no_participants : int = 60):
+    def __init__(self,
+                 inter : disnake.ApplicationCommandInteraction,
+                 server : commands.Cog,
+                 channel : disnake.VoiceChannel,
+                 reason : str,
+                 timeout_on_no_participants : int = 1,
+                 parler : bool = False,
+                 streamer : bool = False,
+                 ecouter : bool = True,
+                 regarder : bool = True
+        ):
         super().__init__(timeout=None)
         self.server : commands.Cog = server
         self.channel : disnake.VoiceChannel = channel
@@ -45,8 +55,8 @@ class Locker(disnake.ui.View):
         self.help_field_state : bool = False
         
         self.muted_perm = disnake.PermissionOverwrite()
-        self.muted_perm.speak = False
-        self.muted_perm.stream = False
+        self.muted_perm.speak = parler
+        self.muted_perm.stream = streamer
         
         self.unmuted_perm = disnake.PermissionOverwrite()
         self.unmuted_perm.speak = None
@@ -56,7 +66,7 @@ class Locker(disnake.ui.View):
         self.authorized_perm.speak = True
         self.authorized_perm.stream = True
         
-        self.timeout_delay : int = timeout_on_no_participants
+        self.timeout_delay : int = timeout_on_no_participants*60
         self.unlock_timeout = False
         
         self.mute.disabled = True
@@ -81,11 +91,11 @@ class Locker(disnake.ui.View):
         participants : List[str] = [p.mention for p in self.authorized_role.members if p in self.channel.members]
         spectateurs : List[str]= [s.mention for s in self.unauthorized_role.members if s in self.channel.members]
         fields.append({
-                    'name':"__**🔊 Participants :**__",
+                    'name':"🔊 __**Participants :**__",
                     'value':"\n".join(participants) if len(participants) > 0 else "*Pas de participant*"
                 })
         fields.append({
-                    'name':"__**"+("🔇" if self.mute.disabled else "🔈")+" Spectateurs :**__",
+                    'name':("🔇" if self.mute.disabled else "🔈")+" __**Spectateurs :**__",
                     'value':"\n".join(spectateurs) if len(spectateurs) > 0 else "*Pas de spectateur*"
                 })
         return FastEmbed(
