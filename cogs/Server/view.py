@@ -72,6 +72,8 @@ class Locker(disnake.ui.View):
         self.mute.disabled = True
         self.unmute.disabled = False
         
+        self.unlock_state : bool = False
+        
     
     def __eq__(self,other):
         return self.channel == other
@@ -141,12 +143,20 @@ class Locker(disnake.ui.View):
                 await member.move_to(self.channel)
             
     async def update(self, inter : disnake.MessageInteraction = None):
+        if self.unlock_state:
+            self.unlock_button.label = "Confirmer ?"
+        else:
+            self.unlock_button.label = "Déverrouiller"
         if inter == None:
-            inter = self.inter
-        await inter.edit_original_message(
-            embed = self.embed,
-            view = self
-        ) 
+            await self.inter.edit_original_message(
+                embed = self.embed,
+                view = self
+            )
+        else:
+            await inter.response.edit_message(
+                embed = self.embed,
+                view = self
+            ) 
         
     async def incoming_connection(self, member : disnake.Member):
         if member not in self.authorized_role.members and member not in self.unauthorized_role.members:
@@ -205,19 +215,19 @@ class Locker(disnake.ui.View):
         
     @disnake.ui.button(emoji = "🔇", label = "Mute", style=disnake.ButtonStyle.primary)
     async def mute(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
-        await interaction.response.defer(ephemeral=True)
         await self.channel.set_permissions(self.unauthorized_role, overwrite=self.muted_perm)
         await self.refresh_voice()
         self.mute.disabled = True
         self.unmute.disabled = False
+        self.unlock_state = False
         await self.update(interaction)
         
     @disnake.ui.button(emoji = "🔈", label = "Unmute", style=disnake.ButtonStyle.primary)
     async def unmute(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
-        await interaction.response.defer(ephemeral=True)
         await self.channel.set_permissions(self.unauthorized_role, overwrite=self.unmuted_perm)
         self.unmute.disabled = True
         self.mute.disabled = False
+        self.unlock_state = False
         await self.update(interaction)
         for member in self.channel.members:
             if self.unauthorized_role in member.roles:
@@ -228,37 +238,40 @@ class Locker(disnake.ui.View):
         
     @disnake.ui.button(emoji = "ℹ️", label = "Voir l'aide", style=disnake.ButtonStyle.green)
     async def info(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
-        await interaction.response.defer(ephemeral=True)
         self.help_field_state = not self.help_field_state
         if self.help_field_state:
             self.info.label = "Cacher l'aide"
         else:
             self.info.label = "Voir l'aide"
+        self.unlock_state = False
         await self.update(interaction)
         
-    @disnake.ui.button(emoji = "🔓", label = "Unlock", style=disnake.ButtonStyle.danger)
+    @disnake.ui.button(emoji = "🔓", label = "Déverrouiller", style=disnake.ButtonStyle.danger)
     async def unlock_button(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
-        await interaction.response.defer(ephemeral=True)
-        await self.unlock(interaction)
+        if self.unlock_state == False:
+            self.unlock_state = True
+            await self.update(interaction)
+        else:
+            await interaction.response.defer()
+            await self.unlock(interaction)
         
     @disnake.ui.select(min_values = 1, max_values = 1, row = 2, placeholder="🚫 Restreindre des participants",options= [
                                 disnake.SelectOption(label = "placeholder",value="1")
                             ])
     async def unauthorize(self, select : disnake.ui.Select, interaction : disnake.MessageInteraction):
-        await interaction.response.defer(ephemeral=True)
         for authorized_member in self.authorized_role.members:
             if str(authorized_member.id) in select.values:
                 await authorized_member.add_roles(self.unauthorized_role, reason="Unauthorized")
                 await authorized_member.remove_roles(self.authorized_role, reason="Unauthorized")
                 await authorized_member.move_to(self.channel)
         self.refresh_presence()
+        self.unlock_state = False
         await self.update(interaction)
         
     @disnake.ui.select(min_values = 1, max_values = 1, row = 3, placeholder="✅ Autoriser des spectateurs",options= [
                                 disnake.SelectOption(label = "placeholder",value="1")
                             ])
     async def authorize(self, select : disnake.ui.Select, interaction : disnake.MessageInteraction):
-        await interaction.response.defer(ephemeral=True)
         for unauthorized_member in self.unauthorized_role.members:
             if str(unauthorized_member.id) in select.values:
                 await unauthorized_member.add_roles(self.authorized_role, reason="Authorized")
@@ -266,5 +279,6 @@ class Locker(disnake.ui.View):
                 await unauthorized_member.move_to(self.channel)
         
         self.refresh_presence()
+        self.unlock_state = False
         await self.update(interaction)
                 

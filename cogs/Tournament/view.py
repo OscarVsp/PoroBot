@@ -22,6 +22,9 @@ class Tournament2v2RollView(disnake.ui.View):
         self.team_selected : Team = None
         self.role : disnake.Role = role
         
+        self.arret_state : bool = False
+
+        
         if not loaded_from_save:
             self.name : str = name
             self.tournament : Tournament2v2Roll = Tournament2v2Roll(self.name,members,ordered)
@@ -141,6 +144,10 @@ class Tournament2v2RollView(disnake.ui.View):
             self.set_team_2_score.placeholder = f"Select a match first."
         if self.tournament.current_round == None:
             self.start.disabled = True
+        if self.arret_state:
+            self.arret.label = "Confirm?"
+        else:
+            self.arret.label = "End"
         await interaction.response.edit_message(
                 embeds = self.dashboard_embeds,
                 view = self
@@ -160,8 +167,9 @@ class Tournament2v2RollView(disnake.ui.View):
         if self.is_admin(interaction):
             await self.update_infos()
             self.update_button.label = "Validate change"
-        self.round_selected = None
-        self.match_selected = None
+            self.round_selected = None
+            self.match_selected = None
+            self.arret_state = False
         await self.update_dashboard(interaction)
         
     @disnake.ui.button(emoji = "🔁", label = "Discard changes", style=disnake.ButtonStyle.primary, row = 1)
@@ -169,23 +177,30 @@ class Tournament2v2RollView(disnake.ui.View):
         if self.is_admin(interaction):
             self.tournament.restore_from_last_state()
             await self.update_infos()
-        self.round_selected = None
-        self.match_selected = None
+            self.round_selected = None
+            self.match_selected = None
+            self.arret_state = False
         await self.update_dashboard(interaction)
         
     @disnake.ui.button(emoji = "🔊", label = "Move to channel", style=disnake.ButtonStyle.gray, row = 1)
     async def start(self, button: disnake.ui.Button, interaction : disnake.MessageInteraction):
-        await self.update_dashboard(interaction)
         if self.is_admin(interaction):
             current_round = self.tournament.current_round
             if current_round != None:
                 for i in range(self.tournament.nb_matches_per_round):
                     for j in range(2):
                         await current_round.matches[i].teams[j].move_to(self.voices[i][j])
+            self.arret_state = False
+        await self.update_dashboard(interaction)
         
     @disnake.ui.button(emoji = "⚠️", label = "End", style=disnake.ButtonStyle.danger, row = 1)
     async def arret(self, button: disnake.ui.Button, interaction : disnake.MessageInteraction):
         if self.is_admin(interaction):
+            if self.arret_state == False:
+                self.arret_state = True
+                self.discard_button.disabled = False
+                await self.update_dashboard(interaction)
+                return
             await interaction.response.defer()
             self.stop()
             try:
@@ -212,6 +227,7 @@ class Tournament2v2RollView(disnake.ui.View):
         if self.is_admin(interaction):
             self.round_selected = self.tournament.rounds[int(select.values[0][0])]
             self.match_selected = self.round_selected.matches[int(select.values[0][1])]
+            self.arret_state = False
         await self.update_dashboard(interaction)
         
         
@@ -233,6 +249,7 @@ class Tournament2v2RollView(disnake.ui.View):
             self.match_selection.disabled = True
             self.discard_button.disabled = False
             self.start.disabled = True
+            self.arret_state = False
         await self.update_dashboard(interaction)
         
     @disnake.ui.select(min_values = 1, max_values = 1, row = 4,
@@ -253,5 +270,6 @@ class Tournament2v2RollView(disnake.ui.View):
             self.match_selection.disabled = True
             self.discard_button.disabled = False
             self.start.disabled = True
+            self.arret_state = False
         await self.update_dashboard(interaction)
   
