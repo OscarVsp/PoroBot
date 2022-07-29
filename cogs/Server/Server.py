@@ -6,7 +6,7 @@ from disnake import ApplicationCommandInteraction, NotFound
 from utils.FastEmbed import FastEmbed
 from typing import List, Optional
 
-from utils.view import ConfirmationView
+from utils.view import confirmation
 from .view import Locker
 from utils.data import color
 
@@ -32,12 +32,9 @@ class Server(commands.Cog):
         name="test"
     )
     async def test(self, inter : ApplicationCommandInteraction):
-        await ConfirmationView.confirm(inter,self.testCallback, target=inter.author, ephemeral=True)
-    
-    
-    @staticmethod
-    async def testCallback(callback_args : dict, interaction : disnake.MessageInteraction):
-        await interaction.edit_original_message(content="Test")
+        await inter.response.defer(ephemeral = True)
+        if (await confirmation(inter.author)):
+            await inter.edit_original_message(embed=FastEmbed(description="Confirmed !"))
  
     @commands.slash_command(
         name="clear",
@@ -57,17 +54,9 @@ class Server(commands.Cog):
             gt = 0
         )
     ):
-        await ConfirmationView.confirm(inter, self.clearMsgCallback,
-                                       callback_args={'nombre':nombre},
-                                       title=f"__**Confirmer la suppression**__",
-                                       message=f"Est-vous sûr de vouloir supprimer les {nombre} derniers message de ce channel ?\n\n⚠️Cette action est irréversible.",
-                                       timeout=30)
-        
-    @staticmethod
-    async def clearMsgCallback(callback_args : dict, interaction : disnake.MessageInteraction):
-        nombre = callback_args.get("nombre")
-        await interaction.channel.purge(limit=nombre)
-        await interaction.edit_original_message(embed = FastEmbed(description = f":broom: {nombre} messages supprimés ! :broom:", color=color.vert))
+        if await confirmation(inter):
+            await inter.channel.purge(limit=nombre)
+            await inter.edit_original_message(embed = FastEmbed(description = f":broom: {nombre} messages supprimés ! :broom:", color=color.vert))
         
         
     @clear.sub_command(
@@ -77,22 +66,14 @@ class Server(commands.Cog):
     async def clearCat(self, inter : ApplicationCommandInteraction,
         categorie : disnake.CategoryChannel = commands.Param(description = "Choisissez category à suppimer")
     ):
-        await ConfirmationView.confirm(inter, self.clearCatCallback,
-                                       callback_args={'category':categorie},
-                                       title=f"__**Confirmer la suppression**__",
-                                       message=f"Est-vous sûr de vouloir supprimer la catégorie __**{categorie.mention}**__ ainsi que tous les channels qu'elle contient :\n"+"\n".join([f"{channel.mention}" for channel in categorie.channels])+"\n\n⚠️Cette action est irréversible.",
-                                       timeout=30)
-
-    @staticmethod
-    async def clearCatCallback(callback_args : dict, interaction : disnake.MessageInteraction):
-        category : disnake.CategoryChannel = callback_args.get("category")
-        for channel in category.channels:
-            await channel.delete()
-        await category.delete()
-        try:
-            await interaction.edit_original_message(embed=FastEmbed(description = f":broom: **Catégorie** *{category.name}* **supprimée** ! :broom:", color=color.vert))
-        except NotFound:
-                pass
+        if await confirmation(inter):
+            for channel in categorie.channels:
+                await channel.delete()
+            await categorie.delete()
+            try:
+                await inter.edit_original_message(embed=FastEmbed(description = f":broom: **Catégorie** *{categorie.name}* **supprimée** ! :broom:", color=color.vert))
+            except NotFound:
+                    pass
             
 
     @commands.slash_command(
