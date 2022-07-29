@@ -16,6 +16,14 @@ class Server(commands.Cog):
         """
         self.bot : commands.InteractionBot = bot
         self.locked_channels : List[Locker] = []
+        
+    @staticmethod
+    def incoming_connection(before : disnake.VoiceState, after : disnake.VoiceState) -> bool:
+        return (after.channel != None and before.channel != after.channel)
+    
+    @staticmethod
+    def outgoing_connection(before : disnake.VoiceState, after : disnake.VoiceState) -> bool:
+        return (before.channel != None and before.channel != after.channel)
  
     @commands.slash_command(
         name="clear",
@@ -76,12 +84,9 @@ class Server(commands.Cog):
         if not locked_channel.permissions_for(inter.guild.default_role).speak:
             await inter.edit_original_message(embed=FastEmbed(description=f"Le channel vocal doit initialement permettre au role {inter.guild.default_role.mention} de parler."))
             return
-        newLocker = Locker(inter,locked_channel,raison)
-        self.locked_channels.append(newLocker)
-        await newLocker.lock()
-        await inter.edit_original_message(embed=newLocker.embed, view=newLocker)
-        if not locked_channel.name.startswith("🔒 "):
-            await locked_channel.edit(name="🔒 "+channel)
+        newLocker = Locker(inter, self, locked_channel,raison)
+        await newLocker.lock(inter)
+        
             
     @channel_lock.autocomplete("channel")
     async def autocomp_locked_chan(self, inter: disnake.ApplicationCommandInteraction, user_input: str):
@@ -89,20 +94,37 @@ class Server(commands.Cog):
         for channel in inter.guild.voice_channels:
             if channel not in self.locked_channels:
                 unlocked_channel.append(channel.name)
-        return unlocked_channel        
+        return unlocked_channel    
+    
+    @commands.Cog.listener('on_voice_state_update')
+    async def on_voice_update(self, member : disnake.Member, before : disnake.VoiceState, after : disnake.VoiceState):
+        if self.incoming_connection(before, after):
+            for locked_channel in self.locked_channels:
+                if locked_channel == after.channel:
+                    await locked_channel.incoming_connection(member)                
+        if self.outgoing_connection(before, after):
+            for locked_channel in self.locked_channels:
+                if locked_channel == before.channel:
+                    await locked_channel.outgoing_connection(member)    
     
     @commands.Cog.listener('on_ready')
     async def on_ready(self):
-        for guild in self.bot.guilds:
+        channels_dirty_name : List[disnake.VoiceChannel] = []
+        for guild in self.bot.guilds:              
             for role in guild.roles:
-                if role.name.endswith("authorized"):
-                    for channel in guild.voice_channels:
-                        if channel.name in [role.name[:len(role.name)-11], role.name[:len(role.name)-13],"🔒 "+role.name[:len(role.name)-11],"🔒 "+role.name[:len(role.name)-13]]:
-                            perm_everyone = disnake.PermissionOverwrite()
-                            perm_everyone.speak = True
-                            await channel.set_permissions(guild.default_role,overwrite=perm_everyone)
-                            await role.delete(reason=f"Cleaning old Locker")
-                            logging.info(f'Role "{guild.name}:{role.name}" deleted by Locker cleaning')
+                if role.name.endswith(Locker.role_name_authorized) or role.name.endswith(Locker.role_name_unauthorized):
+                    await role.delete(reason=f"Cleaning old Locker")
+                    logging.info(f'Role "{guild.name}:{role.name}" deleted by Locker cleaning')
+                    channel_id : int = int(role.name.split(' ')[0])
+                    channel = await self.bot.fetch_channel(channel_id)
+                    if channel.name.startswith("🔒 ") and channel not in channels_dirty_name:
+                        channels_dirty_name.append(channel)
+        for channel in channels_dirty_name:
+            await channel.edit(name=channel.name[2:], reason="Cleanning old Locker")
+            logging.info(f'Channel "{guild.name}:{channel.name}" name cleaned to {channel.name[2:]} by Locker cleaning')
+                   
+                            
+                            
             
         
     
