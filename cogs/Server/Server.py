@@ -1,12 +1,13 @@
 import logging
 from pydoc import describe
+from re import T
 import disnake
 from disnake.ext import commands
 from disnake import ApplicationCommandInteraction, NotFound
 from utils.FastEmbed import FastEmbed
 from typing import List, Optional
 
-from utils.confirmationView import confirmation
+from utils.confirmationView import confirmation,ConfirmationStatus
 from .view import Locker
 from utils.data import color
 
@@ -45,15 +46,19 @@ class Server(commands.Cog):
             gt = 0
         )
     ):
-        if (await confirmation(inter,
+        confirm : ConfirmationStatus = await confirmation(inter,
                                title=f"__**Suppression de {nombre} message(s)**__",
                                message=f"Êtes-vous sûr de vouloir supprimer les {nombre} dernier(s) message(s) de ce channel ?\nCette action est irréversible !",
-                               confirmationLabel=f"Supprimer les message(s)")):
+                               confirmationLabel=f"Supprimer les message(s)",
+                               timeout=5)
+        if confirm:
             await inter.edit_original_message(embed=FastEmbed(description = f"Suppression de {nombre} message(s) en cours... ⌛", color=color.vert), view=None)
             await inter.channel.purge(limit=nombre)
             await inter.edit_original_message(embed = FastEmbed(description = f":broom: {nombre} messages supprimés ! :broom:", color=color.vert))
-        else:
+        elif confirm.is_cancelled:
             await inter.edit_original_message(embed = FastEmbed(description = f":o: Suppresion de {nombre} message(s) annulée", color=color.gris), view = None)
+        else:
+            await inter.edit_original_message(embed = FastEmbed(description = f":o: Suppresion de {nombre} message(s) timeout", color=color.gris), view = None)
         
     @clear.sub_command(
         name='category',
