@@ -7,6 +7,7 @@ from utils.FastEmbed import FastEmbed
 from random import choices
 from utils.data import emotes,color
 from .classes import *
+from utils.confirmationView import confirmation
 
         
         
@@ -129,7 +130,7 @@ class Tournament2v2RollView(disnake.ui.View):
     def rounds(self):
         return self.tournament.rounds_embeds()
             
-    async def update_dashboard(self, interaction : disnake.MessageInteraction):
+    async def update_dashboard(self, interaction : disnake.MessageInteraction, original = False):
         if (self.match_selected and self.round_selected) is not None:
             self.match_selection.placeholder = f"Round {self.round_selected.round_idx+1} Match {chr(ord('A') + self.match_selected.match_idx)}"
             self.set_team_1_score.disabled = False
@@ -144,11 +145,13 @@ class Tournament2v2RollView(disnake.ui.View):
             self.set_team_2_score.placeholder = f"Select a match first."
         if self.tournament.current_round == None:
             self.start.disabled = True
-        if self.arret_state:
-            self.arret.label = "Confirm?"
+        if original:
+            await interaction.edit_original_message(
+                embeds = self.dashboard_embeds,
+                view = self
+            )
         else:
-            self.arret.label = "End"
-        await interaction.response.edit_message(
+            await interaction.response.edit_message(
                 embeds = self.dashboard_embeds,
                 view = self
             ) 
@@ -196,29 +199,31 @@ class Tournament2v2RollView(disnake.ui.View):
     @disnake.ui.button(emoji = "⚠️", label = "End", style=disnake.ButtonStyle.danger, row = 1)
     async def arret(self, button: disnake.ui.Button, interaction : disnake.MessageInteraction):
         if self.is_admin(interaction):
-            if self.arret_state == False:
-                self.arret_state = True
-                self.discard_button.disabled = False
-                await self.update_dashboard(interaction)
-                return
-            await interaction.response.defer()
-            self.stop()
-            try:
-                file = disnake.File(self.tournament.state_file)
-                await self.admin.send(content=f'**__Tournois *"{self.tournament.name}"*__**',embeds=self.dashboard_embeds, file=file)
-                if os.path.exists(self.tournament.state_file):
-                    os.remove(self.tournament.state_file)
-            except:
-                await self.admin.send(embeds=self.dashboard_embeds)
-                await self.admin.send(embed = FastEmbed(title=":x: ERROR :x:", description="Not able to load the files to discord.\nYou can acces them on the host machine and you should to delete them manually once you don't need them anymore."))
-            for channel in self.category.channels:
-                await channel.delete()
-            await self.category.delete()
-            self.bot.tournaments_name.remove(self.name)
-            if len(self.bot.tournaments_name) > 0:
-                await self.bot.change_presence(activity = disnake.Activity(name=", ".join(self.bot.tournaments_name), type=disnake.ActivityType.playing)) 
+            if (await confirmation(interaction,
+                                   title=f"__**Tournament ending confirmation**__",
+                                   message=f"Are you sure that you want to end the tournament **{self.tournament.name}**?",
+                                   confirmationLabel="End the tournament",
+                                   cancelLabel="Cancel")):
+                self.stop()
+                await interaction.edit_original_message(embed=FastEmbed(title=f"__**Tournament {self.tournament.name} ending**__", description="Ending... ⌛"), view=None)
+                try:
+                    file = disnake.File(self.tournament.state_file)
+                    await self.admin.send(content=f'**__Tournois *"{self.tournament.name}"*__**',embeds=self.dashboard_embeds, file=file)
+                    if os.path.exists(self.tournament.state_file):
+                        os.remove(self.tournament.state_file)
+                except:
+                    await self.admin.send(embeds=self.dashboard_embeds)
+                    await self.admin.send(embed = FastEmbed(title=":x: ERROR :x:", description="Not able to load the files to discord.\nYou can acces them on the host machine and you should to delete them manually once you don't need them anymore."))
+                for channel in self.category.channels:
+                    await channel.delete()
+                await self.category.delete()
+                self.bot.tournaments_name.remove(self.name)
+                if len(self.bot.tournaments_name) > 0:
+                    await self.bot.change_presence(activity = disnake.Activity(name=", ".join(self.bot.tournaments_name), type=disnake.ActivityType.playing)) 
+                else:
+                    await self.bot.change_presence(activity=disnake.Game(name='"/" -> commandes'))
             else:
-                await self.bot.change_presence(activity=disnake.Game(name='"/" -> commandes'))
+                await self.update_dashboard(interaction, original=True)            
         else:
             await self.update_dashboard(interaction)      
  

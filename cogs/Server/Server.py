@@ -6,7 +6,7 @@ from disnake import ApplicationCommandInteraction, NotFound
 from utils.FastEmbed import FastEmbed
 from typing import List, Optional
 
-from utils.view import confirmation
+from utils.confirmationView import confirmation
 from .view import Locker
 from utils.data import color
 
@@ -26,15 +26,6 @@ class Server(commands.Cog):
     @staticmethod
     def outgoing_connection(before : disnake.VoiceState, after : disnake.VoiceState) -> bool:
         return (before.channel != None and before.channel != after.channel)
-    
-    
-    @commands.slash_command(
-        name="test"
-    )
-    async def test(self, inter : ApplicationCommandInteraction):
-        await inter.response.defer(ephemeral = True)
-        if (await confirmation(inter.author)):
-            await inter.edit_original_message(embed=FastEmbed(description="Confirmed !"))
  
     @commands.slash_command(
         name="clear",
@@ -54,19 +45,29 @@ class Server(commands.Cog):
             gt = 0
         )
     ):
-        if await confirmation(inter):
+        if (await confirmation(inter,
+                               title=f"__**Suppression de {nombre} message(s)**__",
+                               message=f"Êtes-vous sûr de vouloir supprimer les {nombre} dernier(s) message(s) de ce channel ?\nCette action est irréversible !",
+                               confirmationLabel=f"Supprimer les message(s)")):
+            await inter.edit_original_message(embed=FastEmbed(description = f"Suppression de {nombre} message(s) en cours... ⌛", color=color.vert), view=None)
             await inter.channel.purge(limit=nombre)
             await inter.edit_original_message(embed = FastEmbed(description = f":broom: {nombre} messages supprimés ! :broom:", color=color.vert))
-        
+        else:
+            await inter.edit_original_message(embed = FastEmbed(description = f":o: Suppresion de {nombre} message(s) annulée", color=color.gris), view = None)
         
     @clear.sub_command(
         name='category',
-        description = "Supprimer channels d'une category"
+        description = "Supprimer une categorie"
     )
     async def clearCat(self, inter : ApplicationCommandInteraction,
-        categorie : disnake.CategoryChannel = commands.Param(description = "Choisissez category à suppimer")
+        categorie : disnake.CategoryChannel = commands.Param(description = "Choisissez categorie à suppimer")
     ):
-        if await confirmation(inter):
+
+        if await confirmation(inter,
+                              title=f"__**Suppression de la categorie *{categorie.name}***__",
+                              message=f"Êtes-vous sûr de vouloir supprimer la catégorie ***{categorie.mention}*** ?\nCela supprimera également les {len(categorie.channels)} channels contenus dans celle-ci :\n"+"\n".join(channel.mention for channel in categorie.channels)+"\nCette action est irréversible !",
+                              confirmationLabel="Supprimer la catégorie"):
+            await inter.edit_original_message(embed=FastEmbed(description = f"Suppression de la catégorie *{categorie.name}* en cours... ⌛", color=color.vert), view=None)
             for channel in categorie.channels:
                 await channel.delete()
             await categorie.delete()
@@ -74,6 +75,8 @@ class Server(commands.Cog):
                 await inter.edit_original_message(embed=FastEmbed(description = f":broom: **Catégorie** *{categorie.name}* **supprimée** ! :broom:", color=color.vert))
             except NotFound:
                     pass
+        else:
+            await inter.edit_original_message(embed=FastEmbed(description = f":o: Suppression de la catégorie {categorie.mention} annulée !", color=color.gris), view = None)
             
 
     @commands.slash_command(
@@ -85,7 +88,7 @@ class Server(commands.Cog):
     async def channel_lock(self, inter : ApplicationCommandInteraction,
                            channel : str = commands.Param(description="Le channel vocal à verrouiller"),
                            raison : str = commands.Param(description='La raison du verrouillage à préciser aux spectateurs (défaut : "Focus")', default="Focus"),
-                           parler : int = commands.Param(description="Est-ce que les spectateurs on le droit de parler (défaut : non).", choices = {"Oui":1,"Non":0}, default = 0),
+                           parler : int = commands.Param(description="Est-ce que les spectateurs ont le droit de parler (défaut : non).", choices = {"Oui":1,"Non":0}, default = 0),
                            streamer : int = commands.Param(description="Est-ce que les spectateurs ont le droit de streamer (défaut : non).", choices= {"Oui":1,"Non":0}, default = 0)
         ):  
         await inter.response.defer(ephemeral=True)

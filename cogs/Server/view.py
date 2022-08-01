@@ -1,3 +1,4 @@
+from code import interact
 import disnake 
 from disnake import ApplicationCommandInteraction
 from disnake.ext import commands
@@ -7,6 +8,7 @@ from utils import data
 import asyncio
 from typing import List
 import logging
+from utils.confirmationView import confirmation
 
 class Locker(disnake.ui.View):
     
@@ -72,8 +74,6 @@ class Locker(disnake.ui.View):
         self.mute.disabled = True
         self.unmute.disabled = False
         
-        self.unlock_state : bool = False
-        
     
     def __eq__(self,other):
         return self.channel == other
@@ -83,6 +83,10 @@ class Locker(disnake.ui.View):
     
     def is_unauthorized(self, member : disnake.Member) -> bool:
         return self.unauthorized_role and self.unauthorized_role in member.roles
+    
+    @property
+    def title(self) -> str:
+        return f"🔒 __**Channel** *#{self.channel_original_name}* **verrouillé**__"
        
     @property
     def embed(self) -> disnake.Embed:
@@ -101,7 +105,7 @@ class Locker(disnake.ui.View):
                     'value':"\n".join(spectateurs) if len(spectateurs) > 0 else "*Pas de spectateur*"
                 })
         return FastEmbed(
-            title = f"🔒 __**Channel** *#{self.channel_original_name}* **verrouillé**__",
+            title = self.title,
             description="➖➖➖➖➖➖➖➖➖➖➖➖➖➖➖➖➖➖➖➖➖➖",
             fields = fields,
             color = data.color.vert
@@ -143,10 +147,6 @@ class Locker(disnake.ui.View):
                 await member.move_to(self.channel)
             
     async def update(self, inter : disnake.MessageInteraction = None):
-        if self.unlock_state:
-            self.unlock_button.label = "Confirmer ?"
-        else:
-            self.unlock_button.label = "Déverrouiller"
         if inter == None:
             await self.inter.edit_original_message(
                 embed = self.embed,
@@ -163,7 +163,7 @@ class Locker(disnake.ui.View):
             await member.add_roles(self.unauthorized_role, reason = f"Lock channel - {self.reason}")
             await member.move_to(self.channel)
             await member.send(embed=FastEmbed(
-                    title="🔒 Channel vocal verrouillé",
+                    title=self.title,
                     description=f"Le channel vocal que tu viens de rejoindre a été verrouillé par {self.author.display_name} pour la raison suivante :\n\n**__{self.reason}__**\n\nCela veut dire que tu ne peux pas parler ni streamer, mais tu peux toujours écouter les autres et regarder des streams."
                 ))
         self.refresh_presence()
@@ -191,6 +191,11 @@ class Locker(disnake.ui.View):
             await self.unlock()
             
     async def unlock(self, inter : disnake.MessageInteraction = None):
+        await inter.edit_original_message(
+            embed = FastEmbed(
+                title = f"🔓 __**Channel** *#{self.channel_original_name}* **verrouillé**__",
+                description="Déverrouillage en cours... ⌛"
+            ), view = None)
         self.stop()
         self.server.locked_channels.remove(self)
         members_to_notify = [s for s in self.channel.members if self.unauthorized_role in s.roles]
@@ -203,8 +208,7 @@ class Locker(disnake.ui.View):
                 title = f"🔓 __**Channel** *#{self.channel_original_name}* **déverrouillé**__",
                 description="Le channel à bien été __**déverrouillé**__ !",
                 footer_text="Tu peux rejeter ce message pour le faire disparaitre."
-            ), view = None
-        ) 
+            )) 
         for member in members_to_notify:
             await member.send(embed=FastEmbed(
                 title=f"🔓 __**Channel** *#{self.channel_original_name}* **déverrouillé**__",
@@ -248,12 +252,13 @@ class Locker(disnake.ui.View):
         
     @disnake.ui.button(emoji = "🔓", label = "Déverrouiller", style=disnake.ButtonStyle.danger)
     async def unlock_button(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
-        if self.unlock_state == False:
-            self.unlock_state = True
-            await self.update(interaction)
-        else:
-            await interaction.response.defer()
+        if (await confirmation(interaction, 
+                               title=f"🔓 __**Déverrouiller le channel *{self.channel.name}***__", 
+                               message=f"Es-tu sûr de vouloir déverrouiller le channel {self.channel.mention} ?",
+                               confirmationLabel="Déverrouiller")):
             await self.unlock(interaction)
+        else:
+            await self.update()
         
     @disnake.ui.select(min_values = 1, max_values = 1, row = 2, placeholder="🚫 Restreindre des participants",options= [
                                 disnake.SelectOption(label = "placeholder",value="1")
