@@ -72,7 +72,7 @@ class Basic(commands.Cog):
                         ))
                 else :
                     await inter.edit_original_message(embed=FastEmbed(
-                        title=f"❌ Update failed with status code {data.emotes.number_to_emotes[process.returncode]}",
+                        title=f"❌ Update failed with status code {data.emotes.num[process.returncode]}",
                         description=f"```{stderr.decode().strip()}```"
                     ))
             except FileNotFoundError as e:
@@ -140,7 +140,7 @@ class Basic(commands.Cog):
                         ))
                 else :
                     await inter.edit_original_message(embed=FastEmbed(
-                        title=f"❌ Command failed with status code {data.emotes.number_to_emotes[process.returncode]}",
+                        title=f"❌ Command failed with status code {data.emotes.num[process.returncode]}",
                         description=f"```{stderr.decode().strip()}```"
                     ))
             except FileNotFoundError as e:
