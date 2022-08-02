@@ -211,7 +211,7 @@ class Tournament2v2RollView(disnake.ui.View):
                     await self.admin.send(content=f'**__Tournois *"{self.tournament.name}"*__**',embeds=self.dashboard_embeds, file=file)
                     if os.path.exists(self.tournament.state_file):
                         os.remove(self.tournament.state_file)
-                except:
+                except OSError:
                     await self.admin.send(embeds=self.dashboard_embeds)
                     await self.admin.send(embed = FastEmbed(title=":x: ERROR :x:", description="Not able to load the files to discord.\nYou can acces them on the host machine and you should to delete them manually once you don't need them anymore."))
                 for channel in self.category.channels:
