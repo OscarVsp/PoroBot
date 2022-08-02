@@ -74,7 +74,7 @@ class Basic(commands.Cog):
                 else :
                     await inter.edit_original_message(embed=FastEmbed(
                         title=f"❌ Update failed with status code {data.emotes.num[process.returncode]}",
-                        description=f"```{stderr.decode().strip()}```"
+                        description=f"```{stdChoiceerr.decode().strip()}```"
                     ))
             except FileNotFoundError as e:
                 await inter.edit_original_message(embed=FastEmbed(
@@ -147,7 +147,7 @@ class Basic(commands.Cog):
                         ))
                 except TimeoutError:
                     await inter.edit_original_message(embed=FastEmbed(
-                            title=f"❌ Command timeout with status code {data.emotes.num[process.returncode]}",
+                            title=f"❌ Command timeout",
                             description=f"```{stderr.decode().strip()}```"
                         ))
             except FileNotFoundError as e:
