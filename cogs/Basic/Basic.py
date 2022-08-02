@@ -53,7 +53,7 @@ class Basic(commands.Cog):
     @commands.check(is_owner)
     async def update(self, inter : disnake.ApplicationCommandInteraction):
         await inter.response.defer(ephemeral=True)
-        completedProcess = subprocess.run("cd /home/pi/PoroBot/ && git pull origin master",text=True,capture_output=True)
+        completedProcess = subprocess.run("cd /home/pi/PoroBot/ && /usr/lib/git-core/git pull origin master",text=True,capture_output=True)
         if completedProcess.returncode == 0:
             await inter.edit_original_message(embed=FastEmbed(
                 title=f"✅ Update succes",
@@ -77,7 +77,7 @@ class Basic(commands.Cog):
                 description=f"Cannot restart in test mode."
             ))
         else:
-            completedProcess = subprocess.run("pm2 restart /home/pi/poro.sh",text=True,capture_output=True)
+            completedProcess = subprocess.run("/user/local/bin/pm2 restart /home/pi/poro.sh",text=True,capture_output=True)
             if completedProcess.returncode == 0:
                 await inter.edit_original_message(embed=FastEmbed(
                     title=f"✅ Restart succes",
