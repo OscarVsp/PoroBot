@@ -1,7 +1,8 @@
 import os
 import disnake 
-from disnake import ApplicationCommandInteraction
+from disnake import ApplicationCommandInteraction, Colour
 from disnake.ext.commands import InteractionBot
+from requests import delete
 from cogs.Tournament.classes import Tournament2v2Roll
 from utils.FastEmbed import FastEmbed
 from random import choices
@@ -13,7 +14,7 @@ from utils.confirmationView import confirmation
         
 class Tournament2v2RollView(disnake.ui.View):
       
-    def __init__(self, inter : ApplicationCommandInteraction, bot, role : disnake.Role, members : List[disnake.Member] = None, ordered : bool = False, name : str = "Tournament", loaded_from_save : bool = False):
+    def __init__(self, inter : ApplicationCommandInteraction, bot, role : disnake.Role, ordered : bool = False, name : str = "Tournament", loaded_from_save : bool = False):
         super().__init__(timeout=None)
         self.bot : InteractionBot = bot
         self.inter : ApplicationCommandInteraction = inter
@@ -28,7 +29,7 @@ class Tournament2v2RollView(disnake.ui.View):
         
         if not loaded_from_save:
             self.name : str = name
-            self.tournament : Tournament2v2Roll = Tournament2v2Roll(self.name,members,ordered)
+            self.tournament : Tournament2v2Roll = Tournament2v2Roll(self.name,role.members,ordered)
             self.tournament.generate()
             self.make_options()
             
@@ -70,6 +71,7 @@ class Tournament2v2RollView(disnake.ui.View):
         cat_perm.connect = True
         await self.category.set_permissions(self.role,overwrite=cat_perm)
         
+        self.channel_overview = await self.category.create_text_channel(name="📋 Overview")
         self.channel_rank = await self.category.create_text_channel(name="🏅 Classement")
         self.channel_rounds = await self.category.create_text_channel(name="📅 Rounds")
         self.channel_rules = await self.category.create_text_channel(name="📜 Règles")
@@ -104,11 +106,21 @@ class Tournament2v2RollView(disnake.ui.View):
             description="Les rounds seront affichés ici une fois que le tournoi aura commencé",
             color = color.gold
         ))
-        await self.channel_rules.send(embed=self.rules)
+        self.message_rules = await self.channel_rules.send(embed=self.rules)
+        self.message_overview = await self.channel_overview.send(
+            content=self.role.mention,
+            embed=FastEmbed(
+                title=f"🏆 __**{self.name.upper()}**__ 🏆",
+                description=f"**Bienvenu dans ce tournoi !**\n\n[{self.channel_rank.mention}]({self.message_rank.jump_url}) pour voir le **classement en direct**.\n[{self.channel_rounds.mention}]({self.message_rounds.jump_url}) pour **l'avancement des rounds.**\n[{self.channel_rules.mention}]({self.message_rules.jump_url}) pour voir les **règles du tournoi.**\n➖➖\n{self.voice_general.mention} pour rejoindre le **vocal du tournoi**",
+                image="https://i.imgur.com/GoV9WVk.jpg",
+                color=disnake.Colour.dark_green()
+            )
+        )
         self.message_dashboard = await self.channel_dashboard.send(embeds=self.dashboard_embeds,view=self)
         
     def is_admin(self, inter : disnake.MessageInteraction):
         return inter.author.id == self.admin.id
+    
         
 
     @property   
@@ -201,9 +213,10 @@ class Tournament2v2RollView(disnake.ui.View):
         if self.is_admin(interaction):
             if (await confirmation(interaction,
                                    title=f"__**Tournament ending confirmation**__",
-                                   message=f"Are you sure that you want to end the tournament **{self.tournament.name}**?",
+                                   message=f"⚠️ Are you sure that you want to end the tournament **{self.tournament.name}**? ⚠️",
                                    confirmationLabel="End the tournament",
-                                   cancelLabel="Cancel")):
+                                   cancelLabel="Cancel",
+                                   color=disnake.Colour.red())):
                 self.stop()
                 await interaction.edit_original_message(embed=FastEmbed(title=f"__**Tournament {self.tournament.name} ending**__", description="Ending... ⌛"), view=None)
                 try:
@@ -217,6 +230,7 @@ class Tournament2v2RollView(disnake.ui.View):
                 for channel in self.category.channels:
                     await channel.delete()
                 await self.category.delete()
+                await self.role.delete()
                 self.bot.tournaments_name.remove(self.name)
                 if len(self.bot.tournaments_name) > 0:
                     await self.bot.change_presence(activity = disnake.Activity(name=", ".join(self.bot.tournaments_name), type=disnake.ActivityType.playing)) 

@@ -65,8 +65,11 @@ class Tournament(commands.Cog):
             )
             self.bot.tournaments_name += [name]
             await self.bot.change_presence(activity = disnake.Activity(name=", ".join(self.bot.tournaments_name), type=disnake.ActivityType.playing)) 
-            tournament_role = await inter.guild.create_role(name=f"Tournament {name} role")      
-            new_tournament = Tournament2v2RollView(inter, self.bot, tournament_role, members = members, name = name)
+            tournament_role = await inter.guild.create_role(name=f"Tournament {name} role")
+            for member in members:
+                await member.add_roles(tournament_role, reason=f"Tournement {name}")    
+            await asyncio.sleep(2)
+            new_tournament = Tournament2v2RollView(inter, self.bot, tournament_role, name = name)
             await new_tournament.makeChannels()
             await inter.edit_original_message(
                 embed = FastEmbed(description=f"Tournois {name} créé.\n[Dashboard]({new_tournament.channel_dashboard.jump_url})")

@@ -666,7 +666,7 @@ class Round:
     
     @property
     def title(self) -> str:
-        return f"__**ROUND **__{emotes.num[self._round_idx+1]}"
+        return f"⚔️ __**ROUND **__{emotes.num[self._round_idx+1]}"
 
     @property
     def embed(self) -> disnake.Embed:
@@ -687,10 +687,10 @@ class Round:
     @property
     def embed_color(self) -> disnake.Color:
         if self.is_played:
-            return color.vert
+            return disnake.Colour.green()
         elif self.round_idx == 0 or self._tournament.rounds[self._tournament.rounds.index(self)-1].is_played:
-            return color.gold
-        return color.gris
+            return disnake.Colour.gold()
+        return disnake.Colour.darker_grey()
         
             
     @property
@@ -1081,7 +1081,7 @@ class Tournament2v2Roll(Tournament):
                          nb_teams_per_match=2,
                          nb_players_per_team=2, 
                          size_of_scores=3, 
-                         weigths=[1.01,1,0.99],
+                         weigths=[1.001,1,0.989],
                          scores_descriptor=["kill(s)","turret(s)","cs"])
         
         logging.info(f"{self.log_id} Initializing tournament {self._name} of {len(self._players)} players.")
@@ -1121,12 +1121,12 @@ class Tournament2v2Roll(Tournament):
         sorted_players = self.getRanking()
         ranks = Tournament2v2Roll.rank_emotes(sorted_players)
         return FastEmbed(
-            title = "__**CLASSEMENT**__",
+            title = "🏆 __**CLASSEMENT**__ 🏆",
             color = color.gold,
             fields=[
-                {'name':"__**Rank**__",'value':"\n".join([f"{ranks[i]}" for i in range(len(sorted_players))]),'inline':True},
-                {'name':"__**Players**__",'value':"\n".join([f"**{p.display}**" for p in sorted_players]),'inline':True},
-                {'name':"__**Scores**__",'value':"\n".join([f"**{round(p.points)}**" for p in sorted_players]),'inline':True}
+                {'name':"#️⃣",'value':"\n".join([f"{ranks[i]}" for i in range(len(sorted_players))]),'inline':True},
+                {'name':"__*Joueurs*__",'value':"\n".join([f"**{p.display}**" for p in sorted_players]),'inline':True},
+                {'name':"💎",'value':"\n".join([f" **{emotes.num[round(p.points)]}**" for p in sorted_players]),'inline':True}
             ]
         )
    
@@ -1135,12 +1135,12 @@ class Tournament2v2Roll(Tournament):
         sorted_players = self.getRanking()
         ranks = Tournament2v2Roll.rank_emotes(sorted_players)
         return FastEmbed(
-            title = "__**CLASSEMENT**__",
+            title = "🏆 __**CLASSEMENT**__🏆 ",
             color = color.gold,
             fields=[
-                {'name':"__**Rank**__",'value':"\n".join([f"{ranks[i]}" for i in range(len(sorted_players))]),'inline':True},
-                {'name':"__**Players**__",'value':"\n".join([f"**{p.display}**" for p in sorted_players]),'inline':True},
-                {'name':"__**Scores**__",'value':"\n".join([f"**{round(p.points)}** *({p.scores[self.Score.KILLS]}-{p.scores[self.Score.TURRETS]}-{p.scores[self.Score.CS]})*" for p in sorted_players]),'inline':True}
+                {'name':"#️⃣",'value':"\n".join([f"{ranks[i]}" for i in range(len(sorted_players))]),'inline':True},
+                {'name':"__*Joueurs*__",'value':"\n".join([f"**{p.display}**" for p in sorted_players]),'inline':True},
+                {'name':"💎➖💀-🧱-🧙‍♂️",'value':"\n".join([f"**{emotes.num[round(p.points)]}**➖*{emotes.num[p.scores[self.Score.KILLS]]}-{emotes.num[p.scores[self.Score.TURRETS]]}-{emotes.num[p.scores[self.Score.CS]]}*" for p in sorted_players]),'inline':True}
             ],
             footer_text=f"MSE = {self.MSE}"
         )
@@ -1149,7 +1149,7 @@ class Tournament2v2Roll(Tournament):
     def rules(self) -> disnake.Embed:
         return FastEmbed(
             title = ":scroll: __**RÈGLES**__ :scroll:",
-            color = color.gold,
+            color = disnake.Colour.blue(),
             fields = [
                 {
                     'name':"__**Format du tournoi**__",
@@ -1176,7 +1176,7 @@ class Tournament2v2Roll(Tournament):
                     'value':"""Le match se finit lorsque l'une des deux équipes a __2 points__. Une équipe gagne :one: point pour :
                             ⚔️  __Chaque kills__
                             🧱 __1e tourelle de la game__
-                            💰 __1e **joueur** d'une équipe à 100cs__"""
+                            🧙‍♂️ __1e **joueur** d'une équipe à 100cs__"""
                 },
                 {
                     'name':"__**Score personnel**__",
