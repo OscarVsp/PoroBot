@@ -1,5 +1,5 @@
 import disnake
-from typing import List
+from typing import List, Union
 
 from .FastEmbed import FastEmbed
 from .data import color
@@ -7,11 +7,12 @@ from .data import color
 
 class MemberSelectionView(disnake.ui.View):
     
-    def __init__(self, inter : disnake.Interaction, title : str, message : str, timeout : int, pre_selected_members : List[disnake.Member], check):
+    def __init__(self, inter : disnake.Interaction, title : str, message : str, size : List[int], timeout : int, pre_selected_members : List[disnake.Member], check):
         super().__init__(timeout=timeout)
         self.inter : disnake.Interaction = inter
         self.title : str = title
         self.message : str = message
+        self.size : List[int] = size
         self.selected_members : List[disnake.Member] = pre_selected_members
         self.check = check
         self.is_application_interaction : bool = isinstance(inter, disnake.ApplicationCommandInteraction)
@@ -22,11 +23,12 @@ class MemberSelectionView(disnake.ui.View):
     def embed(self) -> disnake.Embed:
         return FastEmbed(
             title = f"__**{self.title.upper()}**__",
+            description=self.message,
             fields={
                 'name':"__Membre(s) sélectionné(s) :__",
                 'value':"\n".join(member.mention for member in self.selected_members) if len(self.selected_members) else "*Aucun membre sélectionné...*"
             },
-            footer_text=self.message
+            footer_text=f"Il faut un nombre de membre sélectionné(s) compris dans {self.size} pour pouvoir valider" if self.confirm.disabled else disnake.Embed.Empty
         )
             
     async def send(self):
@@ -59,6 +61,9 @@ class MemberSelectionView(disnake.ui.View):
             self.add.options = [disnake.SelectOption(label="Placeholder",value="0")]
             self.add.disabled=True
         self.add.max_values = len(self.add.options)
+        
+        if self.size:
+            self.confirm.disabled = not len(self.selected_members) in self.size
      
     async def update(self, inter : disnake.MessageInteraction = None):
         if inter == None:
@@ -110,14 +115,17 @@ class MemberSelectionView(disnake.ui.View):
 async def memberSelection(
     inter : disnake.Interaction,
     title : str = "Sélection des membres",
-    message : str = "Sélectionner les members ci-dessous",
+    message : str = "",
+    size : Union[int, List[int]] = None,
     timeout : int = 180,
     pre_selected_members : List[disnake.Member] = [],
     check = None) -> List[disnake.Member]:
     """|coro|\n
     TODO
     """
-    memberSelectionView = MemberSelectionView(inter=inter, title=title, message=message, timeout=timeout, pre_selected_members=pre_selected_members, check=check)
+    if isinstance(size, int):
+        size = [size]
+    memberSelectionView = MemberSelectionView(inter=inter, title=title, message=message, timeout=timeout, size=size, pre_selected_members=pre_selected_members, check=check)
     await memberSelectionView.send()
     await memberSelectionView.wait()
     return memberSelectionView.selected_members
