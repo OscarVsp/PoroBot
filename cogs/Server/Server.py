@@ -1,13 +1,12 @@
 import logging
-from pydoc import describe
-from re import T
 import disnake
 from disnake.ext import commands
 from disnake import ApplicationCommandInteraction, NotFound
 from utils.FastEmbed import FastEmbed
-from typing import List, Optional
+from typing import List
 
 from utils.confirmationView import confirmation,ConfirmationStatus
+from utils.memberSelectionView import memberSelection
 from .view import Locker
 from utils.data import color
 
@@ -82,8 +81,68 @@ class Server(commands.Cog):
                     pass
         else:
             await inter.edit_original_message(embed=FastEmbed(description = f":o: Suppression de la catégorie {categorie.mention} annulée !", color=color.gris), view = None)
+          
+    @commands.slash_command(
+        name="export",default_member_permissions=disnake.Permissions.all(),
+        dm_permission=False,
+    )    
+    async def export(self, inter):
+        pass
+    
+    @export.sub_command_group(
+        name="role"
+    )
+    async def export_role(self, inter):
+        pass
+    
+    
             
+    @export_role.sub_command(
+        name="from_event",
+        description="Créer un role à partir des participants d'un évennement."
+    )
+    async def export_role_from_event(self, inter : disnake.ApplicationCommandInteraction,
+                              event : str = commands.Param(description="L'évennement depuis lequel exporter les membres"),
+                              name : str = commands.Param(description='Le nom du role à créer (default = "event.name role")', default=None)):
+        await inter.response.defer(ephemeral=True)
+        events = await inter.guild.fetch_scheduled_events()
+        event : disnake.GuildScheduledEvent = next((e for e in events if e.name == event), None)
+        if not name:
+            name = f"{event.name} role"
+        event_members = []
+        async for member in event.fetch_users():
+            event_members.append(member)
+        
+        selected_members = await memberSelection(inter, title="Export role from event", message="Select members below", timeout=300, pre_selected_members=event_members)    
+        await inter.edit_original_message(embed=FastEmbed(description="\n".join(member.display_name for member in selected_members) if len(selected_members) > 0 else "*Aucun membre sélectionné*"), view = None)
+    
+        
+    @export_role_from_event.autocomplete("event")
+    async def autocomp_locked_chan(self, inter: disnake.ApplicationCommandInteraction, user_input: str):
+        events = []
+        for event in inter.guild.scheduled_events:
+            if event.name.lower().startswith(user_input.lower()):
+                events.append(event.name)
+        return events    
+    
+    @export_role.sub_command(
+        name="from_role",
+        description="Créer un role à partir d'un role existant."
+    )
+    async def export_role_from_event(self, inter : disnake.ApplicationCommandInteraction,
+                              role : disnake.Role = commands.Param(description="Le role depuis lequel exporter les members"),
+                              name : str = commands.Param(description='Le nom du role à créer (default = "role.name copy")', default=None)):
+        await inter.response.defer(ephemeral=True)
+        if not name:
+            name = f"{role.name} copy"
+        
+        
+        selected_members = await memberSelection(inter, title="Export role from role", message="Select members below", timeout=300, pre_selected_members=role.members)    
+        await inter.edit_original_message(embed=FastEmbed(description="\n".join(member.display_name for member in selected_members) if len(selected_members) > 0 else "*Aucun membre sélectionné*"), view = None)
+    
+        
 
+    
     @commands.slash_command(
         name="lock",
         default_member_permissions=disnake.Permissions.all(),

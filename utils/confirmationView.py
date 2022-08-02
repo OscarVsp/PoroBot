@@ -1,11 +1,7 @@
-import asyncio
-from dataclasses import MISSING
 from enum import Enum
-from urllib import response
 import disnake
-from typing import Tuple, Union, List
 
-from pydantic import TimeError
+
 from .FastEmbed import FastEmbed
 from .data import color
 
