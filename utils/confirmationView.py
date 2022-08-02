@@ -67,18 +67,13 @@ class ConfirmationView(disnake.ui.View):
         if self.is_application_interaction:
             if self.inter.response.is_done():
                 original_embeds = (await self.inter.original_message()).embeds
-                if len(self.original_embeds) > 0:
-                    await self.inter.edit_original_message(embeds=original_embeds+[self.embed], view=self)
-                else:
-                    await self.inter.edit_original_message(embed=self.embed, view=self)
+                await self.inter.edit_original_message(embeds=original_embeds+[self.embed], view=self)
             else:
                 await self.inter.response.send_message(embed=self.embed, view=self, ephemeral=True)
         elif self.is_view_interaction:
             original_embeds = self.inter.message.embeds
-            if len(self.original_embeds) > 0:
-                await self.inter.response.edit_message(embeds=original_embeds+[self.embed], view=self)
-            else:
-                await self.inter.response.edit_message(embed=self.embed, view=self)
+            await self.inter.response.edit_message(embeds=original_embeds+[self.embed], view=self)
+
 
         
     async def cancel(self, interaction : disnake.MessageInteraction):
