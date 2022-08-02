@@ -137,8 +137,8 @@ class Server(commands.Cog):
             name = f"{role.name} copy"
         
         
-        selected_members = await memberSelection(inter, title="Export role from role", message="Select members below", timeout=300, pre_selected_members=role.members)    
-        await inter.edit_original_message(embed=FastEmbed(description="\n".join(member.display_name for member in selected_members) if len(selected_members) > 0 else "*Aucun membre sélectionné*"), view = None)
+        selected_members = await memberSelection(inter, title="Export role from role", size = 4, message="Select members to export to the new role", timeout=300, pre_selected_members=role.members)    
+        await inter.edit_original_message(embed=FastEmbed(description="\n".join(member.display_name for member in selected_members) if (selected_members and len(selected_members) > 0 )else "*Aucun membre sélectionné*"), view = None)
     
         
 
