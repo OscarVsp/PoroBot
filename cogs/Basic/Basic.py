@@ -1,3 +1,4 @@
+from typing import List
 import disnake
 from disnake.ext import commands
 from disnake import ApplicationCommandInteraction
@@ -46,6 +47,53 @@ class Basic(commands.Cog):
             view=PoroFeed(inter)
         )
         
+    async def update_proc(self, inter : disnake.ApplicationCommandInteraction, branch : str, restart : bool):
+        cmd_split = ("git","pull","origin",branch)
+        try:
+            process = await asyncio.create_subprocess_exec(
+                *cmd_split, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await process.communicate()
+            if process.returncode == 0:
+                embed = FastEmbed(
+                        title=f"✅ Update successed",
+                        description=f"```{stdout.decode().strip()}```"
+                    )
+                await inter.edit_original_message(embed=embed)
+                if restart:
+                    await self.restart_proc(inter)
+            else :
+                await inter.edit_original_message(embed=FastEmbed(
+                    title=f"❌ Update failed with status code {data.emotes.num[process.returncode]}",
+                    description=f"```{stderr.decode().strip()}```"
+                ))
+        except FileNotFoundError as e:
+            await inter.edit_original_message(embed=FastEmbed(
+                    title=f"❌ Update failed due to *FileNotFoundError*",
+                    description=f"```Couldn't find file {cmd_split[0]}```"))
+    
+    async def restart_proc(self, inter : disnake.ApplicationCommandInteraction):
+        cmd_split = ("pm2","restart","poro")
+        embeds : List[disnake.Embed] = await inter.original_message().embeds
+        try:
+            process = await asyncio.create_subprocess_exec(
+                *cmd_split, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+            )
+            embeds.append(FastEmbed(
+                title=f"⌛ Restarting..."
+            ))
+            await inter.edit_original_message(embeds=embeds)
+
+            stdout, stderr = await process.communicate()
+            
+        except FileNotFoundError as e:
+            embeds.append(FastEmbed(
+                    title=f"❌ Restart failed due to *FileNotFoundError*",
+                    description=f"Couldn't find file ***{cmd_split[0]}***"))
+            await inter.edit_original_message(embeds=embeds)  
+        
+        
+        
     @commands.slash_command(
         description="Update the bot",
         default_member_permissions=disnake.Permissions.all()
@@ -60,46 +108,8 @@ class Basic(commands.Cog):
                 description=f"Cannot update in test mode."
             ))
         else:
-            cmd_split = ("git","pull","origin",branch)
-            try:
-                process = await asyncio.create_subprocess_exec(
-                    *cmd_split, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
-                )
-                stdout, stderr = await process.communicate()
-                if process.returncode == 0:
-                    embed = FastEmbed(
-                            title=f"✅ Update successed",
-                            description=f"```{stdout.decode().strip()}```"
-                        )
-                    await inter.edit_original_message(embed=embed)
-                    if restart:
-                        cmd_split = ("pm2","restart","poro")
-                        try:
-                            process = await asyncio.create_subprocess_exec(
-                                *cmd_split, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
-                            )
-                            embeds = [embed, FastEmbed(
-                                title=f"⌛ Restarting..."
-                            )]
-                            await inter.edit_original_message(embeds=embeds)
-
-                            stdout, stderr = await process.communicate()
-                            
-                        except FileNotFoundError as e:
-                            embeds = [embed, FastEmbed(
-                                    title=f"❌ Restart failed due to *FileNotFoundError*",
-                                    description=f"Couldn't find file ***{cmd_split[0]}***")]
-                            await inter.edit_original_message(embeds=embeds)  
-                else :
-                    await inter.edit_original_message(embed=FastEmbed(
-                        title=f"❌ Update failed with status code {data.emotes.num[process.returncode]}",
-                        description=f"```{stderr.decode().strip()}```"
-                    ))
-            except FileNotFoundError as e:
-                await inter.edit_original_message(embed=FastEmbed(
-                        title=f"❌ Update failed due to *FileNotFoundError*",
-                        description=f"```Couldn't find file {cmd_split[0]}```"
-                    ))
+            await self.update_proc(inter,branch,restart)
+            
                 
                 
     @commands.slash_command(
@@ -114,23 +124,7 @@ class Basic(commands.Cog):
                 description=f"Cannot restart in test mode."
             ))
         else:
-            cmd_split = ("pm2","restart","poro")
-            try:
-                process = await asyncio.create_subprocess_exec(
-                    *cmd_split, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
-                )
-                
-                await inter.edit_original_message(embed=FastEmbed(
-                    title=f"⌛ Restarting..."
-                ))
-
-                stdout, stderr = await process.communicate()
-                  
-            except FileNotFoundError as e:
-                await inter.edit_original_message(embed=FastEmbed(
-                        title=f"❌ Restart failed due to *FileNotFoundError*",
-                        description=f"Couldn't find file ***{cmd_split[0]}***"
-                    ))
+            await self.restart_proc(inter)
 
             
     @commands.slash_command(
