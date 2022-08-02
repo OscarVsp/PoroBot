@@ -52,7 +52,8 @@ class Basic(commands.Cog):
     )
     @commands.check(is_owner)
     async def update(self, inter : disnake.ApplicationCommandInteraction,
-                     branch : str = commands.Param(description="The branch to pull", choices=["master","test"], default="master")):
+                     branch : str = commands.Param(description="The branch to pull", choices=["master","test"], default="master"),
+                     restart : bool = commands.Param(description="Restart the bot after update ?", default = True)):
         await inter.response.defer(ephemeral=True)
         if self.bot.test_mode:
             await inter.edit_original_message(embed=FastEmbed(
@@ -70,6 +71,23 @@ class Basic(commands.Cog):
                             title=f"✅ Update successed",
                             description=f"```{stdout.decode().strip()}```"
                         ))
+                    if restart:
+                        cmd_split = ("pm2","restart","poro")
+                        try:
+                            process = await asyncio.create_subprocess_exec(
+                                *cmd_split, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+                            )
+                            
+                            await inter.edit_original_message(embed=FastEmbed(
+                                title=f"⌛ Restarting..."
+                            ))
+
+                            stdout, stderr = await process.communicate()
+                            
+                        except FileNotFoundError as e:
+                            await inter.edit_original_message(embed=FastEmbed(
+                                    title=f"❌ Restart failed due to *FileNotFoundError*",
+                                    description=f"Couldn't find file ***{cmd_split[0]}***"))  
                 else :
                     await inter.edit_original_message(embed=FastEmbed(
                         title=f"❌ Update failed with status code {data.emotes.num[process.returncode]}",
@@ -80,6 +98,8 @@ class Basic(commands.Cog):
                         title=f"❌ Update failed due to *FileNotFoundError*",
                         description=f"```Couldn't find file {cmd_split[0]}```"
                     ))
+                
+                
     @commands.slash_command(
         description="Restart the bot",
         default_member_permissions=disnake.Permissions.all()
@@ -106,7 +126,7 @@ class Basic(commands.Cog):
                   
             except FileNotFoundError as e:
                 await inter.edit_original_message(embed=FastEmbed(
-                        title=f"❌ Command failed due to *FileNotFoundError*",
+                        title=f"❌ Restart failed due to *FileNotFoundError*",
                         description=f"Couldn't find file ***{cmd_split[0]}***"
                     ))
 
