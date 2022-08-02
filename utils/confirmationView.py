@@ -3,7 +3,6 @@ import disnake
 
 
 from .FastEmbed import FastEmbed
-from .data import color
 
 class State(Enum):
     CANCELLED = 0
@@ -37,7 +36,7 @@ class ConfirmationStatus:
 
 class ConfirmationView(disnake.ui.View):
     
-    def __init__(self, inter : disnake.Interaction, title : str, message : str, timeout : int, confirmationLabel : str, cancelLabel : str):
+    def __init__(self, inter : disnake.Interaction, title : str, message : str, timeout : int, color : disnake.Colour, confirmationLabel : str, cancelLabel : str):
         super().__init__(timeout=timeout)
         self.inter : disnake.Interaction = inter
         self.is_application_interaction : bool = isinstance(inter, disnake.ApplicationCommandInteraction)
@@ -54,7 +53,7 @@ class ConfirmationView(disnake.ui.View):
         self.embed = FastEmbed(
             title=title,
             description=message,
-            color=color.gris
+            color=color
         )
 
         self.state : ConfirmationStatus = ConfirmationStatus(State.UNKOWN)
@@ -91,6 +90,7 @@ async def confirmation(
     message : str = "Confirmer l'action ?",
     timeout : int = 180,
     confirmationLabel : str = "Confirmer",
+    color : disnake.Colour = disnake.Colour.red(),
     cancelLabel : str = "Annuler") -> ConfirmationStatus:
     """|coro|\n
     Send a confirmation view linked to the interaction.
@@ -128,7 +128,7 @@ async def confirmation(
             `State.CANCELLED` (`=False`) if the user has cancelled the action.
             `State.TIMEOUT` (`=False`) if the user has not answered the action before timeout.
     """
-    confirmationView = ConfirmationView(inter=inter, title=title, message=message, timeout=timeout, confirmationLabel=confirmationLabel, cancelLabel=cancelLabel)
+    confirmationView = ConfirmationView(inter=inter, title=title, message=message, timeout=timeout, color=color, confirmationLabel=confirmationLabel, cancelLabel=cancelLabel)
     await confirmationView.send()
     await confirmationView.wait()
     return confirmationView.state
