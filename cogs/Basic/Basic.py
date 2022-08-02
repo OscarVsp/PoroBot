@@ -130,19 +130,25 @@ class Basic(commands.Cog):
                 process = await asyncio.create_subprocess_exec(
                     *cmd_split, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
                 )
-
-                stdout, stderr = await process.communicate()
+                
+                try:
+                    stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=timeout)
             
-                if process.returncode == 0:
-                    await inter.edit_original_message(embed=FastEmbed(
-                            title=f"✅ command successed",
-                            description=f"```{stdout.decode().strip()}```"
+                    if process.returncode == 0:
+                        await inter.edit_original_message(embed=FastEmbed(
+                                title=f"✅ command successed",
+                                description=f"```{stdout.decode().strip()}```"
+                            ))
+                    else :
+                        await inter.edit_original_message(embed=FastEmbed(
+                            title=f"❌ Command failed with status code {data.emotes.num[process.returncode]}",
+                            description=f"```{stderr.decode().strip()}```"
                         ))
-                else :
+                except TimeoutError:
                     await inter.edit_original_message(embed=FastEmbed(
-                        title=f"❌ Command failed with status code {data.emotes.num[process.returncode]}",
-                        description=f"```{stderr.decode().strip()}```"
-                    ))
+                            title=f"❌ Command timeout with status code {data.emotes.num[process.returncode]}",
+                            description=f"```{stderr.decode().strip()}```"
+                        ))
             except FileNotFoundError as e:
                 await inter.edit_original_message(embed=FastEmbed(
                         title=f"❌ Command failed due to *FileNotFoundError*",
