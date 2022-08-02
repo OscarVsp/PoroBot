@@ -55,20 +55,31 @@ class Basic(commands.Cog):
         await inter.response.defer(ephemeral=True)
         if self.bot.test_mode:
             await inter.edit_original_message(embed=FastEmbed(
-                description=f"Cannot restart in test mode."
+                description=f"Cannot update in test mode."
             ))
-        completedProcess = subprocess.run("cd /home/oscar/Document/PoroBotBis/PoroBot/ && /usr/lib/git-core/git pull origin master",text=True,capture_output=True)
-        if completedProcess.returncode == 0:
-            await inter.edit_original_message(embed=FastEmbed(
-                title=f"✅ Update succes",
-                description=f"```{completedProcess.stdout}```"
-            ))
-        else :
-            await inter.edit_original_message(embed=FastEmbed(
-                title=f"❌ Update failed with status code {data.emotes.number_to_emotes[completedProcess.returncode]}",
-                description=f"```{completedProcess.stdout}```"
-            ))
-            
+        else:
+            cmd_split = ("git","pull","origin","master")
+            try:
+                process = await asyncio.create_subprocess_exec(
+                    *cmd_split, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+                )
+
+                stdout, stderr = await process.communicate()
+                if process.returncode == 0:
+                    await inter.edit_original_message(embed=FastEmbed(
+                            title=f"✅ Update successed",
+                            description=f"```{stdout.decode().strip()}```"
+                        ))
+                else :
+                    await inter.edit_original_message(embed=FastEmbed(
+                        title=f"❌ Update failed with status code {data.emotes.number_to_emotes[process.returncode]}",
+                        description=f"```{stderr.decode().strip()}```"
+                    ))
+            except FileNotFoundError as e:
+                await inter.edit_original_message(embed=FastEmbed(
+                        title=f"❌ Update failed due to *FileNotFoundError*",
+                        description=f"```Couldn't find file {cmd_split[0]}```"
+                    ))
     @commands.slash_command(
         description="Restart the bot",
         default_member_permissions=disnake.Permissions.all()
@@ -81,18 +92,62 @@ class Basic(commands.Cog):
                 description=f"Cannot restart in test mode."
             ))
         else:
-            completedProcess = subprocess.run("/user/local/bin/pm2 restart /home/oscar/Document/PoroBotBis/poro.sh",text=True,capture_output=True)
-            if completedProcess.returncode == 0:
+            cmd_split = ("pm2","restart","poro")
+            try:
+                process = await asyncio.create_subprocess_exec(
+                    *cmd_split, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+                )
+                
                 await inter.edit_original_message(embed=FastEmbed(
-                    title=f"✅ Restart succes",
-                    description=f"```{completedProcess.stdout}```"
+                    title=f"⌛ Restarting..."
                 ))
-            else :
+
+                stdout, stderr = await process.communicate()
+                  
+            except FileNotFoundError as e:
                 await inter.edit_original_message(embed=FastEmbed(
-                    title=f"❌ Restart failed with status code {data.emotes.number_to_emotes[completedProcess.returncode]}",
-                    description=f"```{completedProcess.stdout}```"
-                ))
-        
+                        title=f"❌ Command failed due to *FileNotFoundError*",
+                        description=f"Couldn't find file ***{cmd_split[0]}***"
+                    ))
+
+            
+    @commands.slash_command(
+        description="Send a command to the Rpi through the bot",
+        default_member_permissions=disnake.Permissions.all()
+    )
+    @commands.check(is_owner)
+    async def send_command(self, inter : disnake.ApplicationCommandInteraction,
+                           command : str = commands.Param(description="Command to send"),
+                           timeout : int = commands.Param(description="Timeout for the command", default = 180)):
+        await inter.response.defer(ephemeral=True)
+        if self.bot.test_mode:
+            await inter.edit_original_message(embed=FastEmbed(
+                description=f"Cannot send command in test mode."
+            ))
+        else:
+            cmd_split = tuple(command.split(' '))
+            try:
+                process = await asyncio.create_subprocess_exec(
+                    *cmd_split, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+                )
+
+                stdout, stderr = await process.communicate()
+            
+                if process.returncode == 0:
+                    await inter.edit_original_message(embed=FastEmbed(
+                            title=f"✅ command successed",
+                            description=f"```{stdout.decode().strip()}```"
+                        ))
+                else :
+                    await inter.edit_original_message(embed=FastEmbed(
+                        title=f"❌ Command failed with status code {data.emotes.number_to_emotes[process.returncode]}",
+                        description=f"```{stderr.decode().strip()}```"
+                    ))
+            except FileNotFoundError as e:
+                await inter.edit_original_message(embed=FastEmbed(
+                        title=f"❌ Command failed due to *FileNotFoundError*",
+                        description=f"```Couldn't find file {cmd_split[0]}```"
+                    ))
     
         
     @commands.slash_command(
