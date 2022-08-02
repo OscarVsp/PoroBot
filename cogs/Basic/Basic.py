@@ -134,41 +134,36 @@ class Basic(commands.Cog):
     @commands.check(is_owner)
     async def send_command(self, inter : disnake.ApplicationCommandInteraction,
                            command : str = commands.Param(description="Command to send"),
-                           timeout : int = commands.Param(description="Timeout for the command", default = 180)):
+                           timeout : int = commands.Param(description="Timeout for the command", default = 60)):
         await inter.response.defer(ephemeral=True)
-        if self.bot.test_mode:
-            await inter.edit_original_message(embed=FastEmbed(
-                description=f"Cannot send command in test mode."
-            ))
-        else:
-            cmd_split = tuple(command.split(' '))
-            try:
-                process = await asyncio.create_subprocess_exec(
-                    *cmd_split, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
-                )
-                
-                try:
-                    stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=timeout)
+        cmd_split = tuple(command.split(' '))
+        try:
+            process = await asyncio.create_subprocess_exec(
+                *cmd_split, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+            )
             
-                    if process.returncode == 0:
-                        await inter.edit_original_message(embed=FastEmbed(
-                                title=f"✅ command successed",
-                                description=f"```{stdout.decode().strip()}```"
-                            ))
-                    else :
-                        await inter.edit_original_message(embed=FastEmbed(
-                            title=f"❌ Command failed with status code {data.emotes.num[process.returncode]}",
-                            description=f"```{stderr.decode().strip()}```"
-                        ))
-                except TimeoutError:
+            try:
+                stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=timeout)
+        
+                if process.returncode == 0:
                     await inter.edit_original_message(embed=FastEmbed(
-                            title=f"❌ Command timeout"
+                            title=f"✅ command successed",
+                            description=f"```{stdout.decode().strip()}```"
                         ))
-            except FileNotFoundError as e:
-                await inter.edit_original_message(embed=FastEmbed(
-                        title=f"❌ Command failed due to *FileNotFoundError*",
-                        description=f"Couldn't find file ****{cmd_split[0]}****"
+                else :
+                    await inter.edit_original_message(embed=FastEmbed(
+                        title=f"❌ Command failed with status code {data.emotes.num[process.returncode]}",
+                        description=f"```{stderr.decode().strip()}```"
                     ))
+            except TimeoutError:
+                await inter.edit_original_message(embed=FastEmbed(
+                        title=f"❌ Command timeout"
+                    ))
+        except FileNotFoundError as e:
+            await inter.edit_original_message(embed=FastEmbed(
+                    title=f"❌ Command error due to *FileNotFoundError*",
+                    description=f"Couldn't find file ****{cmd_split[0]}****"
+                ))
     
         
     @commands.slash_command(
