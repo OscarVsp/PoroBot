@@ -64,7 +64,6 @@ class Basic(commands.Cog):
                 process = await asyncio.create_subprocess_exec(
                     *cmd_split, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
                 )
-
                 stdout, stderr = await process.communicate()
                 if process.returncode == 0:
                     await inter.edit_original_message(embed=FastEmbed(
@@ -74,7 +73,7 @@ class Basic(commands.Cog):
                 else :
                     await inter.edit_original_message(embed=FastEmbed(
                         title=f"❌ Update failed with status code {data.emotes.num[process.returncode]}",
-                        description=f"```{stdChoiceerr.decode().strip()}```"
+                        description=f"```{stderr.decode().strip()}```"
                     ))
             except FileNotFoundError as e:
                 await inter.edit_original_message(embed=FastEmbed(
@@ -147,13 +146,12 @@ class Basic(commands.Cog):
                         ))
                 except TimeoutError:
                     await inter.edit_original_message(embed=FastEmbed(
-                            title=f"❌ Command timeout",
-                            description=f"```{stderr.decode().strip()}```"
+                            title=f"❌ Command timeout"
                         ))
             except FileNotFoundError as e:
                 await inter.edit_original_message(embed=FastEmbed(
                         title=f"❌ Command failed due to *FileNotFoundError*",
-                        description=f"```Couldn't find file {cmd_split[0]}```"
+                        description=f"Couldn't find file ****{cmd_split[0]}****"
                     ))
     
         
