@@ -67,27 +67,29 @@ class Basic(commands.Cog):
                 )
                 stdout, stderr = await process.communicate()
                 if process.returncode == 0:
-                    await inter.edit_original_message(embed=FastEmbed(
+                    embed = FastEmbed(
                             title=f"✅ Update successed",
                             description=f"```{stdout.decode().strip()}```"
-                        ))
+                        )
+                    await inter.edit_original_message(embed=embed)
                     if restart:
                         cmd_split = ("pm2","restart","poro")
                         try:
                             process = await asyncio.create_subprocess_exec(
                                 *cmd_split, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
                             )
-                            
-                            await inter.edit_original_message(embed=FastEmbed(
+                            embeds = [embed, FastEmbed(
                                 title=f"⌛ Restarting..."
-                            ))
+                            )]
+                            await inter.edit_original_message(embeds=embeds)
 
                             stdout, stderr = await process.communicate()
                             
                         except FileNotFoundError as e:
-                            await inter.edit_original_message(embed=FastEmbed(
+                            embeds = [embed, FastEmbed(
                                     title=f"❌ Restart failed due to *FileNotFoundError*",
-                                    description=f"Couldn't find file ***{cmd_split[0]}***"))  
+                                    description=f"Couldn't find file ***{cmd_split[0]}***")]
+                            await inter.edit_original_message(embeds=embeds)  
                 else :
                     await inter.edit_original_message(embed=FastEmbed(
                         title=f"❌ Update failed with status code {data.emotes.num[process.returncode]}",
