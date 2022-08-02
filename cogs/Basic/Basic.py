@@ -5,7 +5,7 @@ from utils.FastEmbed import FastEmbed
 from utils import data
 from .view import *
 import asyncio
-import subprocess
+from asyncio.exceptions import TimeoutError
 
 async def is_owner(ctx):
     return ctx.author.id == 281401408597655552
@@ -51,14 +51,15 @@ class Basic(commands.Cog):
         default_member_permissions=disnake.Permissions.all()
     )
     @commands.check(is_owner)
-    async def update(self, inter : disnake.ApplicationCommandInteraction):
+    async def update(self, inter : disnake.ApplicationCommandInteraction,
+                     branch : str = commands.Param(description="The branch to pull", choices=["master","test"], default="master")):
         await inter.response.defer(ephemeral=True)
         if self.bot.test_mode:
             await inter.edit_original_message(embed=FastEmbed(
                 description=f"Cannot update in test mode."
             ))
         else:
-            cmd_split = ("git","pull","origin","master")
+            cmd_split = ("git","pull","origin",branch)
             try:
                 process = await asyncio.create_subprocess_exec(
                     *cmd_split, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
