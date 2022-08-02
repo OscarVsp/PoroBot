@@ -74,7 +74,7 @@ class Basic(commands.Cog):
     
     async def restart_proc(self, inter : disnake.ApplicationCommandInteraction):
         cmd_split = ("pm2","restart","poro")
-        embeds : List[disnake.Embed] = await inter.original_message().embeds
+        embeds : List[disnake.Embed] = (await inter.original_message()).embeds
         try:
             process = await asyncio.create_subprocess_exec(
                 *cmd_split, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
