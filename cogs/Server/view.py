@@ -109,7 +109,19 @@ class Locker(disnake.ui.View):
             description="➖➖➖➖➖➖➖➖➖➖➖➖➖➖➖➖➖➖➖➖➖➖",
             fields = fields,
             color = data.color.vert
-        ) 
+        )
+        
+    @property
+    def notification_embed(self) -> disnake.Embed:
+        description = f"Le channel vocal que tu viens de rejoindre a été verrouillé par {self.author.display_name} pour la raison suivante :\n\n**__{self.reason}__**\n\nCela veut dire que tu ne peux pas parler ni streamer, mais tu peux toujours écouter les autres et regarder des streams"
+        for member in self.channel.members:
+            if self.is_authorized(member):
+                if member.activity and member.activity.type == disnake.ActivityType.streaming:
+                    description+=f"\n\n**{member.display_name}** est actuellement en train de stream sur [{member.activity.platform}]({member.activity.url})"
+        FastEmbed(
+            title=self.title,
+            description=description
+        )
         
     async def lock(self, inter : disnake.CommandInteraction):
         self.authorized_role = await self.channel.guild.create_role(name=f"{self.channel.id} {Locker.role_name_authorized}",reason=f"Lock channel - {self.reason}")
@@ -162,10 +174,7 @@ class Locker(disnake.ui.View):
         if member not in self.authorized_role.members and member not in self.unauthorized_role.members:
             await member.add_roles(self.unauthorized_role, reason = f"Lock channel - {self.reason}")
             await member.move_to(self.channel)
-            await member.send(embed=FastEmbed(
-                    title=self.title,
-                    description=f"Le channel vocal que tu viens de rejoindre a été verrouillé par {self.author.display_name} pour la raison suivante :\n\n**__{self.reason}__**\n\nCela veut dire que tu ne peux pas parler ni streamer, mais tu peux toujours écouter les autres et regarder des streams."
-                ))
+            await member.send(embed=self.notification_embed)
         self.refresh_presence()
         await self.update()
         
