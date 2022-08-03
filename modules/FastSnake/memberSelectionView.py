@@ -32,7 +32,7 @@ class MemberSelectionView(disnake.ui.View):
             title = f"__**{self.title.upper()}**__",
             description=self.message,
             fields={
-                'name':f"{Emotes.Num[len(self.selected_members)]}__membre(s) sélectionné(s) :__",
+                'name':f"{Emotes.Num(len(self.selected_members))} __Membre(s) sélectionné(s) :__",
                 'value':"\n".join(f"> {member.mention}" for member in self.selected_members) if len(self.selected_members) else "> *Aucun membre sélectionné...*"
             },
             footer_text=f"Il faut un nombre de membre sélectionné(s) compris dans {self.size} pour pouvoir valider" if self.confirm.disabled else disnake.Embed.Empty
@@ -72,6 +72,10 @@ class MemberSelectionView(disnake.ui.View):
         
         if self.size:
             self.confirm.disabled = not len(self.selected_members) in self.size
+            if self.confirm.disabled:
+                self.confirm.label = "Nombre de membre invalide"
+            else:
+                self.confirm.label = "Valider"
      
     async def update(self, inter : disnake.MessageInteraction = None):
         if inter == None:

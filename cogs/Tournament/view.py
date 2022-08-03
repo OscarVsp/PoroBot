@@ -45,7 +45,7 @@ class Tournament2v2RollView(disnake.ui.View):
         return tournamentView
         
     def make_options(self):
-        self.match_selection.options = [disnake.SelectOption(label=f"Round {j+1} Match {chr(ord('A') + i)}",value=f"{j}{i}",emoji=FS.Emotes.Num[j+1]) for j in range(self.tournament.nb_rounds) for i in range(self.tournament.nb_matches_per_round)]
+        self.match_selection.options = [disnake.SelectOption(label=f"Round {j+1} Match {chr(ord('A') + i)}",value=f"{j}{i}",emoji=FS.Emotes.Num(j+1)) for j in range(self.tournament.nb_rounds) for i in range(self.tournament.nb_matches_per_round)]
         self.match_selection.placeholder = f"Display the rounds first!"
         self.match_selection.disabled = True
         self.set_team_1_score.disabled = True
@@ -69,7 +69,7 @@ class Tournament2v2RollView(disnake.ui.View):
         cat_perm.connect = True
         await self.category.set_permissions(self.role,overwrite=cat_perm)
         
-        self.channel_overview = await self.category.create_text_channel(name="📋 Annonces")
+        self.channel_overview = await self.category.create_text_channel(name="🔔 Annonces")
         self.channel_rank = await self.category.create_text_channel(name="🏅 Classement")
         self.channel_rounds = await self.category.create_text_channel(name="📅 Rounds")
         self.channel_rules = await self.category.create_text_channel(name="📜 Règles")

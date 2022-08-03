@@ -530,7 +530,7 @@ class Match:
         for i,entity in enumerate(self._entities):
             if round(entity.points) >= self._point_to_win:
                 indicators[i] = '✅'
-        return {'name':self.title,'value':"\n".join([f"{indicators[i]}{FS.Emotes.Num[round(e.points)]} {e.display}" for i,e in enumerate(self._entities)]),'inline':True}
+        return {'name':self.title,'value':"\n".join([f"{indicators[i]}{FS.Emotes.Num(round(e.points))} {e.display}" for i,e in enumerate(self._entities)]),'inline':True}
       
     @property
     def field_detailled(self) -> dict:
@@ -541,7 +541,7 @@ class Match:
         for i,entity in enumerate(self._entities):
             if round(entity.points) >= self._point_to_win:
                 indicators[i] = '✅'
-        return {'name':self.title,'value':"\n".join([f"{indicators[i]}{''.join([FS.Emotes.Num[round(score)] for score in e.scores])} {e.display}" for i,e in enumerate(self._entities)]),'inline':True}
+        return {'name':self.title,'value':"\n".join([f"{indicators[i]}{''.join([FS.Emotes.Num(round(score)) for score in e.scores])} {e.display}" for i,e in enumerate(self._entities)]),'inline':True}
       
         
     @property
@@ -661,7 +661,7 @@ class Round:
     
     @property
     def title(self) -> str:
-        return f"⚔️ __**ROUND **__{FS.Emotes.Num[self._round_idx+1]}"
+        return f"⚔️ __**ROUND **__{FS.Emotes.Num(self._round_idx+1)}"
 
     @property
     def embed(self) -> disnake.Embed:
@@ -1103,34 +1103,40 @@ class Tournament2v2Roll(Tournament):
         ranks = []
         for i in range(len(sorted_players)):
             if i == 0:
-                ranks.append(f"{FS.Emotes.Rank[i]}")
+                ranks.append(f"{FS.Emotes.Rank(i)}")
             elif sorted_players[i].points == sorted_players[i-1].points:
                 ranks.append(ranks[-1])
             else:
-                ranks.append(f"{FS.Emotes.Rank[i]}")
+                ranks.append(f"{FS.Emotes.Rank(i)}")
         return ranks
     
     @property
     def classement(self) -> disnake.Embed:
-        sorted_players = self.getRanking()
+        sorted_players : List[Player] = self.getRanking()
         ranks = Tournament2v2Roll.rank_emotes(sorted_players)
         return FS.Embed(
             title = "🏆 __**CLASSEMENT**__🏆 ",
             color = disnake.Colour.gold(),
             fields=[
-                {'name':"#️⃣",'value':"\n".join([f"{ranks[i]}" for i in range(len(sorted_players))]),'inline':True},
-                {'name':"__*Joueurs*__",'value':"\n".join([f"**{p.display}**" for p in sorted_players]),'inline':True},
-                {'name':"💎➖⚔️ 🧱 🧙‍♂️",'value':"\n".join([f"**{FS.Emotes.Num[round(p.points)]}**➖*{FS.Emotes.Num[p.scores[self.Score.KILLS]]} {FS.Emotes.Num[p.scores[self.Score.TURRETS]]} {FS.Emotes.Num[p.scores[self.Score.CS]]}*" for p in sorted_players]),'inline':True}
+                {
+                    'name':"🎖️➖__*Joueurs*__",
+                    'value':"\n".join([f"{ranks[i]}➖**{p.display}**" for i,p in enumerate(sorted_players)]),
+                    'inline':True
+                }
             ]
         )
              
     @property
     def displayedClassement(self) -> disnake.Embed:
         return self.classement.add_field(
+                name="💎",
+                value="\n".join([f" **{round(p.points)}**" for p in self.getRanking()]),
+                inline=True
+            ).add_field(
                 name="➖➖➖➖➖➖➖➖➖➖➖➖➖",
-                value="""> __**Calcul des scores :**__
-                > 💎 **Score** = ⚔️ **Kill**  +  🧱 **Tour**  +  🧙‍♂️ **100cs**
-                > __**En cas d'égalité :**__
+                value="""> __**Calcul des points**__
+                > 💎 **Points** = ⚔️ **Kill**  +  🧱 **Tour**  +  🧙‍♂️ **100cs**
+                > __**En cas d'égalité**__
                 > ⚔️ **Kill**  >  🧱 **Tour**  >  🧙‍♂️ **100cs**
                 """,
                 inline=False
@@ -1140,7 +1146,15 @@ class Tournament2v2Roll(Tournament):
    
     @property
     def detailedClassement(self) -> disnake.Embed:
-        return self.classement.add_field(name="➖➖➖➖➖➖➖➖➖➖➖➖➖",value=f"> MSE = {self.MSE}")
+        return self.classement.add_field(
+                name="💎 __**Points**__",
+                value="\n".join([f"**{round(p.points)}** *({p.scores[self.Score.KILLS]}  {p.scores[self.Score.TURRETS]}  {p.scores[self.Score.CS]})*" for p in self.getRanking()]),
+                inline=True
+            ).add_field(
+                name="➖➖➖➖➖➖➖➖➖➖➖➖➖",
+                value=f"> MSE = {self.MSE}",
+                inline=False
+            )
         
     @property
     def rules(self) -> disnake.Embed:

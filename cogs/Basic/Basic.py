@@ -63,7 +63,7 @@ class Basic(commands.Cog):
                     await self.restart_proc(inter)
             else :
                 await inter.edit_original_message(embed=FS.Embed(
-                    title=f"❌ Update failed with status code {FS.Emotes.Num[process.returncode]}",
+                    title=f"❌ Update failed with status code {FS.Emotes.Num(process.returncode)}",
                     description=f"```{stderr.decode().strip()}```"
                 ))
         except FileNotFoundError as e:
@@ -151,7 +151,7 @@ class Basic(commands.Cog):
                         ))
                 else :
                     await inter.edit_original_message(embed=FS.Embed(
-                        title=f"❌ Command failed with status code {FS.Emotes.Num[process.returncode]}",
+                        title=f"❌ Command failed with status code {FS.Emotes.Num(process.returncode)}",
                         description=f"```{stderr.decode().strip()}```"
                     ))
             except TimeoutError:

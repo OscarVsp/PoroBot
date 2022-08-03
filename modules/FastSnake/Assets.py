@@ -1,7 +1,8 @@
+from multiprocessing.sharedctypes import Value
 from typing import List, Optional, Union
 
 class Emotes:
-    Rank : List[str] = [
+    __rank : List[str] = [
         '\U0001f947',
         '\U0001f948',
         '\U0001f949',
@@ -18,23 +19,17 @@ class Emotes:
         '\U0001f1e9',
         '\U0001f1ea'
         ]
-    Num : List[str] = [
-        '0\u20e3',
-        '1\u20e3',
-        '2\u20e3',
-        '3\u20e3',
-        '4\u20e3',
-        '5\u20e3',
-        '6\u20e3',
-        '7\u20e3',
-        '8\u20e3',
-        '9\u20e3',
-        '\U0001f51f',
-        '\U0001f1e6',
-        '\U0001f1e7',
-        '\U0001f1e8',
-        '\U0001f1e9',
-        '\U0001f1ea'
+    __num : List[str] = [
+        '0️⃣',
+        '1️⃣',
+        '2️⃣',
+        '3️⃣',
+        '4️⃣',
+        '5️⃣',
+        '6️⃣',
+        '7️⃣',
+        '8️⃣',
+        '9️⃣'
         ]
     Alpha : List[str] = [
         '\U0001f1e6',
@@ -129,15 +124,41 @@ class Emotes:
         
 
     @classmethod
-    def num2emotes(cls, number : int, size : int = None):
+    def Num(cls, number : int, size : int = None) -> str:
         """
-        Take a number and return a list of emotes that correspond to the number
+        Take a number and return a str of the emotes that correspond to the number.
         """
+        if size and size < len(str(number)):
+            raise ValueError("Argument size should be greater of equal to the lenght of the number.")
+        
         if size != None:
             number_str = "0"*(size - len(str(number))) + str(number)
         else:
             number_str = str(number)
-        return [cls.Num[int(chiffre)] for chiffre in number_str]
+        return "".join([cls.__num[int(chiffre)] for chiffre in number_str])
+    
+    @classmethod
+    def Rank(cls, number : int, size : int = None) -> str:
+        """
+        Take a number and return a str of the emotes that correspond to the number.
+        """
+        if size and size < len(str(number+1)):
+            raise ValueError("Argument size should be greater of equal to the lenght of the number.")
+        
+        if size == None:
+            if number == 0:
+                return "🥇"
+            elif number == 1:
+                return "🥈"
+            elif number == 2:
+                return "🥉"
+            elif number == 9:
+                return "🔟"
+            else:
+                number_str = str(number+1)
+        else :
+            number_str = "0"*(size - len(str(number+1))) + str(number+1)
+        return "".join([cls.__num[int(chiffre)] for chiffre in number_str])
             
 
 class Images:
