@@ -1,10 +1,6 @@
-import disnake
 from disnake.ext import commands
 from disnake import ApplicationCommandInteraction
-from utils.FastEmbed import FastEmbed
-from utils import data
 from .view import *
-import asyncio
 
 
 class Clicbang(commands.Cog):
@@ -13,7 +9,7 @@ class Clicbang(commands.Cog):
     def __init__(self, bot):
         """Initialize the cog
         """
-        self.bot = bot
+        self.bot : commands.InteractionBot = bot
 
 
     @commands.slash_command(
@@ -38,5 +34,5 @@ class Clicbang(commands.Cog):
             
   
             
-def setup(bot):
+def setup(bot : commands.InteractionBot):
     bot.add_cog(Clicbang(bot))

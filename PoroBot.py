@@ -25,11 +25,12 @@ import logging.handlers
 import disnake
 from disnake import ApplicationCommandInteraction
 from disnake.ext.commands import InteractionBot
-from disnake.ext.commands import Context
 
-from utils.FastEmbed import FastEmbed
-from utils.tools import tracebackEx
-from utils.data import *
+import modules.FastSnake as FS
+
+import traceback
+
+
 
 
 class PoroBot(InteractionBot):
@@ -52,6 +53,16 @@ class PoroBot(InteractionBot):
             super().__init__(intents=intents)
             
         self.load_commands()
+        
+    def tracebackEx(self, ex):
+        if type(ex) == str:
+            return "No valid traceback."
+        ex_traceback = ex.__traceback__
+        if ex_traceback is None:
+            ex_traceback = ex.__traceback__
+        tb_lines = [ line.rstrip('\n') for line in
+            traceback.format_exception(ex.__class__, ex, ex_traceback)]
+        return ''.join(tb_lines)
 
     async def on_ready(self) -> None:
         """
@@ -79,19 +90,19 @@ class PoroBot(InteractionBot):
                 logging.info(f"Loaded extension '{extension}'")
             except Exception as e:
                 exception = f"{type(e).__name__}: {e}"
-                logging.warning(f"Failed to load extension {extension}\n{exception}\n{tracebackEx(exception)}")
+                logging.warning(f"Failed to load extension {extension}\n{exception}\n{self.tracebackEx(exception)}")
 
     async def send_error_log(self, interaction: ApplicationCommandInteraction, error: Exception):
-        tb = tracebackEx(error)
+        tb = self.tracebackEx(error)
         logging.error(f"{error} raised on command /{interaction.application_command.name} from {interaction.guild.name} #{interaction.channel.name} by {interaction.author.name}.\n{tb}")
         await interaction.send(
-            embed= FastEmbed(
+            embed= FS.Embed(
                 title=":x: __**ERROR**__ :x:",
                 description=f"Une erreur s'est produite lors de la commande **/{interaction.application_command.name}**\n{self.owner.mention} a été prévenu et corrigera ce bug au plus vite !\nUtilise `/beer` pour un bière de consolation :beer:",
-                thumbnail = images.poros.shock),
+                thumbnail = FS.Images.Poros.Shock),
             delete_after=10)
         await self.log_channel.send(
-            embed = FastEmbed(
+            embed = FS.Embed(
                 title=f":x: __** ERROR**__ :x:",
                 description=f"```{error}```",
                 fields = [
@@ -105,11 +116,11 @@ class PoroBot(InteractionBot):
         n = (len(tb) // 4090) 
         for i in range(n):
             await self.log_channel.send(
-                embed=FastEmbed(
+                embed=FS.Embed(
                     description=f"```python\n{tb[4096*i:4096*(i+1)]}```")
             )
         await self.log_channel.send(
-            embed=FastEmbed(
+            embed=FS.Embed(
                 description=f"```python\n{tb[4096*n:]}```")
         )
         

@@ -1,13 +1,9 @@
 import disnake 
-from disnake import ApplicationCommandInteraction
-from utils.FastEmbed import FastEmbed
-from utils import data
-from utils.tools import tracebackEx
-import asyncio
-from modules.LolPatchNoteScraper.PatchNote import PatchNote
+import modules.FastSnake as FS
+from modules.LolPatchNoteScraper import PatchNote
 
 
-drink_embed = FastEmbed(
+drink_embed = FS.Embed(
         title = "__**:underage: RÈGLES DE L'ARAM À BOIRE ! :beers:**__",
         description = """✅ :arrow_right: Donner une gorgée :beers:
                          :o2: :arrow_right: Boire une gorgée :beers:
@@ -39,7 +35,7 @@ drink_embed = FastEmbed(
                 
             }
         ],
-        thumbnail = data.images.poros.gragas
+        thumbnail = FS.Images.Poros.Gragas
     )
 
 
@@ -57,13 +53,13 @@ class PatchNoteView(disnake.ui.View):
         else:
             self.patch : PatchNote = PatchNote(previous = previous, lang = 'en-gb')
             
-        self.embed : disnake.Embed = FastEmbed(
+        self.embed : disnake.Embed = FS.Embed(
             author_name = f"Patch {self.patch.season_number}.{self.patch.patch_number}",
             title = f"{self.patch.title}",
             description = self.patch.description,
             url = self.patch.link,
             image = self.patch.overview_image,
-            thumbnail = "https://i.imgur.com/0Fyu6yl.png",
+            thumbnail = FS.Images.Lol_icon,
             color = disnake.Colour.dark_blue()      
         )
         self.add_item(

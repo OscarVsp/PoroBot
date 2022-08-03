@@ -1,6 +1,6 @@
 import disnake 
 from disnake import ApplicationCommandInteraction
-from utils.FastEmbed import FastEmbed
+import modules.FastSnake as FS
 from .scraper import Almanax_scraper
 import asyncio
 
@@ -43,7 +43,7 @@ class AlmanaxView(disnake.ui.View):
             offrandes = "\n".join([f"{d['date']} : **{d['item_quantity']}x** {d['item']}" for d in data])
             size = len(offrandes)
             offrandes = [offrandes[i: i + max_embed_size] for i in range(0, len(offrandes), max_embed_size)]
-            embed = FastEmbed(
+            embed = FS.Embed(
                 title = f":calendar_spiral:__**Almanax des {len(data)} prochains jours**__:calendar_spiral:",
                 description = offrandes[0]
             )
@@ -51,13 +51,13 @@ class AlmanaxView(disnake.ui.View):
                 embeds = [embed]
                 offrandes.pop(0)
                 for offrande in offrandes:
-                    embeds.append(FastEmbed(
+                    embeds.append(FS.Embed(
                         description = offrande
                     ))
                 return embeds
             return embed
         
-        return FastEmbed(
+        return FS.Embed(
             title = f":calendar_spiral:__**Almanax du {data['date']}**__:calendar_spiral:",
             fields = [
                 {"name" : "__Offrande :__",

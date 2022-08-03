@@ -3,13 +3,9 @@ import logging
 import disnake
 from disnake.ext import commands
 from disnake import ApplicationCommandInteraction, NotFound
-from utils.FastEmbed import FastEmbed
 from typing import List, Union
-
-from utils.confirmationView import confirmation,ConfirmationStatus
-from utils.memberSelectionView import memberSelection
+import modules.FastSnake as FS
 from .view import Locker
-from utils.data import color
 
 class ColorEnum(disnake.Colour, Enum):
     Blue = disnake.Colour.blue().value,
@@ -74,19 +70,19 @@ class Server(commands.Cog):
             gt = 0
         )
     ):
-        confirm : ConfirmationStatus = await confirmation(inter,
+        confirm : FS.ConfirmationStatus = await FS.confirmation(inter,
                                title=f"__**Suppression de {nombre} message(s)**__",
                                message=f"Êtes-vous sûr de vouloir supprimer les {nombre} dernier(s) message(s) de ce channel ?\nCette action est irréversible !",
                                confirmationLabel=f"Supprimer les message(s)",
                                timeout=5)
         if confirm:
-            await inter.edit_original_message(embed=FastEmbed(description = f"Suppression de {nombre} message(s) en cours... ⌛", color=color.vert), view=None)
+            await inter.edit_original_message(embed=FS.Embed(description = f"Suppression de {nombre} message(s) en cours... ⌛", color=disnake.Colour.green()), view=None)
             await inter.channel.purge(limit=nombre)
-            await inter.edit_original_message(embed = FastEmbed(description = f":broom: {nombre} messages supprimés ! :broom:", color=color.vert))
+            await inter.edit_original_message(embed = FS.Embed(description = f":broom: {nombre} messages supprimés ! :broom:", color=disnake.Colour.green()))
         elif confirm.is_cancelled:
-            await inter.edit_original_message(embed = FastEmbed(description = f":o: Suppresion de {nombre} message(s) annulée", color=color.gris), view = None)
+            await inter.edit_original_message(embed = FS.Embed(description = f":o: Suppresion de {nombre} message(s) annulée", color=disnake.Colour.dark_grey()), view = None)
         else:
-            await inter.edit_original_message(embed = FastEmbed(description = f":o: Suppresion de {nombre} message(s) timeout", color=color.gris), view = None)
+            await inter.edit_original_message(embed = FS.Embed(description = f":o: Suppresion de {nombre} message(s) timeout", color=disnake.Colour.dark_grey()), view = None)
         
     @clear.sub_command(
         name='category',
@@ -96,20 +92,20 @@ class Server(commands.Cog):
         categorie : disnake.CategoryChannel = commands.Param(description = "Choisissez categorie à suppimer")
     ):
 
-        if await confirmation(inter,
+        if await FS.confirmation(inter,
                               title=f"__**Suppression de la categorie *{categorie.name}***__",
                               message=f"Êtes-vous sûr de vouloir supprimer la catégorie ***{categorie.mention}*** ?\nCela supprimera également les {len(categorie.channels)} channels contenus dans celle-ci :\n"+"\n".join(channel.mention for channel in categorie.channels)+"\nCette action est irréversible !",
                               confirmationLabel="Supprimer la catégorie"):
-            await inter.edit_original_message(embed=FastEmbed(description = f"Suppression de la catégorie *{categorie.name}* en cours... ⌛", color=color.vert), view=None)
+            await inter.edit_original_message(embed=FS.Embed(description = f"Suppression de la catégorie *{categorie.name}* en cours... ⌛", color=disnake.Colour.green()), view=None)
             for channel in categorie.channels:
                 await channel.delete()
             await categorie.delete()
             try:
-                await inter.edit_original_message(embed=FastEmbed(description = f":broom: **Catégorie** *{categorie.name}* **supprimée** ! :broom:", color=color.vert))
+                await inter.edit_original_message(embed=FS.Embed(description = f":broom: **Catégorie** *{categorie.name}* **supprimée** ! :broom:", color=disnake.Colour.green()))
             except NotFound:
                     pass
         else:
-            await inter.edit_original_message(embed=FastEmbed(description = f":o: Suppression de la catégorie {categorie.mention} annulée !", color=color.gris), view = None)
+            await inter.edit_original_message(embed=FS.Embed(description = f":o: Suppression de la catégorie {categorie.mention} annulée !", color=disnake.Colour.green()), view = None)
           
     @commands.slash_command(
         name="export",default_member_permissions=disnake.Permissions.all(),
@@ -142,8 +138,8 @@ class Server(commands.Cog):
         async for member in event.fetch_users():
             event_members.append(member)
         
-        selected_members = await memberSelection(inter, title="Export role from event", message="Select members below", timeout=300, pre_selected_members=event_members)    
-        await inter.edit_original_message(embed=FastEmbed(description="\n".join(member.display_name for member in selected_members) if len(selected_members) > 0 else "*Aucun membre sélectionné*"), view = None)
+        selected_members : List[disnake.Member] = await FS.memberSelection(inter, title="Export role from event", message="Select members below", timeout=300, pre_selection=event_members)    
+        await inter.edit_original_message(embed=FS.Embed(description="\n".join(member.display_name for member in selected_members) if len(selected_members) > 0 else "*Aucun membre sélectionné*"), view = None)
     
         
     @export_role_from_event.autocomplete("event")
@@ -166,17 +162,24 @@ class Server(commands.Cog):
             name = f"{role.name} copy"
         
         
-        selected_members = await memberSelection(inter, title="Export role from role", size = 4, message="Select members to export to the new role", timeout=300, pre_selected_members=role.members)    
-        await inter.edit_original_message(embed=FastEmbed(description="\n".join(member.display_name for member in selected_members) if (selected_members and len(selected_members) > 0 )else "*Aucun membre sélectionné*"), view = None)
+        selected_members : List[disnake.Member] = await FS.memberSelection(inter, title="Export role from role", size = 4, message="Select members to export to the new role", timeout=300, pre_selection=role.members)    
+        await inter.edit_original_message(embed=FS.Embed(description="\n".join(member.display_name for member in selected_members) if (selected_members and len(selected_members) > 0 )else "*Aucun membre sélectionné*"), view = None)
     
-        
-        
     @commands.slash_command(
         name="embed",
-        description="Créer un embed"
+        description="Envoyer un embed",
+        dm_permission=False,
+        default_member_permissions=disnake.Permissions.all()
     )
-    async def embed(self, inter : ApplicationCommandInteraction,
-                    channel : disnake.TextChannel = commands.Param(description="The channel where to send the embed (défaut : here)", default = None),
+    async def embed(self, inter : ApplicationCommandInteraction):
+        pass    
+        
+    @embed.sub_command(
+        name="guild",
+        description="Envoyer un embed dans un channel d'un server"
+    )
+    async def embed_guild(self, inter : ApplicationCommandInteraction,
+                    channel : disnake.TextChannel = commands.Param(description="The channel where to send the embed (default : here)", default = None),
                     titre : str = commands.Param(description="Le titre", default = disnake.Embed.Empty),
                     contenu : str = commands.Param(description="Le contenu", default = disnake.Embed.Empty),
                     mention : Union[disnake.Role, disnake.Member] = commands.Param(description="Un role ou un membre à mentionner", default=None),
@@ -204,7 +207,7 @@ class Server(commands.Cog):
                 channel = inter.channel
             msg = await channel.send(
                 content=mention.mention if mention else None,
-                embed=FastEmbed(
+                embed=FS.Embed(
                     title=titre,
                     description= contenu,
                     color=disnake.Colour(color) if color else disnake.Colour.default(),
@@ -217,9 +220,58 @@ class Server(commands.Cog):
                     footer_icon_url=footer_icon_url
                 ) 
             )
-            await inter.edit_original_message(embed=FastEmbed(description=f"Embed envoyé [ici]({msg.jump_url})"))
+            await inter.edit_original_message(embed=FS.Embed(description=f"Embed envoyé [ici]({msg.jump_url})"))
         else:
-            await inter.edit_original_message(embed=FastEmbed(description="Impossible d'envoyer un embed vide"))
+            await inter.edit_original_message(embed=FS.Embed(description="Impossible d'envoyer un embed vide"))
+            
+    @embed.sub_command(
+        name="private",
+        description="Envoyer un embed en priver"
+    )
+    async def embed_private(self, inter : ApplicationCommandInteraction,
+                    target : Union[disnake.Role, disnake.Member] = commands.Param(description="Le role ou le member à qui envoye l'embed"),
+                    titre : str = commands.Param(description="Le titre", default = disnake.Embed.Empty),
+                    contenu : str = commands.Param(description="Le contenu", default = disnake.Embed.Empty),
+                    color : ColorEnum = commands.Param(description="La couleur", default=None),
+                    url : str = commands.Param(description="L'url", default=disnake.Embed.Empty),
+                    thumbnail_url : str = commands.Param(description="L'url du thumbnail", default=disnake.Embed.Empty),
+                    thumbnail_file : disnake.Attachment = commands.Param(description="Le fichier du thumbnail", default=None),
+                    image_url : str = commands.Param(description="L'url de l'image", default=disnake.Embed.Empty),
+                    image_file : disnake.Attachment = commands.Param(description="Le fichier de l'image", default=None),
+                    author_name : str = commands.Param(description="Le nom de l'auteur (defaut : ton nom)", default = None),
+                    author_icon_url : str = commands.Param(description="L'icon de l'auteur", default=disnake.Embed.Empty),
+                    footer_text : str = commands.Param(description="Le text du footer", default=disnake.Embed.Empty),
+                    footer_icon_url : str = commands.Param(description="L'url de l'icon du footer", default = disnake.Embed.Empty)):
+        await inter.response.defer(ephemeral=True)
+        if (
+            titre != disnake.Embed.Empty 
+            or contenu != disnake.Embed.Empty 
+            or thumbnail_file != None 
+            or thumbnail_url != disnake.Embed.Empty 
+            or image_file != None 
+            or image_url != disnake.Embed.Empty
+            or author_name != disnake.Embed.Empty
+            or author_icon_url != disnake.Embed.Empty):
+            embed = FS.Embed(
+                    title=titre,
+                    description= contenu,
+                    color=disnake.Colour(color) if color else disnake.Colour.default(),
+                    url=url,
+                    thumbnail=await thumbnail_file.to_file() if thumbnail_file else thumbnail_url,
+                    image=await image_file.to_file() if image_file else image_url,
+                    author_name=author_name,
+                    author_icon_url=author_icon_url,
+                    footer_text=footer_text,
+                    footer_icon_url=footer_icon_url
+                ) 
+            if isinstance(target, disnake.Role):
+                for member in target.members:
+                    await member.send(embed=embed)
+            elif isinstance(target, disnake.Member):
+                    await target.send(embed=embed)
+            await inter.edit_original_message(embed=FS.Embed(description=f"Embed envoyé !"))
+        else:
+            await inter.edit_original_message(embed=FS.Embed(description="Impossible d'envoyer un embed vide"))
     
 
     
@@ -241,7 +293,7 @@ class Server(commands.Cog):
                 locked_channel = chan   
                 break 
         if not locked_channel.permissions_for(inter.guild.default_role).speak:
-            await inter.edit_original_message(embed=FastEmbed(description=f"Le channel vocal doit initialement permettre au role {inter.guild.default_role.mention} de parler."))
+            await inter.edit_original_message(embed=FS.Embed(description=f"Le channel vocal doit initialement permettre au role {inter.guild.default_role.mention} de parler."))
             return
         newLocker = Locker(inter, self, locked_channel,raison,timeout_on_no_participants=1, parler=bool(parler), streamer = bool(streamer))
         await newLocker.lock(inter)

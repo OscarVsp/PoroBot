@@ -2,7 +2,7 @@ from enum import Enum
 import disnake
 
 
-from .FastEmbed import FastEmbed
+from .Embed import Embed
 
 class State(Enum):
     CANCELLED = 0
@@ -31,8 +31,6 @@ class ConfirmationStatus:
     def is_timeout(self) -> bool:
         return self.status == State.TIMEOUT
     
-        
-    
 
 class ConfirmationView(disnake.ui.View):
     
@@ -50,7 +48,7 @@ class ConfirmationView(disnake.ui.View):
         self.add_item(confirmation_button)
         self.add_item(cancel_button)
         
-        self.embed = FastEmbed(
+        self.embed = Embed(
             title=title,
             description=message,
             color=color
@@ -84,51 +82,3 @@ class ConfirmationView(disnake.ui.View):
     async def on_timeout(self) -> None:
         self.state.status = State.TIMEOUT
           
-async def confirmation(
-    inter : disnake.Interaction,
-    title : str = "Confirmation",
-    message : str = "Confirmer l'action ?",
-    timeout : int = 180,
-    confirmationLabel : str = "Confirmer",
-    color : disnake.Colour = disnake.Colour.red(),
-    cancelLabel : str = "Annuler") -> ConfirmationStatus:
-    """|coro|\n
-    Send a confirmation view linked to the interaction.
-    The interaction can be either an `ApplicationCommandInteraction` or a `MessageInteraction`.
-    
-    If the interaction of a `ApplicationCommandInteraction` has not been answered yet, the confirmation view is send using `ephemeral=True`.
-    If the interaction has already been answered, or in the case of a `MessageInteraction`, the embeds of the original_message are kept and the confirmation view embed is simply added at the end of the list.
-    
-    At the end of the confirmation, the interaction is defer, but the embeds and views are not removed yet and should be explicitly dealt with during a following `"edit_original_message"` (e.g. `"view=None"` to remove the confirmation view).
-
-    Parameters
-    ----------
-        inter (`disnake.Interaction`):
-            The interaction for which the confirmation occurs.
-        title (`str`, `optional`): 
-            Title of the confirmation embed.
-            Defaults to `"Confirmation"`.
-        message (`str`, `optional`): 
-            Message of the confirmation embed.
-            Defaults to `"Confirmer l'action ?"`.
-        timeout (`int`, `optional`): 
-            The timeout for the user to answer to confirmation.
-            Defaults to `180`.
-        confirmationLabel (`str`, `optional`): 
-            The label for the confirmation button.
-            Defaults to `"Confirmer"`.
-        cancelLabel (`str`, `optional`): 
-            The label for the cancel button.
-            Defaults to `"Annuler"`.
-
-    Returns
-    --------
-        `ConfirmationStatus`: 
-            `State.CONFIRMED` (`=True`) if the user has confirmed the action.
-            `State.CANCELLED` (`=False`) if the user has cancelled the action.
-            `State.TIMEOUT` (`=False`) if the user has not answered the action before timeout.
-    """
-    confirmationView = ConfirmationView(inter=inter, title=title, message=message, timeout=timeout, color=color, confirmationLabel=confirmationLabel, cancelLabel=cancelLabel)
-    await confirmationView.send()
-    await confirmationView.wait()
-    return confirmationView.state

@@ -1,23 +1,21 @@
 import os
 import disnake 
-from disnake import ApplicationCommandInteraction, Colour
+from disnake import ApplicationCommandInteraction
 from disnake.ext.commands import InteractionBot
-from requests import delete
 from cogs.Tournament.classes import Tournament2v2Roll
-from utils.FastEmbed import FastEmbed
-from random import choices
-from utils.data import emotes,color
+import modules.FastSnake as FS
 from .classes import *
-from utils.confirmationView import confirmation
 
         
         
 class Tournament2v2RollView(disnake.ui.View):
       
-    def __init__(self, inter : ApplicationCommandInteraction, bot, role : disnake.Role, ordered : bool = False, name : str = "Tournament", loaded_from_save : bool = False):
+    def __init__(self, inter : ApplicationCommandInteraction, bot, role : disnake.Role, ordered : bool = False, annonce : str = None, name : str = "Tournament", banner : str = FS.Images.Tournament.ClashBanner, loaded_from_save : bool = False):
         super().__init__(timeout=None)
         self.bot : InteractionBot = bot
         self.inter : ApplicationCommandInteraction = inter
+        self.banner : str = banner
+        self.annonce : str = annonce
         self.admin : disnake.Member = self.inter.author
         self.round_selected : Round = None
         self.match_selected : Match = None
@@ -47,7 +45,7 @@ class Tournament2v2RollView(disnake.ui.View):
         return tournamentView
         
     def make_options(self):
-        self.match_selection.options = [disnake.SelectOption(label=f"Round {j+1} Match {chr(ord('A') + i)}",value=f"{j}{i}",emoji=emotes.num[j+1]) for j in range(self.tournament.nb_rounds) for i in range(self.tournament.nb_matches_per_round)]
+        self.match_selection.options = [disnake.SelectOption(label=f"Round {j+1} Match {chr(ord('A') + i)}",value=f"{j}{i}",emoji=FS.Emotes.Num[j+1]) for j in range(self.tournament.nb_rounds) for i in range(self.tournament.nb_matches_per_round)]
         self.match_selection.placeholder = f"Display the rounds first!"
         self.match_selection.disabled = True
         self.set_team_1_score.disabled = True
@@ -71,7 +69,7 @@ class Tournament2v2RollView(disnake.ui.View):
         cat_perm.connect = True
         await self.category.set_permissions(self.role,overwrite=cat_perm)
         
-        self.channel_overview = await self.category.create_text_channel(name="📋 Overview")
+        self.channel_overview = await self.category.create_text_channel(name="📋 Annonces")
         self.channel_rank = await self.category.create_text_channel(name="🏅 Classement")
         self.channel_rounds = await self.category.create_text_channel(name="📅 Rounds")
         self.channel_rules = await self.category.create_text_channel(name="📜 Règles")
@@ -101,19 +99,19 @@ class Tournament2v2RollView(disnake.ui.View):
                     self.voices[i].append(await self.category.create_voice_channel(name=f"Match {chr(ord('A') + i)} Team {j+1}"))
         
         self.message_rank = await self.channel_rank.send(embed=self.rank)
-        self.message_rounds = await self.channel_rounds.send(embed=FastEmbed(
+        self.message_rounds = await self.channel_rounds.send(embed=FS.Embed(
             title="📅 Rounds",
             description="Les rounds seront affichés ici une fois que le tournoi aura commencé",
-            color = color.gold
+            color = disnake.Colour.gold()
         ))
         self.message_rules = await self.channel_rules.send(embed=self.rules)
         self.message_overview = await self.channel_overview.send(
             content=self.role.mention,
-            embed=FastEmbed(
+            embed=FS.Embed(
                 title=f"🏆 __**{self.name.upper()}**__ 🏆",
-                description=f"**Bienvenu dans ce tournoi !**\n\n[{self.channel_rank.mention}]({self.message_rank.jump_url}) pour voir le **classement en direct**.\n[{self.channel_rounds.mention}]({self.message_rounds.jump_url}) pour **l'avancement des rounds.**\n[{self.channel_rules.mention}]({self.message_rules.jump_url}) pour voir les **règles du tournoi.**\n➖➖\n{self.voice_general.mention} pour rejoindre le **vocal du tournoi**",
-                image="https://i.imgur.com/GoV9WVk.jpg",
-                color=disnake.Colour.dark_green()
+                description=(self.annonce if self.annonce else "Bienvenu dans ce tournoi !") + f"\n➖➖\n[{self.channel_rank.mention}]({self.message_rank.jump_url}) pour voir le **classement en direct**.\n[{self.channel_rounds.mention}]({self.message_rounds.jump_url}) pour **l'avancement des rounds.**\n[{self.channel_rules.mention}]({self.message_rules.jump_url}) pour voir les **règles du tournoi.**\n➖➖\n{self.voice_general.mention} pour rejoindre le **vocal du tournoi**",
+                image=self.banner,
+                color=disnake.Colour.blue()
             )
         )
         self.message_dashboard = await self.channel_dashboard.send(embeds=self.dashboard_embeds,view=self)
@@ -124,22 +122,22 @@ class Tournament2v2RollView(disnake.ui.View):
         
 
     @property   
-    def dashboard_embeds(self): 
+    def dashboard_embeds(self) -> List[disnake.Embed]: 
         embeds = []       
         embeds.append(self.tournament.detailedClassement)
         embeds += self.tournament.rounds_embeds(detailled= True)
         return embeds
     
     @property
-    def rules(self):
+    def rules(self) -> disnake.Embed:
         return self.tournament.rules
     
     @property
-    def rank(self):
-        return self.tournament.classement
+    def rank(self) -> disnake.Embed:
+        return self.tournament.displayedClassement
     
     @property
-    def rounds(self):
+    def rounds(self) -> List[disnake.Embed]:
         return self.tournament.rounds_embeds()
             
     async def update_dashboard(self, interaction : disnake.MessageInteraction, original = False):
@@ -151,6 +149,8 @@ class Tournament2v2RollView(disnake.ui.View):
             self.set_team_2_score.placeholder = f"{self.match_selected.teams[1].display_name} : {self.match_selected.teams[1].scores_description}"
         else:
             self.match_selection.placeholder = f"Select a match"
+            self.match_selection.options = [disnake.SelectOption(label=f"Round {j+1} Match {chr(ord('A') + i)}",value=f"{j}{i}",emoji="🆕") for j in range(self.tournament.nb_rounds) for i in range(self.tournament.nb_matches_per_round) if not self.tournament.rounds[j].matches[i].is_played]
+            self.match_selection.options += [disnake.SelectOption(label=f"Round {j+1} Match {chr(ord('A') + i)}",value=f"{j}{i}",emoji="↩️") for j in range(self.tournament.nb_rounds) for i in range(self.tournament.nb_matches_per_round) if self.tournament.rounds[j].matches[i].is_played]
             self.set_team_1_score.disabled = True
             self.set_team_1_score.placeholder = f"Select a match first."
             self.set_team_2_score.disabled = True
@@ -211,14 +211,14 @@ class Tournament2v2RollView(disnake.ui.View):
     @disnake.ui.button(emoji = "⚠️", label = "End", style=disnake.ButtonStyle.danger, row = 1)
     async def arret(self, button: disnake.ui.Button, interaction : disnake.MessageInteraction):
         if self.is_admin(interaction):
-            if (await confirmation(interaction,
+            if (await FS.confirmation(interaction,
                                    title=f"__**Tournament ending confirmation**__",
                                    message=f"⚠️ Are you sure that you want to end the tournament **{self.tournament.name}**? ⚠️",
                                    confirmationLabel="End the tournament",
                                    cancelLabel="Cancel",
                                    color=disnake.Colour.red())):
                 self.stop()
-                await interaction.edit_original_message(embed=FastEmbed(title=f"__**Tournament {self.tournament.name} ending**__", description="Ending... ⌛"), view=None)
+                await interaction.edit_original_message(embed=FS.Embed(title=f"__**Tournament {self.tournament.name} ending**__", description="Ending... ⌛"), view=None)
                 try:
                     file = disnake.File(self.tournament.state_file)
                     await self.admin.send(content=f'**__Tournois *"{self.tournament.name}"*__**',embeds=self.dashboard_embeds, file=file)
@@ -226,7 +226,7 @@ class Tournament2v2RollView(disnake.ui.View):
                         os.remove(self.tournament.state_file)
                 except OSError:
                     await self.admin.send(embeds=self.dashboard_embeds)
-                    await self.admin.send(embed = FastEmbed(title=":x: ERROR :x:", description="Not able to load the files to discord.\nYou can acces them on the host machine and you should to delete them manually once you don't need them anymore."))
+                    await self.admin.send(embed = FS.Embed(title=":x: ERROR :x:", description="Not able to load the files to discord.\nYou can acces them on the host machine and you should to delete them manually once you don't need them anymore."))
                 for channel in self.category.channels:
                     await channel.delete()
                 await self.category.delete()

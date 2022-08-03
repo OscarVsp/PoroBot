@@ -1,9 +1,8 @@
-from utils import data
-from utils.FastEmbed import FastEmbed
+import modules.FastSnake as FS
 import disnake
 from math import ceil
 
-regles = FastEmbed(
+regles = FS.Embed(
     title = ":scroll: __**REGLES DU BANG**__ :scroll:",
     description = """Ce jeu reprend le principe de la roulette russe, avec des cartes. Chacun à son tour, on sera maitre du jeu et on tirera une carte (distribué automatiquement par le bot en message privé). Le nombre indiqué sur la carte correspond à la position de l'unique balle dans le barillet, et donc le nombre de *"coup à tiré"* avant que la balle sorte.
                      Le maitre du jeu choisit alors un autre joueur sur qui tirer, et annonce le résultat du tire (à faire oralement):
@@ -80,11 +79,11 @@ class Carte(object):
         Returns:
             str: The "https" link to tho image on "Imgur".
         """
-        return data.images.cards[self.color][self.value-1]
+        return FS.Images.Cards.get(self.color)[self.value-1]
     
     @property
     def embed(self):
-        return FastEmbed(
+        return FS.Embed(
             title = f"{self}",
             thumbnail = self.image,
             fields = [{
@@ -135,7 +134,7 @@ class Player(object):
         """
         return Player(self.member,self.looses)
          
-    def takeCarte(self,carte:Carte,mirror):
+    def takeCarte(self,carte : Carte,mirror):
         """Received a card, actualize the score and check if the player is now on "mirror".
 
         Args:
@@ -187,5 +186,5 @@ class Player(object):
         self.carreau = False
         self.doubleCarreau = False
         
-    async def send(self,carte):
+    async def send(self,carte : Carte):
         await self.member.send(embed=carte.embed)

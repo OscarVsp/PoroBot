@@ -1,12 +1,9 @@
 import disnake
 from disnake.ext import commands
 from disnake import ApplicationCommandInteraction
-from random import randint,choices,sample
-from utils.FastEmbed import FastEmbed
-from utils import data
+import modules.FastSnake as FS
 from .view import *
-import asyncio
-from .watcher import ClashTeam,Watcher
+from .watcher import Watcher
 from .exceptions import *
 
 
@@ -19,8 +16,8 @@ class Lol(commands.Cog):
 
                 Get the member dict for the lore from the "Members.json" file next to it.
                 """
-                self.bot = bot
-                self.watcher = Watcher(bot.config["RIOT_APIKEY"],"euw1")
+                self.bot : commands.InteractionBot = bot
+                self.watcher : Watcher = Watcher(bot.config["RIOT_APIKEY"],"euw1")
 
         @commands.slash_command(
                 description = "Scouter une team clash à partir du nom d'un des joueurs"
@@ -35,22 +32,22 @@ class Lol(commands.Cog):
                         team = await self.watcher.get_clash_team(summoner)
                         await inter.edit_original_message(
                                 embed= team.embed,
-                                components = disnake.ui.Button(label="OPGG", emoji= "<:Opgg:948174103557312563>", style = disnake.ButtonStyle.link, url = team.opgg)
+                                components = disnake.ui.Button(label="OPGG", emoji= FS.Emotes.OPGG, style = disnake.ButtonStyle.link, url = team.opgg)
                         )
                 except (NoCurrentTeam):
                         await inter.edit_original_message(
-                                embed = FastEmbed(
+                                embed = FS.Embed(
                                         title = f"__**Clash**__",
                                         description = f"**{summoner}** ne fait pas parti d'une équipe clash actuellement...",
-                                        thumbnail = "https://i.imgur.com/52zSz3H.png"
+                                        thumbnail = FS.Images.Poros.Question
                                 )
                         )
                 except (SumomnerNotFound):
                         await inter.edit_original_message(
-                                embed = FastEmbed(
+                                embed = FS.Embed(
                                         title = f"__**Clash**__",
                                         description = f"**{summoner}** n'a pas pu être trouvé...\nVérifiez que le nom d'invocateur soit correct.",
-                                        thumbnail = "https://i.imgur.com/52zSz3H.png"
+                                        thumbnail = FS.Images.Poros.Question
                                 )
                         )
         
@@ -59,10 +56,10 @@ class Lol(commands.Cog):
         )
         async def wasteonlol(self, inter : ApplicationCommandInteraction):
                 await inter.response.send_message(
-                        embed = FastEmbed(
+                        embed = FS.Embed(
                                 title = "__**Wasted on Lol**__",
                                 description = "Utilise les liens ci-dessous pour découvrir combien de temps et/ou d'argent tu as dépensés dans League of Legends",
-                                thumbnail = data.images.poros.neutral
+                                thumbnail = FS.Images.Poros.Neutral
                         
                         ),
                         components = [
@@ -98,5 +95,5 @@ class Lol(commands.Cog):
                        
 
 
-def setup(bot):
+def setup(bot : commands.InteractionBot):
     bot.add_cog(Lol(bot))

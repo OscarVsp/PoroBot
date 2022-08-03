@@ -1,10 +1,7 @@
 import disnake
 from disnake.ext import commands,tasks
 from disnake import ApplicationCommandInteraction
-from requests import delete
-from utils.FastEmbed import FastEmbed
-from utils import data
-from utils.tools import tracebackEx
+import modules.FastSnake as FS
 from .view import *
 from .scraper import Almanax_scraper
 import asyncio
@@ -19,9 +16,9 @@ class Dofus(commands.Cog):
     def __init__(self, bot):
         """Initialize the cog
         """
-        self.bot = bot
+        self.bot : commands.InteractionBot = bot
         self.scraper = Almanax_scraper()
-        self.almanax_message = None
+        self.almanax_message : disnake.Message = None
         self.almanax_task.add_exception_type(asyncpg.PostgresConnectionError)
         self.almanax_task.start()
         
@@ -36,10 +33,10 @@ class Dofus(commands.Cog):
         )
     ):
         await inter.response.send_message(
-            embed = FastEmbed(
+            embed = FS.Embed(
                 title = "Consultation du Krosmoz en cours...",
                 description = "À chaque fois que l'almanax d'un jour est demandé pour la première fois, cela peut prendre un peu de temps.\nL'almanax te sera envoyé en privé dès qu'il sera prêt.",
-                thumbnail = data.images.sablier
+                thumbnail = FS.Images.Sablier
             ),
             delete_after = 10
         )
@@ -84,23 +81,23 @@ class Dofus(commands.Cog):
     
     @almanax_task.error
     async def error_almanax_task(self, error):
-        tb = tracebackEx(error)
+        tb = self.bot.tracebackEx(error)
         await self.bot.log_channel.send(
-            embed= FastEmbed(
+            embed= FS.Embed(
                 title=f":x: __** ERROR**__ :x:",
                 description=f"""```{error}```\nRaised on task **Almanax_task**."""))
         n = (len(tb) // 4096) 
         for i in range(n):
             await self.bot.log_channel.send(
-                embed=FastEmbed(
+                embed=FS.Embed(
                     description=f"```python\n{tb[4096*i:4096*(i+1)]}```"))
         await self.bot.log_channel.send(
-            embed=FastEmbed(
+            embed=FS.Embed(
                 description=f"```python\n{tb[4096*n:]}```"))
         logging.error(f"{error} raised on task Almanax_task \n {tb}")
         
     def cog_unload(self):
         self.almanax.cancel()
 
-def setup(bot):
+def setup(bot : commands.InteractionBot):
     bot.add_cog(Dofus(bot))

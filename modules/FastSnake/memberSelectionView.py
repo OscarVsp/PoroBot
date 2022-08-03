@@ -1,27 +1,33 @@
 import disnake
-from typing import List, Union
+from typing import List
 
-from .FastEmbed import FastEmbed
-from .data import color
+from .Embed import Embed
 
 
 class MemberSelectionView(disnake.ui.View):
     
-    def __init__(self, inter : disnake.Interaction, title : str, message : str, size : List[int], timeout : int, pre_selected_members : List[disnake.Member], check):
+    def __init__(self, inter : disnake.Interaction, title : str, message : str, size : List[int], timeout : int, pre_selection : List[disnake.Member], check):
         super().__init__(timeout=timeout)
         self.inter : disnake.Interaction = inter
         self.title : str = title
         self.message : str = message
         self.size : List[int] = size
-        self.selected_members : List[disnake.Member] = pre_selected_members
-        self.check = check
+        self.selected_members : List[disnake.Member] = pre_selection
+        if check:
+            self.check = check
+        else:
+            self.check = MemberSelectionView.default_check
         self.is_application_interaction : bool = isinstance(inter, disnake.ApplicationCommandInteraction)
         self.is_view_interaction : bool = isinstance(inter, disnake.MessageInteraction)
+        
+    @staticmethod
+    def default_check(**kwargs):
+        return True
 
         
     @property
     def embed(self) -> disnake.Embed:
-        return FastEmbed(
+        return Embed(
             title = f"__**{self.title.upper()}**__",
             description=self.message,
             fields={
@@ -29,7 +35,8 @@ class MemberSelectionView(disnake.ui.View):
                 'value':"\n".join(member.mention for member in self.selected_members) if len(self.selected_members) else "*Aucun membre sélectionné...*"
             },
             footer_text=f"Il faut un nombre de membre sélectionné(s) compris dans {self.size} pour pouvoir valider" if self.confirm.disabled else disnake.Embed.Empty
-        )
+        )       
+    
             
     async def send(self):
         self.refresh_selection()
@@ -49,7 +56,7 @@ class MemberSelectionView(disnake.ui.View):
         for member in self.inter.guild.members:
             if member in self.selected_members:
                 self.remove.options.append(disnake.SelectOption(label=member.display_name, value=str(member.id)))
-            elif not self.check or self.check(member):
+            elif self.check(member=member, selected_members=self.selected_members, original_interaction=self.inter, size=self.size):
                 self.add.options.append(disnake.SelectOption(label=member.display_name, value=str(member.id)))
                 
         if self.remove.options == []:
@@ -111,21 +118,3 @@ class MemberSelectionView(disnake.ui.View):
         await self.update(interaction)
 
         
-          
-async def memberSelection(
-    inter : disnake.Interaction,
-    title : str = "Sélection des membres",
-    message : str = "",
-    size : Union[int, List[int]] = None,
-    timeout : int = 180,
-    pre_selected_members : List[disnake.Member] = [],
-    check = None) -> List[disnake.Member]:
-    """|coro|\n
-    TODO
-    """
-    if isinstance(size, int):
-        size = [size]
-    memberSelectionView = MemberSelectionView(inter=inter, title=title, message=message, timeout=timeout, size=size, pre_selected_members=pre_selected_members, check=check)
-    await memberSelectionView.send()
-    await memberSelectionView.wait()
-    return memberSelectionView.selected_members

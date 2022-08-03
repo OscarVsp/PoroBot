@@ -1,17 +1,11 @@
-from sqlite3 import DataError
 import cfscrape
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from bs4 import BeautifulSoup
-import json
-import argparse
 import logging
 import requests
-import os
-import sys
 import asyncio
-from utils.data import images
+import modules.FastSnake as FS
 import pickledb
-from json.decoder import JSONDecodeError
 
 
 class Almanax_scraper:
@@ -61,7 +55,7 @@ class Almanax_scraper:
             if mid_container.img != None:
                 pic = mid_container.img['src']
             else:
-                pic = images.placeholder
+                pic = FS.Images.Placeholder
 
             bonus = str(mid_container)
             bonus = bonus[len('<div class="more">'):bonus.index('<div class="more-infos">')].strip()

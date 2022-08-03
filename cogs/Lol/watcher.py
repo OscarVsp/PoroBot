@@ -1,16 +1,9 @@
 from riotwatcher import LolWatcher, ApiError
 from .exceptions import NoCurrentTeam, SumomnerNotFound
-from utils.FastEmbed import FastEmbed
-from utils.data import *
-import logging
-from disnake import Embed
-from datetime import datetime
-from typing import List
+import modules.FastSnake as FS
+import disnake
 import asyncio
 
-
-role_to_emote = {'UNSELECTED':"<:Missing:829247441278074891>",'TOP':'<:Top:797548227004071956>','JUNGLE':'<:Jungle:797548226998829078>','MIDDLE':'<:Mid:797548226944565298>','BOTTOM':'<:Bot:829047436563054632>','UTILITY':'<:Support:797548227347480593>',"FILL":"<:Fill:829062843717386261>"}
-rank_to_emote = {'UNRANKED':"<:Unranked:829242191020032001>",'IRON':"<:Iron:829240724871577600>",'BRONZE':"<:Bronze:829240724754792449>",'SILVER':"<:Silver:829240724867514378>",'GOLD':"<:Gold:829240724842872872>",'PLATINUM':"<:Platinum:829240724797128754>",'DIAMOND':"<:Diamond:829240724830027796>",'MASTER':"<:Master:829240724943405096>",'GRANDMASTER':"<:Grandmaster:829240724767768576>",'CHALLENGER':"<:Challenger:829240724712456193>"}
 
 class ClashPlayer():
 
@@ -44,12 +37,12 @@ class ClashTeam():
         return self.playersNotSorted["TOP"] + self.playersNotSorted["JUNGLE"] + self.playersNotSorted["MIDDLE"] + self.playersNotSorted["BOTTOM"] + self.playersNotSorted["UTILITY"] + self.playersNotSorted["FILL"] + self.playersNotSorted["UNSELECTED"]
 
     @property
-    def embed(self) -> Embed:
-        return FastEmbed(
+    def embed(self) -> disnake.Embed:
+        return FS.Embed(
             title = f"__**{self.name} ({self.abbreviation})**__",
-            description = f"\n".join([f"{role_to_emote[p.position]}{rank_to_emote[p.tier]} {p.name}" for p in self.getPlayersSorted()]),
+            description = f"\n".join([f"{FS.Emotes.Lol.Position.get(p.position)}{FS.Emotes.Lol.Rank.get(p.tier)} {p.name}" for p in self.getPlayersSorted()]),
             thumbnail = self.icon,
-            color = color.bleu
+            color = disnake.Colour.blue()
         )
         
     @property

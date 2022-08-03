@@ -1,12 +1,7 @@
-from abc import abstractmethod
-from ctypes.wintypes import MSG
-from enum import Enum
-from http.client import HTTPException
 import random
 import disnake
-from utils.data import emotes,color
-from utils.FastEmbed import FastEmbed
-from utils.ShadowMember import ShadowMember, VocalGuildChannel, Components
+import modules.FastSnake as FS
+from modules.FastSnake.ShadowMember import ShadowMember, VocalGuildChannel, Components
 import json
 import logging
 from datetime import datetime
@@ -519,12 +514,12 @@ class Match:
     def is_played(self) -> bool:
         played = False
         for entity in self._entities:
-            played = played or (entity.points >= self._point_to_win)
+            played = played or (round(entity.points) >= self._point_to_win)
         return played
     
     @property
     def title(self) -> str:
-        return f"__MATCH __{emotes.alpha[self._match_idx]}"
+        return f"__MATCH __{FS.Emotes.Alpha[self._match_idx]}"
 
     @property
     def field(self) -> dict:
@@ -535,7 +530,7 @@ class Match:
         for i,entity in enumerate(self._entities):
             if round(entity.points) >= self._point_to_win:
                 indicators[i] = '✅'
-        return {'name':self.title,'value':"\n".join([f"{indicators[i]}{emotes.num[round(e.points)]} {e.display}" for i,e in enumerate(self._entities)]),'inline':True}
+        return {'name':self.title,'value':"\n".join([f"{indicators[i]}{FS.Emotes.Num[round(e.points)]} {e.display}" for i,e in enumerate(self._entities)]),'inline':True}
       
     @property
     def field_detailled(self) -> dict:
@@ -546,7 +541,7 @@ class Match:
         for i,entity in enumerate(self._entities):
             if round(entity.points) >= self._point_to_win:
                 indicators[i] = '✅'
-        return {'name':self.title,'value':"\n".join([f"{indicators[i]}{''.join([emotes.num[round(score)] for score in e.scores])} {e.display}" for i,e in enumerate(self._entities)]),'inline':True}
+        return {'name':self.title,'value':"\n".join([f"{indicators[i]}{''.join([FS.Emotes.Num[round(score)] for score in e.scores])} {e.display}" for i,e in enumerate(self._entities)]),'inline':True}
       
         
     @property
@@ -666,11 +661,11 @@ class Round:
     
     @property
     def title(self) -> str:
-        return f"⚔️ __**ROUND **__{emotes.num[self._round_idx+1]}"
+        return f"⚔️ __**ROUND **__{FS.Emotes.Num[self._round_idx+1]}"
 
     @property
     def embed(self) -> disnake.Embed:
-        return FastEmbed(
+        return FS.Embed(
         title = self.title,
         color = self.embed_color,
         fields = [m.field for m in self._matches]
@@ -678,7 +673,7 @@ class Round:
             
     @property
     def embed_detailled(self) -> disnake.Embed:
-        return FastEmbed(
+        return FS.Embed(
         title = self.title,
         color = self.embed_color,
         fields = [m.field_detailled for m in self._matches]
@@ -687,10 +682,10 @@ class Round:
     @property
     def embed_color(self) -> disnake.Color:
         if self.is_played:
-            return disnake.Colour.green()
+            return disnake.Colour.lighter_grey()
         elif self.round_idx == 0 or self._tournament.rounds[self._tournament.rounds.index(self)-1].is_played:
-            return disnake.Colour.gold()
-        return disnake.Colour.darker_grey()
+            return disnake.Colour.green()
+        return disnake.Embed.Empty
         
             
     @property
@@ -891,7 +886,6 @@ class Tournament:
                 embeds.append(round.embed)
         return embeds
     
-    @abstractmethod
     def generate(self) -> None:
         pass
     
@@ -1109,90 +1103,94 @@ class Tournament2v2Roll(Tournament):
         ranks = []
         for i in range(len(sorted_players)):
             if i == 0:
-                ranks.append(f"{emotes.rank[i]}")
+                ranks.append(f"{FS.Emotes.Rank[i]}")
             elif sorted_players[i].points == sorted_players[i-1].points:
                 ranks.append(ranks[-1])
             else:
-                ranks.append(f"{emotes.rank[i]}")
+                ranks.append(f"{FS.Emotes.Rank[i]}")
         return ranks
-             
+    
     @property
     def classement(self) -> disnake.Embed:
         sorted_players = self.getRanking()
         ranks = Tournament2v2Roll.rank_emotes(sorted_players)
-        return FastEmbed(
-            title = "🏆 __**CLASSEMENT**__ 🏆",
-            color = color.gold,
+        return FS.Embed(
+            title = "🏆 __**CLASSEMENT**__🏆 ",
+            color = disnake.Colour.gold(),
             fields=[
                 {'name':"#️⃣",'value':"\n".join([f"{ranks[i]}" for i in range(len(sorted_players))]),'inline':True},
                 {'name':"__*Joueurs*__",'value':"\n".join([f"**{p.display}**" for p in sorted_players]),'inline':True},
-                {'name':"💎",'value':"\n".join([f" **{emotes.num[round(p.points)]}**" for p in sorted_players]),'inline':True}
+                {'name':"💎➖⚔️ 🧱 🧙‍♂️",'value':"\n".join([f"**{FS.Emotes.Num[round(p.points)]}**➖*{FS.Emotes.Num[p.scores[self.Score.KILLS]]} {FS.Emotes.Num[p.scores[self.Score.TURRETS]]} {FS.Emotes.Num[p.scores[self.Score.CS]]}*" for p in sorted_players]),'inline':True}
             ]
         )
+             
+    @property
+    def displayedClassement(self) -> disnake.Embed:
+        return self.classement.add_field(
+                name="➖➖➖➖➖➖➖➖➖➖➖➖➖",
+                value="""> __**Calcul des scores :**__
+                > 💎 **Score** = ⚔️ **Kill**  +  🧱 **Tour**  +  🧙‍♂️ **100cs**
+                > __**En cas d'égalité :**__
+                > ⚔️ **Kill**  >  🧱 **Tour**  >  🧙‍♂️ **100cs**
+                """,
+                inline=False
+            )
+            
+        
    
     @property
     def detailedClassement(self) -> disnake.Embed:
-        sorted_players = self.getRanking()
-        ranks = Tournament2v2Roll.rank_emotes(sorted_players)
-        return FastEmbed(
-            title = "🏆 __**CLASSEMENT**__🏆 ",
-            color = color.gold,
-            fields=[
-                {'name':"#️⃣",'value':"\n".join([f"{ranks[i]}" for i in range(len(sorted_players))]),'inline':True},
-                {'name':"__*Joueurs*__",'value':"\n".join([f"**{p.display}**" for p in sorted_players]),'inline':True},
-                {'name':"💎➖💀-🧱-🧙‍♂️",'value':"\n".join([f"**{emotes.num[round(p.points)]}**➖*{emotes.num[p.scores[self.Score.KILLS]]}-{emotes.num[p.scores[self.Score.TURRETS]]}-{emotes.num[p.scores[self.Score.CS]]}*" for p in sorted_players]),'inline':True}
-            ],
-            footer_text=f"MSE = {self.MSE}"
-        )
+        return self.classement.add_field(name="➖➖➖➖➖➖➖➖➖➖➖➖➖",value=f"> MSE = {self.MSE}")
         
     @property
     def rules(self) -> disnake.Embed:
-        return FastEmbed(
+        return FS.Embed(
             title = ":scroll: __**RÈGLES**__ :scroll:",
-            color = disnake.Colour.blue(),
+            color = disnake.Colour.purple(),
             fields = [
                 {
                     'name':"__**Format du tournoi**__",
-                    'value':f"""Le tournoi se joue individuellement mais les matchs se font par __équipe de 2__. Ces équipes changent à chaque match. Ceci est fait en s'assurant que chacun joue
-                            ✅ __avec__ chaque autres joueurs exactement :one: fois
-                            :x: __contre__ chaque autres joueurs exactement :two: fois.
-                            Il y aura donc __ {self._nb_rounds} rounds__ avec __{self._nb_matches_per_round} matchs__ en parallèles."""
+                    'value':f"""Le tournoi se joue individuellement mais les matchs se font par **équipe de 2**. Ces équipes changent à chaque match. Ceci est fait en s'assurant que chacun joue
+                            > ✅ __avec__ chaque autres joueurs exactement :one: fois
+                            > :x: __contre__ chaque autres joueurs exactement :two: fois.
+                            Il y aura donc **{self._nb_rounds} rounds**"""+(f"avec **{self._nb_matches_per_round} matchs** en parallèles." if self._nb_matches_per_round>1 else ".")
                 },
                 {
                     'name':"__**Format d'un match**__",
-                    'value':"""Les matchs sont en __BO1__ se jouant en 2v2 selon le format suivant :
-                            🌍 __Map__ : Abime hurlante
-                            👓 __Mode__ : Blind
-                            ❌ __Bans__ : 3 par équipe (à faire via le chat dans le lobby **pré-game**)"""
+                    'value':"""Les matchs sont en **BO1** se jouant en 2v2 selon le format suivant :
+                            > 🌍 __Map__ : Abime hurlante
+                            > 👓 __Mode__ : Blind
+                            > ❌ __Bans__ : 3 par équipe *(à faire via le chat dans le lobby **pré-game**)*"""
                 },
                 {
                     'name':"__**Règles d'un match**__",
-                    'value':"""⛔ Interdiction de prendre les healts __extérieurs__ (ceux entre la **T1** et la **T2**).
-                            ✅ Le suicide est autorisé et ne compte pas comme un kill.
-                            ✅ L'achat d'objet lors d'une mort est autorisé."""
+                    'value':"""> ⛔ __Interdiction__ de prendre les healts **extérieurs** *(ceux entre la **T1** et la **T2**)*.
+                            > ✅ __Le suicide__ est autorisé et ne compte pas comme un kill.
+                            > ✅ __L'achat d'objet__ lors d'une mort est autorisé."""
                 },
                 {
                     'name':"__**Score d'un match**__",
-                    'value':"""Le match se finit lorsque l'une des deux équipes a __2 points__. Une équipe gagne :one: point pour :
-                            ⚔️  __Chaque kills__
-                            🧱 __1e tourelle de la game__
-                            🧙‍♂️ __1e **joueur** d'une équipe à 100cs__"""
+                    'value':"""Le match se finit lorsque l'une des deux équipes a **2 points**. Une équipe gagne **1 point** pour :
+                            > ⚔️  __Chaque kills__
+                            > 🧱 __1e tourelle de la game__
+                            > 🧙‍♂️ __1e joueur d'une équipe à 100cs__"""
                 },
                 {
                     'name':"__**Score personnel**__",
-                    'value':f"""Les points obtenus en équipe lors d'un match sont ajoutés au score personnel de chaque joueur (indépendamment de qui a marqué le point).
+                    'value':f"""Les points obtenus en équipe lors d'un match sont ajoutés au score personnel de chaque joueur *(indépendamment de qui a marqué le point)*.
                             À la fin des {self._nb_rounds} rounds, c'est les points personnels qui détermineront le classement."""
                 },
                 {
                     'name':"__**Égalité**__",
-                    'value':f"""En cas d'égalité, on départage avec __kills > Tourelles > 100cs__.
-                            En cas d'égalité parfaite pour la première ou deuxième place, un __1v1__ en BO1 est organisé (même règles, mais _1 point__ suffit pour gagner)."""
+                    'value':f"""En cas d'égalité, on départage avec ⚔️ **kills** > 🧱 **Tourelles** > 🧙‍♂️ **100cs**.
+                            En cas d'égalité parfaite pour la 2ième place, un **1v1** en BO1 est organisé *(même règles, mais **1 point** suffit pour gagner)*."""
                 },
                 {
                     'name':"__**Phase finale**__",
-                    'value':f"""À la fin des {self._nb_rounds} rounds, un BO5 en __1v1__ sera joué entre le 1er et le 2ème du classement pour derterminer le grand vainqueur. Pour chaque deux points d'écart, un match d'avance sera accordé au 1er du classement (jusqu'à un maximum de 2 matchs d'avance).
-                    *__Exemple :__
-                    **Lỳf** est premier avec __14 points__ mais **Gay Prime** est deuxième avec __11 points__\n⏭️ BO5 commençant à **1-0** en faveur de **Lỳf**.*"""
+                    'value':f"""À la fin des {self._nb_rounds} rounds, un BO5 en **1v1** sera joué entre le **1er** et le **2ième** du classement pour derterminer le grand vainqueur. Pour chaque **{round((self._nb_rounds*2)/5)} point(s)** d'écart, un match d'avance sera accordé au **1er** *(jusqu'à un maximum de 2 matchs d'avance)*.
+                    > __*Exemple :*__
+                    > **Lỳf** est 1er avec **{self._nb_rounds*2} points** mais **Gay Prime** est 2ième avec **{self._nb_rounds*2-round((self._nb_rounds*2)/5)} points**
+                    > ⏭️ **BO5** commençant à **1-0** en faveur de **Lỳf**."""
                 }
             ]
         )

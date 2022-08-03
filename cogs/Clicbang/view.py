@@ -1,8 +1,6 @@
 import disnake 
 from disnake import ApplicationCommandInteraction
-from utils.FastEmbed import FastEmbed
-from utils import data
-import asyncio
+import modules.FastSnake as FS
 from random import shuffle, choice
 from itertools import cycle
 from .model import Player, Carte, regles
@@ -22,10 +20,10 @@ class BangMenu(disnake.ui.View):
         
     @property   
     def embed(self):
-        embed = FastEmbed(
+        embed = FS.Embed(
                 title = "__**BANG - MENU**__",
                 footer_text= f"Au moins {self.number_players_min} joueurs pour démarrer une partie.",
-                thumbnail = data.images.bang_6
+                thumbnail = FS.Images.Bang_6
         )
         if len(self.players) != 0:
             embed.add_field(
@@ -96,9 +94,9 @@ class BangGame(disnake.ui.View):
                 line = ":black_medium_small_square:"
             line += f"**{player.display_name}** : {player.points}"
             if player.isCarreau:
-                line += ":diamonds:"
+                line += FS.Emotes.CardColor.Carreau
             if player.isDoubleCarreau:
-                line += ":diamonds:"
+                line += FS.Emotes.CardColor.Carreau
             player_lines.append(line)
         return "/n".join(player_lines)
     
@@ -107,7 +105,7 @@ class BangGame(disnake.ui.View):
         return f"{self.max_value*4 - len(self.cartes)}/{self.max_value*4} cartes jouées"
         
     def embed(self, message : str = ""):
-        embed = FastEmbed(
+        embed = FS.Embed(
             title = "__**BANG - PARTIE**__"
         )
         if self.lastCarte == None:
@@ -116,7 +114,7 @@ class BangGame(disnake.ui.View):
                 value = "*Les cartes jouées s'afficheront ici*",
                 inline = False
             )
-            embed.set_thumbnail(url = data.images.cards['back'])
+            embed.set_thumbnail(url = FS.Images.Cards.Back)
         else:
             embed.add_field(
                 name = '__Dernière carte jouée :__',

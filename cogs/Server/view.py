@@ -1,14 +1,10 @@
-from code import interact
 import disnake 
-from disnake import ApplicationCommandInteraction
 from disnake.ext import commands
-from utils.FastEmbed import FastEmbed
 from disnake.ext import commands
-from utils import data
+import modules.FastSnake as FS
 import asyncio
 from typing import List
 import logging
-from utils.confirmationView import confirmation
 
 class Locker(disnake.ui.View):
     
@@ -39,9 +35,7 @@ class Locker(disnake.ui.View):
                  reason : str,
                  timeout_on_no_participants : int = 1,
                  parler : bool = False,
-                 streamer : bool = False,
-                 ecouter : bool = True,
-                 regarder : bool = True
+                 streamer : bool = False
         ):
         super().__init__(timeout=None)
         self.server : commands.Cog = server
@@ -104,11 +98,11 @@ class Locker(disnake.ui.View):
                     'name':("🔇" if self.mute.disabled else "🔈")+" __**Spectateurs :**__",
                     'value':"\n".join(spectateurs) if len(spectateurs) > 0 else "*Pas de spectateur*"
                 })
-        return FastEmbed(
+        return FS.Embed(
             title = self.title,
             description="➖➖➖➖➖➖➖➖➖➖➖➖➖➖➖➖➖➖➖➖➖➖",
             fields = fields,
-            color = data.color.vert
+            color = disnake.Colour.green()
         )
         
     @property
@@ -118,7 +112,7 @@ class Locker(disnake.ui.View):
             if self.is_authorized(member):
                 if member.activity and member.activity.type == disnake.ActivityType.streaming:
                     description+=f"\n\n**{member.display_name}** est actuellement en train de stream sur [{member.activity.platform}]({member.activity.url})"
-        FastEmbed(
+        FS.Embed(
             title=self.title,
             description=description
         )
@@ -201,7 +195,7 @@ class Locker(disnake.ui.View):
             
     async def unlock(self, inter : disnake.MessageInteraction = None):
         await inter.edit_original_message(
-            embed = FastEmbed(
+            embed = FS.Embed(
                 title = f"🔓 __**Channel** *#{self.channel_original_name}* **verrouillé**__",
                 description="Déverrouillage en cours... ⌛"
             ), view = None)
@@ -213,13 +207,13 @@ class Locker(disnake.ui.View):
         if inter == None:
             inter = self.inter
         await inter.edit_original_message(
-            embed = FastEmbed(
+            embed = FS.Embed(
                 title = f"🔓 __**Channel** *#{self.channel_original_name}* **déverrouillé**__",
                 description="Le channel à bien été __**déverrouillé**__ !",
                 footer_text="Tu peux rejeter ce message pour le faire disparaitre."
             )) 
         for member in members_to_notify:
-            await member.send(embed=FastEmbed(
+            await member.send(embed=FS.Embed(
                 title=f"🔓 __**Channel** *#{self.channel_original_name}* **déverrouillé**__",
                 description=f"Le channel vocal dans lequel tu te trouve vient d'être __**définitivement**__ déverrouillé.\nTu peux maintenant te __**dé-mute**__ pour parler !"
             ))
@@ -244,7 +238,7 @@ class Locker(disnake.ui.View):
         await self.update(interaction)
         for member in self.channel.members:
             if self.unauthorized_role in member.roles:
-                await member.send(embed=FastEmbed(
+                await member.send(embed=FS.Embed(
                     title=f"🔈 __**Channel** *#{self.channel_original_name}* **déverrouillé**__",
                     description="Le channel vocal dans lequel tu trouver vient d'être __**temporairement**__ déverrouillé.\nTu peux te __**dé-mute**__ pour parler !"
                 ))
@@ -261,7 +255,7 @@ class Locker(disnake.ui.View):
         
     @disnake.ui.button(emoji = "🔓", label = "Déverrouiller", style=disnake.ButtonStyle.danger)
     async def unlock_button(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
-        if (await confirmation(interaction, 
+        if (await FS.confirmation(interaction, 
                                title=f"🔓 __**Déverrouiller le channel *{self.channel.name}***__", 
                                message=f"Es-tu sûr de vouloir déverrouiller le channel {self.channel.mention} ?",
                                confirmationLabel="Déverrouiller")):
@@ -277,7 +271,8 @@ class Locker(disnake.ui.View):
             if str(authorized_member.id) in select.values:
                 await authorized_member.add_roles(self.unauthorized_role, reason="Unauthorized")
                 await authorized_member.remove_roles(self.authorized_role, reason="Unauthorized")
-                await authorized_member.move_to(self.channel)
+                if authorized_member.voice and authorized_member.voice.channel == self.channel:
+                    await authorized_member.move_to(self.channel)
         self.refresh_presence()
         self.unlock_state = False
         await self.update(interaction)
@@ -290,7 +285,8 @@ class Locker(disnake.ui.View):
             if str(unauthorized_member.id) in select.values:
                 await unauthorized_member.add_roles(self.authorized_role, reason="Authorized")
                 await unauthorized_member.remove_roles(self.unauthorized_role, reason="Authorized")
-                await unauthorized_member.move_to(self.channel)
+                if unauthorized_member.voice and unauthorized_member.voice.channel == self.channel:
+                    await unauthorized_member.move_to(self.channel)
         
         self.refresh_presence()
         self.unlock_state = False

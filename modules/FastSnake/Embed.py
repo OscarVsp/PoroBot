@@ -1,7 +1,7 @@
-from disnake import Embed, File
+import disnake
 from typing import List, Union
 
-class FastEmbed(Embed):
+class Embed(disnake.Embed):
     """Represents a Discord embed.
 
     .. container:: operations
@@ -57,23 +57,23 @@ class FastEmbed(Embed):
     
     def __init__(self,
         *,
-        title               : str                       = Embed.Empty,
-        description         : str                       = Embed.Empty,
-        color               : int                       = Embed.Empty,
-        url                 : str                       = Embed.Empty,
+        title               : str                       = disnake.Embed.Empty,
+        description         : str                       = disnake.Embed.Empty,
+        color               : int                       = disnake.Embed.Empty,
+        url                 : str                       = disnake.Embed.Empty,
         
         fields              : Union[List[dict],dict]    = None,
         
         author_name         : str                       = None,
-        author_url          : str                       = Embed.Empty,
-        author_icon_url     : str                       = Embed.Empty,
+        author_url          : str                       = disnake.Embed.Empty,
+        author_icon_url     : str                       = disnake.Embed.Empty,
         
-        thumbnail           : Union[str,File]           = Embed.Empty,
+        thumbnail           : Union[str,disnake.File]   = disnake.Embed.Empty,
         
-        image               : Union[str,File]           = Embed.Empty,
+        image               : Union[str,disnake.File]   = disnake.Embed.Empty,
           
-        footer_text         : str                       = Embed.Empty,
-        footer_icon_url     : str                       = Embed.Empty
+        footer_text         : str                       = disnake.Embed.Empty,
+        footer_icon_url     : str                       = disnake.Embed.Empty
         ):
         
         super().__init__(
@@ -118,7 +118,7 @@ class FastEmbed(Embed):
         if thumbnail != Embed.Empty:
             if type(thumbnail) == str:
                 self.set_thumbnail(url = thumbnail)
-            elif type(thumbnail) == File:
+            elif type(thumbnail) == disnake.File:
                 self.set_thumbnail(file = thumbnail)
             else:
                 raise TypeError(f'Argument "thumbnail" should be type "str" or "disnake.File" but {type(fields)} has been provided.')
@@ -127,7 +127,7 @@ class FastEmbed(Embed):
         if image != Embed.Empty:
             if type(image) == str:
                 self.set_image(url = image)
-            elif type(image) == File:
+            elif type(image) == disnake.File:
                 self.set_image(file = image)
             else:
                 raise TypeError(f'Argument "thumbnail" should be type "str" or "disnake.File" but {type(fields)} has been provided.')

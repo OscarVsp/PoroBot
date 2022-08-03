@@ -2,8 +2,7 @@ from typing import List
 import disnake
 from disnake.ext import commands
 from disnake import ApplicationCommandInteraction
-from utils.FastEmbed import FastEmbed
-from utils import data
+import modules.FastSnake as FS
 from .view import *
 import asyncio
 from asyncio.exceptions import TimeoutError
@@ -18,17 +17,17 @@ class Basic(commands.Cog):
     def __init__(self, bot):
         """Initialize the cog
         """
-        self.bot = bot
+        self.bot : commands.InteractionBot = bot
 
     @commands.slash_command(
         description = "Commander un bière (test le ping du bot)"
     )
     async def beer(self, inter: ApplicationCommandInteraction):
         await inter.response.send_message(
-            embed=FastEmbed(
+            embed=FS.Embed(
                 title="Voilà tes bières",
                 description=f":beer:\n Après {round(self.bot.latency,2)} secondes d'attente seulement !",
-                color = data.color.gold
+                color = disnake.Colour.gold()
             ),
             view = Beer(inter)
         )
@@ -39,9 +38,9 @@ class Basic(commands.Cog):
     )
     async def porosnack(self, inter: ApplicationCommandInteraction):
         await inter.response.send_message(
-            embed = FastEmbed(
+            embed = FS.Embed(
                 description="Nourris le poro !",
-                image=data.images.poros.growings[0],
+                image=FS.Images.Poros.Growings[0],
                 footer_text="0/10"
             ),
             view=PoroFeed(inter)
@@ -55,7 +54,7 @@ class Basic(commands.Cog):
             )
             stdout, stderr = await process.communicate()
             if process.returncode == 0:
-                embed = FastEmbed(
+                embed = FS.Embed(
                         title=f"✅ Update successed",
                         description=f"```{stdout.decode().strip()}```"
                     )
@@ -63,12 +62,12 @@ class Basic(commands.Cog):
                 if restart:
                     await self.restart_proc(inter)
             else :
-                await inter.edit_original_message(embed=FastEmbed(
-                    title=f"❌ Update failed with status code {data.emotes.num[process.returncode]}",
+                await inter.edit_original_message(embed=FS.Embed(
+                    title=f"❌ Update failed with status code {FS.Emotes.Num[process.returncode]}",
                     description=f"```{stderr.decode().strip()}```"
                 ))
         except FileNotFoundError as e:
-            await inter.edit_original_message(embed=FastEmbed(
+            await inter.edit_original_message(embed=FS.Embed(
                     title=f"❌ Update failed due to *FileNotFoundError*",
                     description=f"```Couldn't find file {cmd_split[0]}```"))
     
@@ -79,7 +78,7 @@ class Basic(commands.Cog):
             process = await asyncio.create_subprocess_exec(
                 *cmd_split, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
             )
-            embeds.append(FastEmbed(
+            embeds.append(FS.Embed(
                 title=f"⌛ Restarting..."
             ))
             await inter.edit_original_message(embeds=embeds)
@@ -87,7 +86,7 @@ class Basic(commands.Cog):
             stdout, stderr = await process.communicate()
             
         except FileNotFoundError as e:
-            embeds.append(FastEmbed(
+            embeds.append(FS.Embed(
                     title=f"❌ Restart failed due to *FileNotFoundError*",
                     description=f"Couldn't find file ***{cmd_split[0]}***"))
             await inter.edit_original_message(embeds=embeds)  
@@ -104,7 +103,7 @@ class Basic(commands.Cog):
                      restart : bool = commands.Param(description="Restart the bot after update ?", default = True)):
         await inter.response.defer(ephemeral=True)
         if self.bot.test_mode:
-            await inter.edit_original_message(embed=FastEmbed(
+            await inter.edit_original_message(embed=FS.Embed(
                 description=f"Cannot update in test mode."
             ))
         else:
@@ -120,7 +119,7 @@ class Basic(commands.Cog):
     async def restart(self, inter : disnake.ApplicationCommandInteraction):
         await inter.response.defer(ephemeral=True)
         if self.bot.test_mode:
-            await inter.edit_original_message(embed=FastEmbed(
+            await inter.edit_original_message(embed=FS.Embed(
                 description=f"Cannot restart in test mode."
             ))
         else:
@@ -146,21 +145,21 @@ class Basic(commands.Cog):
                 stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=timeout)
         
                 if process.returncode == 0:
-                    await inter.edit_original_message(embed=FastEmbed(
+                    await inter.edit_original_message(embed=FS.Embed(
                             title=f"✅ command successed",
                             description=f"```{stdout.decode().strip()}```"
                         ))
                 else :
-                    await inter.edit_original_message(embed=FastEmbed(
-                        title=f"❌ Command failed with status code {data.emotes.num[process.returncode]}",
+                    await inter.edit_original_message(embed=FS.Embed(
+                        title=f"❌ Command failed with status code {FS.Emotes.Num[process.returncode]}",
                         description=f"```{stderr.decode().strip()}```"
                     ))
             except TimeoutError:
-                await inter.edit_original_message(embed=FastEmbed(
+                await inter.edit_original_message(embed=FS.Embed(
                         title=f"❌ Command timeout"
                     ))
         except FileNotFoundError as e:
-            await inter.edit_original_message(embed=FastEmbed(
+            await inter.edit_original_message(embed=FS.Embed(
                     title=f"❌ Command error due to *FileNotFoundError*",
                     description=f"Couldn't find file ****{cmd_split[0]}****"
                 ))
@@ -199,7 +198,7 @@ class Basic(commands.Cog):
             await inter.author.send(
                 files = files
             )
-        await inter.edit_original_message(embed=FastEmbed(description="Logs sent on private !"))
+        await inter.edit_original_message(embed=FS.Embed(description="Logs sent on private !"))
         
  
     @commands.user_command(
@@ -209,9 +208,9 @@ class Basic(commands.Cog):
         lore_embed = get_lore_embed(inter.target.name)
         if lore_embed == False:
             await inter.response.send_message(
-                embed = FastEmbed(
+                embed = FS.Embed(
                     description = f"{inter.target.name} n'a pas encore de lore...\nDemande à Hyksos de l'écrire !",
-                    thumbnail = data.images.poros.sweat
+                    thumbnail = FS.Images.Poros.Sweat
                     ),
                 ephemeral = True
             )
@@ -233,5 +232,5 @@ class Basic(commands.Cog):
     
 
 
-def setup(bot):
+def setup(bot : commands.InteractionBot):
     bot.add_cog(Basic(bot))

@@ -2,10 +2,7 @@ import disnake
 from disnake.ext import commands
 from disnake import ApplicationCommandInteraction
 from disnake.ext.commands import InteractionBot
-from random import randint,choices,sample
-from utils.FastEmbed import FastEmbed
-from utils.data import emotes, color
-from utils.memberSelectionView import memberSelection
+import modules.FastSnake as FS
 from .view import *
 from .classes import *
 import asyncio
@@ -45,8 +42,10 @@ class Tournament(commands.Cog):
     )
     async def newTournament2v2Roll(self, inter: ApplicationCommandInteraction,
                                 name : str = commands.Param(description="Nom du tournoi", default="Tournoi"),
+                                annonce : str = commands.Param(description="Le text à inclure dans l'annonce initial du tournoi", default=None),
                                 role : disnake.Role = commands.Param(description="Un role depuis lequel importer des joureurs", default = None),
-                                event : str = commands.Param(description="Un évent depuis lequel importer des joueurs", default = None)):
+                                event : str = commands.Param(description="Un évent depuis lequel importer des joueurs", default = None),
+                                banniere : str = commands.Param(description="""Le lien "https" de l'image à utiliser comme bannière""", default = FS.Images.Tournament.ClashBanner)):
         """Create a tournament 2v2 roll of 4, 5 or 8 players
         """
         await inter.response.defer(ephemeral=True)
@@ -57,10 +56,10 @@ class Tournament(commands.Cog):
             async for member in event.fetch_users():
                 if member not in members:
                     members.append(member)
-        members = await memberSelection(inter, title="Sélection des joueurs.", message= "Sélectionne les membres participant au tournois.", size = [4,5,8], pre_selected_members=members)
+        members = await FS.memberSelection(inter, title="Sélection des joueurs.", message= "Sélectionne les membres participant au tournois.", size = [4,5,8], pre_selection=members)
         if members:
             await inter.edit_original_message(
-                embed = FastEmbed(description=f"⌛ Création du tournois {name} en cours..."),
+                embed = FS.Embed(description=f"⌛ Création du tournois {name} en cours..."),
                 view=None
             )
             self.bot.tournaments_name += [name]
@@ -69,13 +68,13 @@ class Tournament(commands.Cog):
             for member in members:
                 await member.add_roles(tournament_role, reason=f"Tournement {name}")    
             await asyncio.sleep(2)
-            new_tournament = Tournament2v2RollView(inter, self.bot, tournament_role, name = name)
+            new_tournament = Tournament2v2RollView(inter, self.bot, tournament_role, name = name, banner = banniere, annonce = annonce)
             await new_tournament.makeChannels()
             await inter.edit_original_message(
-                embed = FastEmbed(description=f"Tournois {name} créé.\n[Dashboard]({new_tournament.channel_dashboard.jump_url})")
+                embed = FS.Embed(description=f"Tournois {name} créé.\n[Dashboard]({new_tournament.channel_dashboard.jump_url})")
             )
         else:
-            await inter.edit_original_message(embed=FastEmbed(description=f"Création du tournois annulée"), view=None)
+            await inter.edit_original_message(embed=FS.Embed(description=f"Création du tournois annulée"), view=None)
         
     @newTournament2v2Roll.autocomplete("event")
     async def autocomp_locked_chan(self, inter: disnake.ApplicationCommandInteraction, user_input: str):
@@ -100,7 +99,7 @@ class Tournament(commands.Cog):
         self.bot.tournaments_name += [new_tournament.name]
         await self.bot.change_presence(activity = disnake.Activity(name=", ".join(self.bot.tournaments_name), type=disnake.ActivityType.playing))       
         await inter.edit_original_message(
-            embed = FastEmbed(description=f"Tournois {new_tournament.name} créé.\n[Dashboard]({new_tournament.channel_dashboard.jump_url})")
+            embed = FS.Embed(description=f"Tournois {new_tournament.name} créé.\n[Dashboard]({new_tournament.channel_dashboard.jump_url})")
         )
         
     
