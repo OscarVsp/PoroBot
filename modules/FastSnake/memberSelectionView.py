@@ -2,6 +2,7 @@ import disnake
 from typing import List
 
 from .Embed import Embed
+from .Assets import *
 
 
 class MemberSelectionView(disnake.ui.View):
@@ -31,8 +32,8 @@ class MemberSelectionView(disnake.ui.View):
             title = f"__**{self.title.upper()}**__",
             description=self.message,
             fields={
-                'name':"__Membre(s) sélectionné(s) :__",
-                'value':"\n".join(member.mention for member in self.selected_members) if len(self.selected_members) else "*Aucun membre sélectionné...*"
+                'name':f"{Emotes.Num[len(self.selected_members)]}__membre(s) sélectionné(s) :__",
+                'value':"\n".join(f"> {member.mention}" for member in self.selected_members) if len(self.selected_members) else "> *Aucun membre sélectionné...*"
             },
             footer_text=f"Il faut un nombre de membre sélectionné(s) compris dans {self.size} pour pouvoir valider" if self.confirm.disabled else disnake.Embed.Empty
         )       

@@ -101,7 +101,7 @@ class Tournament2v2RollView(disnake.ui.View):
         self.message_rank = await self.channel_rank.send(embed=self.rank)
         self.message_rounds = await self.channel_rounds.send(embed=FS.Embed(
             title="📅 Rounds",
-            description="Les rounds seront affichés ici une fois que le tournoi aura commencé",
+            description="*Les rounds seront affichés ici une fois que le tournoi aura commencé*",
             color = disnake.Colour.gold()
         ))
         self.message_rules = await self.channel_rules.send(embed=self.rules)
@@ -109,7 +109,7 @@ class Tournament2v2RollView(disnake.ui.View):
             content=self.role.mention,
             embed=FS.Embed(
                 title=f"🏆 __**{self.name.upper()}**__ 🏆",
-                description=(self.annonce if self.annonce else "Bienvenu dans ce tournoi !") + f"\n➖➖\n[{self.channel_rank.mention}]({self.message_rank.jump_url}) pour voir le **classement en direct**.\n[{self.channel_rounds.mention}]({self.message_rounds.jump_url}) pour **l'avancement des rounds.**\n[{self.channel_rules.mention}]({self.message_rules.jump_url}) pour voir les **règles du tournoi.**\n➖➖\n{self.voice_general.mention} pour rejoindre le **vocal du tournoi**",
+                description=(self.annonce if self.annonce else "Bienvenu dans ce tournoi !") + f"\n➖➖\n> [{self.channel_rank.mention}]({self.message_rank.jump_url}) pour voir le **classement en direct**.\n> [{self.channel_rounds.mention}]({self.message_rounds.jump_url}) pour **l'avancement des rounds.**\n> [{self.channel_rules.mention}]({self.message_rules.jump_url}) pour voir les **règles du tournoi.**\n> ➖➖\n> {self.voice_general.mention} pour rejoindre le **vocal du tournoi**",
                 image=self.banner,
                 color=disnake.Colour.blue()
             )
