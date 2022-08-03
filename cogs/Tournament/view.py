@@ -46,6 +46,8 @@ class Tournament2v2RollView(disnake.ui.View):
         
     def make_options(self):
         self.match_selection.options = [disnake.SelectOption(label=f"Round {j+1} Match {chr(ord('A') + i)}",value=f"{j}{i}",emoji=FS.Emotes.Num(j+1)) for j in range(self.tournament.nb_rounds) for i in range(self.tournament.nb_matches_per_round)]
+        if len(self.match_selection.options) > 25:
+            self.match_selection.options = self.match_selection.options[:25]
         self.match_selection.placeholder = f"Display the rounds first!"
         self.match_selection.disabled = True
         self.set_team_1_score.disabled = True
@@ -151,6 +153,8 @@ class Tournament2v2RollView(disnake.ui.View):
             self.match_selection.placeholder = f"Select a match"
             self.match_selection.options = [disnake.SelectOption(label=f"Round {j+1} Match {chr(ord('A') + i)}",value=f"{j}{i}",emoji="🆕") for j in range(self.tournament.nb_rounds) for i in range(self.tournament.nb_matches_per_round) if not self.tournament.rounds[j].matches[i].is_played]
             self.match_selection.options += [disnake.SelectOption(label=f"Round {j+1} Match {chr(ord('A') + i)}",value=f"{j}{i}",emoji="↩️") for j in range(self.tournament.nb_rounds) for i in range(self.tournament.nb_matches_per_round) if self.tournament.rounds[j].matches[i].is_played]
+            if len(self.match_selection.options) > 25:
+                self.match_selection.options = self.match_selection.options[:25]
             self.set_team_1_score.disabled = True
             self.set_team_1_score.placeholder = f"Select a match first."
             self.set_team_2_score.disabled = True
