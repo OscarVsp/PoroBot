@@ -57,9 +57,9 @@ class MemberSelectionView(disnake.ui.View):
         self.remove.options = []
         self.add.options = []
         for member in self.inter.guild.members:
-            if len(self.remove.options) <= 25 and member in self.selected_members:
+            if len(self.remove.options) < 25 and member in self.selected_members:
                 self.remove.options.append(disnake.SelectOption(label=member.display_name, value=str(member.id)))
-            elif len(self.add.options) <= 25 and self.check(member=member, selected_members=self.selected_members, original_interaction=self.inter, size=self.size):
+            elif len(self.add.options) < 25 and self.check(member=member, selected_members=self.selected_members, original_interaction=self.inter, size=self.size):
                 self.add.options.append(disnake.SelectOption(label=member.display_name, value=str(member.id)))
                 
         if self.remove.options == []:
