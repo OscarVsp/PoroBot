@@ -136,13 +136,17 @@ class Locker(disnake.ui.View):
     def refresh_presence(self):
         if len(self.unauthorized_role.members) > 0:
             self.authorize.options = [disnake.SelectOption(label=f"{member.display_name}", value=str(member.id)) for member in self.unauthorized_role.members]
-            self.authorize.max_values = min(len(self.unauthorized_role.members),25)
+            if len(self.authorize.options) > 25:
+                self.authorize.options = self.authorize.options[:25]
+            self.authorize.max_values = len(self.unauthorized_role.members)
             self.authorize.disabled = False
         else:
             self.authorize.disabled = True
         if len(self.authorized_role.members) > 0:
             self.unauthorize.options = [disnake.SelectOption(label=f"{member.display_name}", value=str(member.id)) for member in self.authorized_role.members]
-            self.unauthorize.max_values = min(len(self.authorized_role.members),25)
+            if len(self.unauthorize.options) > 25:
+                self.unauthorize.options = self.unauthorize.options[:25]
+            self.unauthorize.max_values = len(self.authorized_role.members)
             self.unauthorize.disabled = False
         else:
             self.unauthorize.disabled = True
