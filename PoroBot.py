@@ -164,18 +164,21 @@ if __name__ == "__main__":
     consoleHandler.setLevel(logging.INFO)
     rootLogger.addHandler(consoleHandler)
 
-    fileInfoHandler = logging.handlers.RotatingFileHandler(filename="logs/info.log",mode='w',encoding="UTF-8", delay = True, backupCount = 5)
-    fileInfoHandler.setFormatter(logFormatter)
-    fileInfoHandler.setLevel(logging.INFO)
-    fileInfoHandler.doRollover()
-    rootLogger.addHandler(fileInfoHandler)
+    if platform.system() == 'Linux':
+        fileInfoHandler = logging.handlers.RotatingFileHandler(filename="logs/info.log",mode='w',encoding="UTF-8", delay = True, backupCount = 5)
+        fileDebugHandler = logging.handlers.RotatingFileHandler(filename="logs/debug.log",mode='w',encoding="UTF-8", delay = True, backupCount = 5)
+        fileInfoHandler.setFormatter(logFormatter)
+        fileInfoHandler.setLevel(logging.INFO)
+        fileInfoHandler.doRollover()
+        rootLogger.addHandler(fileInfoHandler)
+        fileDebugHandler.setFormatter(logFormatter)
+        fileDebugHandler.setLevel(logging.DEBUG)
+        fileDebugHandler.doRollover()
+        rootLogger.addHandler(fileDebugHandler)
+   
 
-    fileDebugHandler = logging.handlers.RotatingFileHandler(filename="logs/debug.log",mode='w',encoding="UTF-8", delay = True, backupCount = 5)
-    fileDebugHandler.setFormatter(logFormatter)
-    fileDebugHandler.setLevel(logging.DEBUG)
-    fileDebugHandler.doRollover()
-    rootLogger.addHandler(fileDebugHandler)
-    
+    else:
+        logging.warn("Non Linux system. Log info and debug file won't be available.")    
     
     config = dotenv_values(".env")  
 

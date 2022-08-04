@@ -1,8 +1,6 @@
 import disnake
 from typing import List
 
-from soupsieve import select
-
 from .Embed import Embed
 from .Assets import *
 
@@ -22,6 +20,7 @@ class MemberSelectionView(disnake.ui.View):
             self.check = MemberSelectionView.default_check
         self.is_application_interaction : bool = isinstance(inter, disnake.ApplicationCommandInteraction)
         self.is_view_interaction : bool = isinstance(inter, disnake.MessageInteraction)
+        self.options_limited : bool = False
         
     @staticmethod
     def default_check(**kwargs):

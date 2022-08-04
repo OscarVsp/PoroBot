@@ -1,3 +1,4 @@
+from platform import system
 import random
 import disnake
 import modules.FastSnake as FS
@@ -975,8 +976,11 @@ class Tournament:
         return sum(points_diff)/len(points_diff)
         
     @property
-    def state_file(self) -> str:
-        return f"cogs/Tournament/saves/{self._name}_state-{self._start_time}.json" 
+    def state_file(self) -> Optional[str]:
+        if system() == 'Linux':
+            return f"cogs/Tournament/saves/{self._name}_state-{self._start_time}.json".replace(" ","_")
+        else:
+            return None
     
     def __iter__(self):
         yield 'name', self._name
@@ -992,8 +996,10 @@ class Tournament:
     
     def save_state(self) -> None:
         self._last_state : dict = dict(self)
-        with open(self.state_file, 'w') as fp:
-            json.dump(self._last_state, fp, indent=1)
+        file = self.state_file
+        if file:
+            with open(self.state_file, 'w') as fp:
+                json.dump(self._last_state, fp, indent=1)
 
 
 seeding = List[List[List[List[int]]]]    

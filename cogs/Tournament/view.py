@@ -4,6 +4,7 @@ from disnake import ApplicationCommandInteraction
 from disnake.ext.commands import InteractionBot
 from cogs.Tournament.classes import Tournament2v2Roll
 import modules.FastSnake as FS
+from modules.FastSnake.Embed import Embed
 from .classes import *
 
         
@@ -212,6 +213,13 @@ class Tournament2v2RollView(disnake.ui.View):
             self.arret_state = False
         await self.update_dashboard(interaction)
         
+    @disnake.ui.button(emoji = "📩", label = "Send DM message", style=disnake.ButtonStyle.gray, row = 1)
+    async def notif(self, button: disnake.ui.Button, interaction : disnake.MessageInteraction):
+        if self.is_admin(interaction):
+            await interaction.response.send_modal(NotificationModal(self.role))
+        else:
+            await self.update_dashboard(interaction)
+        
     @disnake.ui.button(emoji = "⚠️", label = "End", style=disnake.ButtonStyle.danger, row = 1)
     async def arret(self, button: disnake.ui.Button, interaction : disnake.MessageInteraction):
         if self.is_admin(interaction):
@@ -223,14 +231,18 @@ class Tournament2v2RollView(disnake.ui.View):
                                    color=disnake.Colour.red())):
                 self.stop()
                 await interaction.edit_original_message(embed=FS.Embed(title=f"__**Tournament {self.tournament.name} ending**__", description="Ending... ⌛"), view=None)
-                try:
-                    file = disnake.File(self.tournament.state_file)
-                    await self.admin.send(content=f'**__Tournois *"{self.tournament.name}"*__**',embeds=self.dashboard_embeds, file=file)
-                    if os.path.exists(self.tournament.state_file):
-                        os.remove(self.tournament.state_file)
-                except OSError:
+                filename = self.tournament.state_file
+                if filename:
+                    try:  
+                        file = disnake.File(filename)
+                        await self.admin.send(content=f'**__Tournois *"{self.tournament.name}"*__**',embeds=self.dashboard_embeds, file=file)
+                        if os.path.exists(self.tournament.state_file):
+                            os.remove(self.tournament.state_file)
+                    except OSError:
+                        await self.admin.send(embeds=self.dashboard_embeds)
+                        await self.admin.send(embed = FS.Embed(title=":x: ERROR :x:", description="Not able to load the files to discord.\nYou can acces them on the host machine and you should to delete them manually once you don't need them anymore."))
+                else:
                     await self.admin.send(embeds=self.dashboard_embeds)
-                    await self.admin.send(embed = FS.Embed(title=":x: ERROR :x:", description="Not able to load the files to discord.\nYou can acces them on the host machine and you should to delete them manually once you don't need them anymore."))
                 for channel in self.category.channels:
                     await channel.delete()
                 await self.category.delete()
@@ -252,8 +264,7 @@ class Tournament2v2RollView(disnake.ui.View):
             self.match_selected = self.round_selected.matches[int(select.values[0][1])]
             self.arret_state = False
         await self.update_dashboard(interaction)
-        
-        
+            
     @disnake.ui.select(min_values = 1, max_values = 1, row = 3,
                             options= [
                                 disnake.SelectOption(label = "2 kills", emoji = "✅", value = "200"),
@@ -296,3 +307,40 @@ class Tournament2v2RollView(disnake.ui.View):
             self.arret_state = False
         await self.update_dashboard(interaction)
   
+
+
+
+class NotificationModal(disnake.ui.Modal):
+    
+    def __init__(self, role : disnake.Role):
+        components = [
+            disnake.ui.TextInput(
+                label="Le titre du message à envoyer",
+                style=disnake.TextInputStyle.short,
+                custom_id="title"
+            ),
+            disnake.ui.TextInput(
+                label="Le contenu du message à envoyer",
+                style=disnake.TextInputStyle.paragraph,
+                custom_id="description"
+            ),
+        ]
+        
+        super().__init__(title="Notification", components=components, timeout=300)
+            
+       
+        self.role : disnake.Role = role
+        
+    async def callback(self, interaction: disnake.ModalInteraction) -> None:
+        await interaction.response.defer()
+        embed = Embed(
+                    title=interaction.text_values.get("title"),
+                    description=interaction.text_values.get("description")
+                )
+        for user in self.role.members:
+            try:
+                await user.send(embed=embed)
+            except disnake.errors.HTTPException:
+                pass
+        msg = await interaction.edit_original_message(embeds=[Embed(title="__**Notification sent**__")]+[embed])
+        await msg.delete(delay=2)

@@ -199,6 +199,24 @@ class Basic(commands.Cog):
                 files = files
             )
         await inter.edit_original_message(embed=FS.Embed(description="Logs sent on private !"))
+    """   
+    @commands.slash_command(
+        description = "test",
+        default_member_permissions=disnake.Permissions.all()
+    )
+    async def test(self, inter : disnake.UserCommandInteraction):
+        await inter.response.defer(ephemeral=True)
+        
+        async def call_back(interaction : disnake.MessageInteraction):
+            await interaction.response.defer()
+            await inter.send(embed=FS.Embed(description="test 2"))
+        
+        testView = disnake.ui.View()
+        testButton = disnake.ui.Button(label="test")
+        testButton.callback = call_back
+        testView.add_item(testButton)
+        await inter.edit_original_message(embed=FS.Embed(description="Logs sent on private !"), view = testView)"""
+        
         
  
     @commands.user_command(
