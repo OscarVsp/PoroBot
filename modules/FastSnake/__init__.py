@@ -3,5 +3,6 @@ import disnake
 from .Embed import *
 from .Views import *
 from .ShadowMember import *
-from .confirmationView import *
-from .memberSelectionView import *
+from .ConfirmationView import *
+from .ChoicesView import *
+from .MemberSelectionView import *
