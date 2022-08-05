@@ -6,8 +6,10 @@ from disnake import ApplicationCommandInteraction, NotFound
 from typing import List, Union
 import modules.FastSnake as FS
 from modules.FastSnake.ConfirmationView import ConfirmationReturnData
+from modules.FastSnake.ShadowMember import MISSING
 from modules.FastSnake.Views import confirmation
 from .view import Locker
+from deep_translator import GoogleTranslator
 
 class ColorEnum(disnake.Colour, Enum):
     Blue = disnake.Colour.blue().value,
@@ -45,6 +47,7 @@ class Server(commands.Cog):
         """
         self.bot : commands.InteractionBot = bot
         self.locked_channels : List[Locker] = []
+        self.translator = GoogleTranslator(source = "auto", target = "en")
         
     @staticmethod
     def incoming_connection(before : disnake.VoiceState, after : disnake.VoiceState) -> bool:
@@ -346,7 +349,39 @@ class Server(commands.Cog):
                    
                             
                             
+    def tr(self, text : str) -> str:
+        return self.translator.translate(text)
             
+            
+    @commands.message_command(
+        name="Translate" 
+    )
+    async def translate(self, inter : disnake.ApplicationCommandInteraction):
+        await inter.response.defer(ephemeral=True)
+        content = self.tr(inter.target.content)
+        embeds = []
+        if inter.target.embeds:
+            for embed in inter.target.embeds:
+                embed.title = self.tr(embed.title)
+                if embed.description != disnake.Embed.Empty:
+                    embed.description = self.tr(embed.description) 
+                if embed.footer.text:
+                    embed.set_footer(text= self.tr(embed.footer.text), icon_url=embed.footer.icon_url)
+                if embed.author.name:
+                    embed.set_author(name = self.tr(embed.author.name), url = embed.author.url, icon_url= embed.author.icon_url)
+                fields = embed.fields.copy()
+                embed.clear_fields()
+                for field in fields:
+                    embed.add_field(name=self.tr(field.name), value = self.tr(field.value), inline = field.inline)
+                    
+                embeds.append(embed)
+        await inter.edit_original_message(
+            content=content,
+            embeds = embeds,
+        )
+    
+                
+                
         
     
                 
