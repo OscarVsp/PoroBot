@@ -6,6 +6,7 @@ from disnake import ApplicationCommandInteraction, NotFound
 from typing import List, Union
 import modules.FastSnake as FS
 from modules.FastSnake.ConfirmationView import ConfirmationReturnData
+from modules.FastSnake.Views import confirmation
 from .view import Locker
 
 class ColorEnum(disnake.Colour, Enum):
@@ -205,9 +206,7 @@ class Server(commands.Cog):
             or author_icon_url != disnake.Embed.Empty):
             if not channel:
                 channel = inter.channel
-            msg = await channel.send(
-                content=mention.mention if mention else None,
-                embed=FS.Embed(
+            embed = FS.Embed(
                     title=titre,
                     description= contenu,
                     color=disnake.Colour(color) if color else disnake.Colour.default(),
@@ -219,8 +218,15 @@ class Server(commands.Cog):
                     footer_text=footer_text,
                     footer_icon_url=footer_icon_url
                 ) 
-            )
-            await inter.edit_original_message(embed=FS.Embed(description=f"Embed envoyé [ici]({msg.jump_url})"))
+            await inter.edit_original_message(embed=embed)
+            if (await confirmation(inter, message="Confirmer l'envoie du message ?",color=disnake.Colour.purple())):
+                await channel.send(
+                    content=mention.mention if mention else None,
+                    embed=embed
+                )
+                await inter.edit_original_message(embed=FS.Embed(description=f"Embed envoyé !"),view=None)
+            else:
+                await inter.edit_original_message(embed=FS.Embed(description=":o: Envoie du message annulé"), view=None)
         else:
             await inter.edit_original_message(embed=FS.Embed(description="Impossible d'envoyer un embed vide"))
             
@@ -264,12 +270,16 @@ class Server(commands.Cog):
                     footer_text=footer_text,
                     footer_icon_url=footer_icon_url
                 ) 
-            if isinstance(target, disnake.Role):
-                for member in target.members:
-                    await member.send(embed=embed)
-            elif isinstance(target, disnake.Member):
-                    await target.send(embed=embed)
-            await inter.edit_original_message(embed=FS.Embed(description=f"Embed envoyé !"))
+            await inter.edit_original_message(embed=embed)
+            if (await confirmation(inter, message="Confirmer l'envoie du message ?",color=disnake.Colour.purple())):
+                if isinstance(target, disnake.Role):
+                    for member in target.members:
+                        await member.send(embed=embed)
+                elif isinstance(target, disnake.Member):
+                        await target.send(embed=embed)
+                await inter.edit_original_message(embed=FS.Embed(description=f"Embed envoyé !"),view=None)
+            else:
+                await inter.edit_original_message(embed=FS.Embed(description=":o: Envoie du message annulé"),view=None)
         else:
             await inter.edit_original_message(embed=FS.Embed(description="Impossible d'envoyer un embed vide"))
     
