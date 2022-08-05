@@ -1,3 +1,4 @@
+from collections import namedtuple
 import os
 import disnake 
 from disnake import ApplicationCommandInteraction
@@ -110,18 +111,25 @@ class Tournament2v2RollView(disnake.ui.View):
         self.message_rules = await self.channel_rules.send(embed=self.rules)
         self.message_overview = await self.channel_overview.send(
             content=self.role.mention,
-            embed=FS.Embed(
-                title=f"🏆 __**{self.name.upper()}**__ 🏆",
-                description=(self.annonce if self.annonce else "Bienvenu dans ce tournoi !") + f"\n➖➖\n> [{self.channel_rank.mention}]({self.message_rank.jump_url}) pour voir le **classement en direct**.\n> [{self.channel_rounds.mention}]({self.message_rounds.jump_url}) pour **l'avancement des rounds.**\n> [{self.channel_rules.mention}]({self.message_rules.jump_url}) pour voir les **règles du tournoi.**\n> ➖➖\n> {self.voice_general.mention} pour rejoindre le **vocal du tournoi**",
-                image=self.banner,
-                color=disnake.Colour.blue()
-            )
+            embed=self.annonce_embed(
+                title="__**Informations**__",
+                description=f"Bienvenu dans ce tournoi !\nVous trouverez toutes les informations utiles dans les channels suivants:\n\n> [{self.channel_rank.mention}]({self.message_rank.jump_url}) pour voir le **classement en direct**.\n> [{self.channel_rounds.mention}]({self.message_rounds.jump_url}) pour **l'avancement des rounds.**\n> [{self.channel_rules.mention}]({self.message_rules.jump_url}) pour voir les **règles du tournoi.**\n> ➖➖\n> {self.voice_general.mention} pour rejoindre le **vocal du tournoi**"
+            )       
         )
         self.message_dashboard = await self.channel_dashboard.send(embeds=self.dashboard_embeds,view=self)
         
     def is_admin(self, inter : disnake.MessageInteraction):
         return inter.author.id == self.admin.id
     
+    def annonce_embed(self, title : str, description : str, banner : str = None) -> disnake.Embed:
+        return FS.Embed(
+                author_name=f"{self.name.upper()}",
+                author_icon_url=FS.Assets.Images.Tournament.Trophy,
+                title = title,
+                description=description,
+                image=(banner if banner else self.banner),
+                color=disnake.Colour.blue()
+            )
         
 
     @property   
@@ -182,17 +190,17 @@ class Tournament2v2RollView(disnake.ui.View):
         await self.message_rank.edit(embed=self.rank)
         await self.message_rounds.edit(embeds=self.rounds)
                      
-    @disnake.ui.button(emoji = "✅", label = "Validate changes", style=disnake.ButtonStyle.green, row = 1)
+    @disnake.ui.button(emoji = "✅", label = "Validate", style=disnake.ButtonStyle.green, row = 1)
     async def update_button(self, button: disnake.ui.Button, interaction : disnake.MessageInteraction):
         if self.is_admin(interaction):
             await self.update_infos()
-            self.update_button.label = "Validate change"
+            self.update_button.label = "Validate"
             self.round_selected = None
             self.match_selected = None
             self.arret_state = False
         await self.update_dashboard(interaction)
         
-    @disnake.ui.button(emoji = "🔁", label = "Discard changes", style=disnake.ButtonStyle.primary, row = 1)
+    @disnake.ui.button(emoji = "🔁", label = "Cancel", style=disnake.ButtonStyle.primary, row = 1)
     async def discard_button(self, button: disnake.ui.Button, interaction : disnake.MessageInteraction):
         if self.is_admin(interaction):
             self.tournament.restore_from_last_state()
@@ -202,7 +210,7 @@ class Tournament2v2RollView(disnake.ui.View):
             self.arret_state = False
         await self.update_dashboard(interaction)
         
-    @disnake.ui.button(emoji = "🔊", label = "Move to channel", style=disnake.ButtonStyle.gray, row = 1)
+    @disnake.ui.button(emoji = "🔊", label = "Vocal", style=disnake.ButtonStyle.gray, row = 1)
     async def start(self, button: disnake.ui.Button, interaction : disnake.MessageInteraction):
         if self.is_admin(interaction):
             current_round = self.tournament.current_round
@@ -213,10 +221,10 @@ class Tournament2v2RollView(disnake.ui.View):
             self.arret_state = False
         await self.update_dashboard(interaction)
         
-    @disnake.ui.button(emoji = "📩", label = "Send DM message", style=disnake.ButtonStyle.gray, row = 1)
+    @disnake.ui.button(emoji = "🔔", label = "Annonce", style=disnake.ButtonStyle.gray, row = 1)
     async def notif(self, button: disnake.ui.Button, interaction : disnake.MessageInteraction):
         if self.is_admin(interaction):
-            await interaction.response.send_modal(NotificationModal(self.role))
+            await interaction.response.send_modal(NotificationModal(self))
         else:
             await self.update_dashboard(interaction)
         
@@ -273,7 +281,7 @@ class Tournament2v2RollView(disnake.ui.View):
                                 disnake.SelectOption(label = "1 kills", emoji = "❌", value = "100"),
                                 disnake.SelectOption(label = "1 turret", emoji = "❌", value = "010"),
                                 disnake.SelectOption(label = "100 cs", emoji = "❌", value = "001"),
-                                disnake.SelectOption(label = "nothing", emoji = "❌", value = "000")
+                                disnake.SelectOption(label = "Nothing", emoji = "❌", value = "000")
                             ])
     async def set_team_1_score(self, select : disnake.ui.Select, interaction : disnake.MessageInteraction):
         if self.is_admin(interaction):
@@ -294,7 +302,7 @@ class Tournament2v2RollView(disnake.ui.View):
                                 disnake.SelectOption(label = "1 kills", emoji = "❌", value = "100"),
                                 disnake.SelectOption(label = "1 turret", emoji = "❌", value = "010"),
                                 disnake.SelectOption(label = "100 cs", emoji = "❌", value = "001"),
-                                disnake.SelectOption(label = "nothing", emoji = "❌", value = "000")
+                                disnake.SelectOption(label = "Nothing", emoji = "❌", value = "000")
                             ])
     async def set_team_2_score(self, select : disnake.ui.Select, interaction : disnake.MessageInteraction):
         if self.is_admin(interaction):
@@ -312,7 +320,7 @@ class Tournament2v2RollView(disnake.ui.View):
 
 class NotificationModal(disnake.ui.Modal):
     
-    def __init__(self, role : disnake.Role):
+    def __init__(self, tournament : Tournament2v2RollView):
         components = [
             disnake.ui.TextInput(
                 label="Le titre du message à envoyer",
@@ -324,23 +332,30 @@ class NotificationModal(disnake.ui.Modal):
                 style=disnake.TextInputStyle.paragraph,
                 custom_id="description"
             ),
+            disnake.ui.TextInput(
+                label="Bannière",
+                placeholder="La bannière du tournoi sera utilisé par défaut.",
+                required = False,
+                value = None,
+                style=disnake.TextInputStyle.short,
+                custom_id="banner"
+            ),
         ]
-        
-        super().__init__(title="Notification", components=components, timeout=300)
+        self.tournament : Tournament2v2RollView = tournament
+        super().__init__(title="Création d'une annonce", components=components, timeout=600)
             
        
-        self.role : disnake.Role = role
         
     async def callback(self, interaction: disnake.ModalInteraction) -> None:
         await interaction.response.defer()
-        embed = Embed(
-                    title=interaction.text_values.get("title"),
-                    description=interaction.text_values.get("description")
-                )
-        for user in self.role.members:
-            try:
-                await user.send(embed=embed)
-            except disnake.errors.HTTPException:
-                pass
-        msg = await interaction.edit_original_message(embeds=[Embed(title="__**Notification sent**__")]+[embed])
+        embed = self.tournament.annonce_embed(
+            title=f"__**{interaction.text_values.get('title')}**__",
+            description=interaction.text_values.get("description"),
+            banner = interaction.text_values.get("banner")
+        )
+        msg = await self.tournament.channel_overview.send(
+            content=self.tournament.role.mention,
+            embed=embed
+        )
+        msg = await interaction.edit_original_message(embed=Embed(title="✅ __**Notification sent**__",description=f"[Notification]({msg.jump_url}) has been sent to {self.tournament.channel_overview.mention} !"))
         await msg.delete(delay=2)

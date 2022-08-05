@@ -107,6 +107,7 @@ class Server(commands.Cog):
         else:
             await inter.edit_original_message(embed=FS.Embed(description = f":o: Suppression de la catégorie {categorie.mention} annulée !", color=disnake.Colour.green()), view = None)
           
+          
     @commands.slash_command(
         name="export",default_member_permissions=disnake.Permissions.all(),
         dm_permission=False,

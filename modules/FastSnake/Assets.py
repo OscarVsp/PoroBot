@@ -266,6 +266,7 @@ class Images:
 
     class Tournament:
         ClashBanner : str = "https://i.imgur.com/GoV9WVk.jpg"
+        Trophy : str = "https://i.imgur.com/GMaULvR.png"
 
     Lol_icon : str = "https://i.imgur.com/0Fyu6yl.png"
     Sablier : str = "https://i.imgur.com/2V0xDMW.png"

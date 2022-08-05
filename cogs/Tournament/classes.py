@@ -1140,10 +1140,10 @@ class Tournament2v2Roll(Tournament):
                 inline=True
             ).add_field(
                 name="➖➖➖➖➖➖➖➖➖➖➖➖➖",
-                value="""> __**Calcul des points**__
-                > 💎 **Points** = ⚔️ **Kill**  +  🧱 **Tour**  +  🧙‍♂️ **100cs**
-                > __**En cas d'égalité**__
-                > ⚔️ **Kill**  >  🧱 **Tour**  >  🧙‍♂️ **100cs**
+                value="""> **Calcul des points**
+                > 💎 Points **=** ⚔️ Kill  **+**  🧱 Tour  **+**  🧙‍♂️ 100cs
+                > **En cas d'égalité**
+                > ⚔️ Kill  **>**  🧱 Tour  **>**  🧙‍♂️ 100cs
                 """,
                 inline=False
             )
