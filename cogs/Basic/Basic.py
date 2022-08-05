@@ -201,7 +201,7 @@ class Basic(commands.Cog):
                 files = files
             )
         await inter.edit_original_message(embed=FS.Embed(description="Logs sent on private !"))
-    ""  
+      
     @commands.slash_command(
         description = "test",
         default_member_permissions=disnake.Permissions.all()
@@ -210,10 +210,11 @@ class Basic(commands.Cog):
         await inter.response.defer(ephemeral=True)
         choices = [
             ButtonChoice("Choice 1"),
-            ButtonChoice("Test2",emoji="🧹")
+            ButtonChoice("Test2",emoji="🧹"),
+            ButtonChoice("Tes32",emoji="🧹")
         ]
         
-        choice = await QRM(inter,choices,choices)
+        choice = await QRM(inter,choices,min=1, max=2)
         
         if choice:
             if choices[0] in choice.responses:

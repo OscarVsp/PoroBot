@@ -66,6 +66,7 @@ class ConfirmationView(disnake.ui.View):
         self.stop()
         
     async def on_timeout(self) -> None:
+        await self.inter.edit_original_message(embed=Embed(description="⭕ Timeout",color=disnake.Colour.dark_grey()))
         self.state = State.TIMEOUT
           
           

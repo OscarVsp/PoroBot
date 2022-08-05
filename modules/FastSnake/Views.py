@@ -15,7 +15,7 @@ async def confirmation(
     inter : disnake.Interaction,
     title : str = "Confirmation",
     message : str = "Confirmer l'action ?",
-    timeout : int = 180,
+    timeout : int = None,
     color : disnake.Colour = disnake.Colour.red()) -> ConfirmationReturnData:
     """|coro|\n
     Send a confirmation view linked to the interaction.
@@ -38,7 +38,7 @@ async def confirmation(
             Defaults to `"Confirmer l'action ?"`.
         timeout (`int`, `optional`): 
             The timeout for the user to answer to confirmation.
-            Defaults to `180`.
+            Defaults to `None`.
         color (`disnake.Colour`, `optional`): 
             The color to use for the embed.
             Defaults to `disnake.Colour.red()`.
@@ -55,7 +55,7 @@ async def memberSelection(
     title : str = "Sélection des membres",
     message : str = "",
     size : Union[int, List[int]] = None,
-    timeout : int = 180,
+    timeout : int = None,
     pre_selection : List[disnake.Member] = [],
     check = None,
     color : disnake.Colour = disnake.Colour.blue()) -> MemberSelectionReturnData:
@@ -83,7 +83,7 @@ async def memberSelection(
             Defaults to `None`.
         timeout (`int`, `optional`): 
             The timeout for the user to answer to confirmation.
-            Defaults to `180`.
+            Defaults to `None`.
         pre_selection (`List[disnake.Member]`, `optional`): 
             The member to include into the selection at the beginning.
             Defaults to `[]`.
@@ -120,8 +120,8 @@ async def QCM(
     pre_selection : Optional[str],
     title : str = "Choix",
     message : str = "Choisissez parmit les propositions ci-dessous",
-    timeout : int = 180,
-    color : disnake.Colour = disnake.Colour.red()) -> QCMReturnData:
+    timeout : int = None,
+    color : disnake.Colour = disnake.Colour.purple()) -> QCMReturnData:
     """|coro|\n
     Send a QCM view linked to the interaction.
     The interaction can be either an `ApplicationCommandInteraction` or a `MessageInteraction`.
@@ -147,7 +147,7 @@ async def QCM(
             Defaults to `"Confirmer l'action ?"`.
         timeout (`int`, `optional`): 
             The timeout for the user to answer to confirmation.
-            Defaults to `180`.
+            Defaults to `None`.
         color (`disnake.Colour`, `optional`): 
             The color to use for the embed.
             Defaults to `disnake.Colour.red()`.
@@ -163,12 +163,12 @@ async def QRM(
     inter : disnake.Interaction,
     choices : List[str],
     pre_selection : list[str] = None,
-    limit : int = None,
-    limit_stric : bool = False,
+    min : int = 0,
+    max : int = None,
     title : str = "Choix",
     message : str = "Choisissez parmit les propositions ci-dessous",
-    timeout : int = 180,
-    color : disnake.Colour = disnake.Colour.red()) -> QRMReturnData:
+    timeout : int = None,
+    color : disnake.Colour = disnake.Colour.purple()) -> QRMReturnData:
     """|coro|\n
     Send a QCM view linked to the interaction.
     The interaction can be either an `ApplicationCommandInteraction` or a `MessageInteraction`.
@@ -187,21 +187,21 @@ async def QRM(
         pre_selection (`List[str]`):
             The preselected choices.
             Defaults to `None`
-        limit  (`int`):
-            The number of choice that someone can choose. `None` for no limit.
-            Defaults to `None`.
-        limit_stric (`bool`):
-            Is the number of choice should be exactly equal to the limit.
-            Defaults to `False`
+        min (`int`):
+            The minimum choice that someone can choose.
+            Defaults to `0`.
+        max (`int`):
+            The maximum choice that someone can choose. `None` for no limit
+            Defaults to `0`.
         title (`str`, `optional`): 
             Title of the confirmation embed.
-            Defaults to `"Confirmation"`.
+            Defaults to `"Choix"`.
         message (`str`, `optional`): 
             Message of the confirmation embed.
-            Defaults to `"Confirmer l'action ?"`.
+            Defaults to `"Choisissez parmit les propositions ci-dessous"`.
         timeout (`int`, `optional`): 
             The timeout for the user to answer to confirmation.
-            Defaults to `180`.
+            Defaults to `None`.
         color (`disnake.Colour`, `optional`): 
             The color to use for the embed.
             Defaults to `disnake.Colour.red()`.
@@ -210,4 +210,4 @@ async def QRM(
     --------
         `QRMReturnData`
     """
-    return QRMReturnData(await process(QRMView(inter, title, message, timeout, color, choices, pre_selection, limit, limit_stric)))
+    return QRMReturnData(await process(QRMView(inter, title, message, timeout, color, choices, pre_selection, min, max)))

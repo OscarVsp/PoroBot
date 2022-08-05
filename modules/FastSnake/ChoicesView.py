@@ -85,13 +85,28 @@ class QCMReturnData(ConfirmationReturnData):
         
 class QRMView(ConfirmationView):
     
-    def __init__(self, inter : disnake.Interaction, title : str, message : str, timeout : int, color : disnake.Colour, choices : List[ButtonChoice], pre_selection : List[ButtonChoice], limit : int, limit_strict : bool):
+    def __init__(self, inter : disnake.Interaction, title : str, message : str, timeout : int, color : disnake.Colour, choices : List[ButtonChoice], pre_selection : List[ButtonChoice], min : int, max : Optional[int]):
         super().__init__(inter,title,message,timeout,color)
-        self.limit : int = limit if limit else len(choices)
-        self.limit_strict : bool = limit_strict if limit else False
-        
         if len(choices) > 20:
             raise ValueError("Size of choices should be at max 20")
+        
+        self.min : int = min
+        self.max : int = max if max else len(choices)
+        
+        if self.min == self.max:
+            self.footer = f"Exactement {self.min} réponses nécessaires."
+        elif self.min == 0:
+            if self.max == len(choices):
+                self.footer = f"Pas de limite de nombre de réponses."
+            else:
+                self.footer = f"Au maximum {self.max} réponses possibles."
+        else:
+            if self.max == len(choices):
+                self.footer = f"Au minimun {self.min} réponses nécessaire."
+            else:
+                self.footer = f"Entre {self.min} et {self.max} réponses possibles."
+        
+        
         
         
         for i,choice in enumerate(choices):
@@ -103,20 +118,22 @@ class QRMView(ConfirmationView):
         self.check_validity()
         
     def check_validity(self) -> None:
-        if self.limit_strict:
-            self.confirm.disabled == (len(self.responses) == self.limit)
+        if len(self.responses) < self.min:
+            self.confirm.disabled = True
+            self.confirm.label = "Pas assez de réponse"
+        elif len(self.responses) > self.max:
+            self.confirm.disabled = True
+            self.confirm.label = "Trop de réponse"
         else:
-            self.confirm.disabled == (len(self.responses) <= self.limit)
+            self.confirm.disabled = False
+            self.confirm.label = "Confirmer"
         
     @property
     def embed(self) -> disnake.Embed:
         embed = super().embed
         if self.responses != []:
             embed.add_field(name="__**Choix actuel**__",value="\n".join(f"> {r.emoji if r.emoji else '◾'} **{r.label}**" for r in self.responses))
-        if self.limit_strict:
-            embed.set_footer(text=f"Exactement {self.limit} réponses nécessaires.")
-        else:
-            embed.set_footer(text=f"Au maximum {self.limit} réponses possibles.")
+        embed.set_footer(text=self.footer)
         return embed
      
     async def call_back(self, interaction : disnake.MessageInteraction):

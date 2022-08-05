@@ -178,7 +178,7 @@ if __name__ == "__main__":
    
 
     else:
-        logging.warn("Non Linux system. Log info and debug file won't be available.")    
+        logging.warning("Non Linux system. Log info and debug file won't be available.")    
     
     config = dotenv_values(".env")  
 
