@@ -261,8 +261,7 @@ class Locker(disnake.ui.View):
     async def unlock_button(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
         if (await FS.confirmation(interaction, 
                                title=f"🔓 __**Déverrouiller le channel *{self.channel.name}***__", 
-                               message=f"Es-tu sûr de vouloir déverrouiller le channel {self.channel.mention} ?",
-                               confirmationLabel="Déverrouiller")):
+                               message=f"Es-tu sûr de vouloir déverrouiller le channel {self.channel.mention} ?")):
             await self.unlock(interaction)
         else:
             await self.update()

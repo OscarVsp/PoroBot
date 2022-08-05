@@ -1,11 +1,14 @@
 from collections import namedtuple
 import os
+from secrets import choice
 import disnake 
 from disnake import ApplicationCommandInteraction
 from disnake.ext.commands import InteractionBot
 from cogs.Tournament.classes import Tournament2v2Roll
 import modules.FastSnake as FS
+from modules.FastSnake.ChoicesView import ButtonChoice
 from modules.FastSnake.Embed import Embed
+from modules.FastSnake.Views import confirmation
 from .classes import *
 
         
@@ -231,37 +234,64 @@ class Tournament2v2RollView(disnake.ui.View):
     @disnake.ui.button(emoji = "⚠️", label = "End", style=disnake.ButtonStyle.danger, row = 1)
     async def arret(self, button: disnake.ui.Button, interaction : disnake.MessageInteraction):
         if self.is_admin(interaction):
-            if (await FS.confirmation(interaction,
-                                   title=f"__**Tournament ending confirmation**__",
-                                   message=f"⚠️ Are you sure that you want to end the tournament **{self.tournament.name}**? ⚠️",
-                                   confirmationLabel="End the tournament",
-                                   cancelLabel="Cancel",
-                                   color=disnake.Colour.red())):
+            send_result = ButtonChoice(label="Send Result",emoji="📊")
+            send_file = ButtonChoice(label="Send File",emoji="📑")
+            delete_role = ButtonChoice(label="Delete Role",emoji="👥")
+            delete_category = ButtonChoice(label="Delete Category",emoji="🧹")
+            choices = []
+            filename = self.tournament.state_file
+            if filename:
+                choices.append(send_file)
+            choices += [send_result,delete_role,delete_category]
+            pre_selection = choices.copy()
+            if filename:
+                pre_selection.remove(send_file)
+            confirmationQRM = await FS.QRM(
+                interaction,
+                choices,
+                pre_selection,
+                title=f"⚠️ __**Tournament ending confirmation**__ ",
+                message=f"What do you want me to do while ending the tournament ?",
+                color=disnake.Colour.red()
+            )
+            if confirmationQRM:
                 self.stop()
                 await interaction.edit_original_message(embed=FS.Embed(title=f"__**Tournament {self.tournament.name} ending**__", description="Ending... ⌛"), view=None)
-                filename = self.tournament.state_file
-                if filename:
-                    try:  
-                        file = disnake.File(filename)
-                        await self.admin.send(content=f'**__Tournois *"{self.tournament.name}"*__**',embeds=self.dashboard_embeds, file=file)
-                        if os.path.exists(self.tournament.state_file):
-                            os.remove(self.tournament.state_file)
-                    except OSError:
-                        await self.admin.send(embeds=self.dashboard_embeds)
-                        await self.admin.send(embed = FS.Embed(title=":x: ERROR :x:", description="Not able to load the files to discord.\nYou can acces them on the host machine and you should to delete them manually once you don't need them anymore."))
-                else:
-                    await self.admin.send(embeds=self.dashboard_embeds)
-                for channel in self.category.channels:
-                    await channel.delete()
-                await self.category.delete()
-                await self.role.delete()
+                
                 self.bot.tournaments_name.remove(self.name)
                 if len(self.bot.tournaments_name) > 0:
                     await self.bot.change_presence(activity = disnake.Activity(name=", ".join(self.bot.tournaments_name), type=disnake.ActivityType.playing)) 
                 else:
                     await self.bot.change_presence(activity=disnake.Game(name='"/" -> commandes'))
+                
+                if send_result in confirmationQRM.responses:
+                    await self.admin.send(content=f'**__Tournois *"{self.tournament.name}"*__**',embeds=self.dashboard_embeds)
+                
+                if send_file in confirmationQRM.responses:
+                    filename = self.tournament.state_file
+                    if filename:
+                        try:  
+                            file = disnake.File(filename)
+                            await self.admin.send(file=file)
+                            if os.path.exists(self.tournament.state_file):
+                                os.remove(self.tournament.state_file)
+                        except OSError:
+                            await self.admin.send(embed = FS.Embed(title=":x: ERROR :x:", description="Not able to load the files to discord.\nYou can acces them on the host machine and you should to delete them manually once you don't need them anymore."))
+                    else:
+                        await self.admin.send(embed = FS.Embed(title=":x: ERROR :x:", description="No file for this tournament."))
+                
+                if delete_role in confirmationQRM.responses:
+                    await self.role.delete()
+                
+                if delete_category in confirmationQRM.responses:
+                    for channel in self.category.channels:
+                        await channel.delete()
+                    await self.category.delete()     
+                else:
+                    await interaction.edit_original_message(embed=FS.Embed(title=f"__**Tournament {self.tournament.name} ending**__", description="Ended !"), view=None)
+                
             else:
-                await self.update_dashboard(interaction, original=True)            
+                await self.update_dashboard(interaction, original=True       )    
         else:
             await self.update_dashboard(interaction)      
  

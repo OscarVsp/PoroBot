@@ -3,6 +3,8 @@ import disnake
 from disnake.ext import commands
 from disnake import ApplicationCommandInteraction
 import modules.FastSnake as FS
+from modules.FastSnake.ChoicesView import ButtonChoice, QRMView
+from modules.FastSnake.Views import QRM
 from .view import *
 import asyncio
 from asyncio.exceptions import TimeoutError
@@ -199,24 +201,25 @@ class Basic(commands.Cog):
                 files = files
             )
         await inter.edit_original_message(embed=FS.Embed(description="Logs sent on private !"))
-    """   
+    ""  
     @commands.slash_command(
         description = "test",
         default_member_permissions=disnake.Permissions.all()
     )
     async def test(self, inter : disnake.UserCommandInteraction):
         await inter.response.defer(ephemeral=True)
+        choices = [
+            ButtonChoice("Choice 1"),
+            ButtonChoice("Test2",emoji="🧹")
+        ]
         
-        async def call_back(interaction : disnake.MessageInteraction):
-            await interaction.response.defer()
-            await inter.send(embed=FS.Embed(description="test 2"))
+        choice = await QRM(inter,choices,choices)
         
-        testView = disnake.ui.View()
-        testButton = disnake.ui.Button(label="test")
-        testButton.callback = call_back
-        testView.add_item(testButton)
-        await inter.edit_original_message(embed=FS.Embed(description="Logs sent on private !"), view = testView)"""
-        
+        if choice:
+            if choices[0] in choice.responses:
+                await inter.channel.send(choices[0].label)
+            if choices[1] in choice.responses:
+                await inter.channel.send(choices[1].label)
         
  
     @commands.user_command(

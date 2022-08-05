@@ -5,6 +5,7 @@ from disnake.ext import commands
 from disnake import ApplicationCommandInteraction, NotFound
 from typing import List, Union
 import modules.FastSnake as FS
+from modules.FastSnake.ConfirmationView import ConfirmationReturnData
 from .view import Locker
 
 class ColorEnum(disnake.Colour, Enum):
@@ -70,11 +71,10 @@ class Server(commands.Cog):
             gt = 0
         )
     ):
-        confirm : FS.ConfirmationStatus = await FS.confirmation(inter,
+        confirm : ConfirmationReturnData = await FS.confirmation(inter,
                                title=f"__**Suppression de {nombre} message(s)**__",
                                message=f"Êtes-vous sûr de vouloir supprimer les {nombre} dernier(s) message(s) de ce channel ?\nCette action est irréversible !",
-                               confirmationLabel=f"Supprimer les message(s)",
-                               timeout=5)
+                               timeout=30)
         if confirm:
             await inter.edit_original_message(embed=FS.Embed(description = f"Suppression de {nombre} message(s) en cours... ⌛", color=disnake.Colour.green()), view=None)
             await inter.channel.purge(limit=nombre)
@@ -94,8 +94,7 @@ class Server(commands.Cog):
 
         if await FS.confirmation(inter,
                               title=f"__**Suppression de la categorie *{categorie.name}***__",
-                              message=f"Êtes-vous sûr de vouloir supprimer la catégorie ***{categorie.mention}*** ?\nCela supprimera également les {len(categorie.channels)} channels contenus dans celle-ci :\n"+"\n".join(channel.mention for channel in categorie.channels)+"\nCette action est irréversible !",
-                              confirmationLabel="Supprimer la catégorie"):
+                              message=f"Êtes-vous sûr de vouloir supprimer la catégorie ***{categorie.mention}*** ?\nCela supprimera également les {len(categorie.channels)} channels contenus dans celle-ci :\n"+"\n".join(channel.mention for channel in categorie.channels)+"\nCette action est irréversible !"):
             await inter.edit_original_message(embed=FS.Embed(description = f"Suppression de la catégorie *{categorie.name}* en cours... ⌛", color=disnake.Colour.green()), view=None)
             for channel in categorie.channels:
                 await channel.delete()

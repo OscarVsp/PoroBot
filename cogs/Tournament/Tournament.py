@@ -56,8 +56,8 @@ class Tournament(commands.Cog):
             async for member in event.fetch_users():
                 if member not in members:
                     members.append(member)
-        members = await FS.memberSelection(inter, title="Sélection des joueurs.", message= "Sélectionne les membres participant au tournois.", size = [4,5,8], pre_selection=members)
-        if members:
+        selection = await FS.memberSelection(inter, title="Sélection des joueurs.", message= "Sélectionne les membres participant au tournois.", size = [4,5,8], pre_selection=members)
+        if selection.is_confirmed:
             await inter.edit_original_message(
                 embed = FS.Embed(description=f"⌛ Création du tournois {name} en cours..."),
                 view=None
@@ -65,7 +65,7 @@ class Tournament(commands.Cog):
             self.bot.tournaments_name += [name]
             await self.bot.change_presence(activity = disnake.Activity(name=", ".join(self.bot.tournaments_name), type=disnake.ActivityType.playing)) 
             tournament_role = await inter.guild.create_role(name=f"Tournament {name} role")
-            for member in members:
+            for member in selection.members:
                 await member.add_roles(tournament_role, reason=f"Tournement {name}")    
             await asyncio.sleep(2)
             new_tournament = Tournament2v2RollView(inter, self.bot, tournament_role, name = name, banner = banniere, annonce = annonce)
