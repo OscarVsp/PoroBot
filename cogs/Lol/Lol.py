@@ -106,10 +106,11 @@ class Lol(commands.Cog):
 
 
         @lol.sub_command(
-                name="classement"
+                name="classement",
+                description="Classement League of Legends des members du serveur"
         )
         async def classement(self, inter : ApplicationCommandInteraction):
-                await inter.response.defer(ephemeral=True)
+                await inter.response.defer(ephemeral=False)
                 members : List[disnake.Member] = []
                 summoners : List[Summoner] = []
                 for user_id_str in self.summoners.getall():
@@ -124,9 +125,12 @@ class Lol(commands.Cog):
                 for summoner in sorted_summoners:
                         sorted_members.append(members[summoners.index(summoner)])
 
-                await inter.edit_original_message(embed = FS.Embed(
-                        title=f"{FS.Assets.Emotes.lol} __**CLASSEMENT LEAGUE OF LEGENDS**__",
-                        description="\n".join([ f"{sorted_summoners[i].tier_emote} **{sorted_summoners[i].rank}** __**{sorted_members[i].display_name}**__"  for i in range(len(sorted_members))])
+                await inter.edit_original_message(
+                        embed = FS.Embed(
+                                title=f"{FS.Assets.Emotes.lol} __**CLASSEMENT LEAGUE OF LEGENDS**__",
+                                description="\n".join([ f"> {sorted_summoners[i].tier_emote} **{sorted_summoners[i].rank}** __**{sorted_members[i].display_name}**__"  for i in range(len(sorted_members))]),
+                                thumbnail=FS.Assets.Images.Tournament.ClashBanner,
+                                footer_text="""Tu n'es pas dans le classement ? Lie ton compte discord avec ton compte League of Legends en utilisant "/lol account" !"""
                         )
                 )
                 
