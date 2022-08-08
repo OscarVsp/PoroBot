@@ -98,7 +98,9 @@ class Lol(commands.Cog):
                         
                 
         @commands.user_command(
-                name="Nom d'invocateur"
+                name="Nom d'invocateur",
+                default_member_permissions=disnake.Permissions.all()
+                
         )
         async def summoner_set(self, inter : ApplicationCommandInteraction, target : disnake.User):
                 await inter.response.send_modal(SimpleModal(f"Définir le nom d'invocateur de {target.display_name}", questions=[disnake.ui.TextInput(label="Nom d'invocateur", custom_id="summoner_name")], callback = self.modal_callback, callback_datas={'target':target}))
