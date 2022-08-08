@@ -51,6 +51,7 @@ class Emotes:
     PoroSnack : str = '<:porosnack:908477364135161877>'
     BoudhaPog : str = '<:BoudhaPog:854084071055032340>'
     OPGG : str = '<:Opgg:948174103557312563>'
+    lol : str = '<:Lol:658237632786071593>'
     
     class Lol:
         
