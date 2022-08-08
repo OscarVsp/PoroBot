@@ -8,7 +8,7 @@ import disnake
 import asyncio
 
 TIERS = ['UNRANKED','IRON','BRONZE','SILVER','GOLD','PLATINUM','DIAMOND','MASTER','GRANDMASTER','CHALLENGER']
-RANKS = ['N/A','IV','III','II','I']
+RANKS = ['-','IV','III','II','I']
 
 
 class Summoner:
@@ -44,7 +44,7 @@ class Summoner:
         self.icon = f"https://raw.communitydragon.org/pbe/plugins/rcp-be-lol-game-data/global/default/v1/profile-icons/{summonerDto.get('profileIconId')}.jpg"
         
         self.tier : str = 'UNRANKED'
-        self.rank : str = 'N/A'
+        self.rank : str = RANKS[0]
         self.points : int = 0
         try:
             leagues : List[dict]  = self.watcher.league.by_summoner(self.watcher.region, self.id)
@@ -81,15 +81,10 @@ class ClashPlayer(Summoner):
         
         self.role : str = playerDto.get('role')
         self.position : str = playerDto.get('position')
-        
-            
+                  
     @property
     def position_emote(self) -> str:
         return FS.Emotes.Lol.Position.get(self.position)
-
-        
-                
-    
 
 class ClashTeam():
 
@@ -136,6 +131,43 @@ class ClashTeam():
     @property
     def opgg(self) -> str:
         return f"https://euw.op.gg/multi/query={''.join([p.name.replace(' ','%20')+'%2C' for p in self.players])}"
+    
+
+    
+class ActiveMatch:
+    
+    class Participant:
+        
+        def __init__(self, currentGameParticipant : dict):
+            self.championId : int = currentGameParticipant.get('championId')
+            self.perks = currentGameParticipant.get('perks')
+            self.profileIconId : int = currentGameParticipant.get('profileIconId')
+            self.bot : bool = currentGameParticipant.get('bot')
+            self.teamId : int = currentGameParticipant.get('teamId')
+            self.summonerName : int = currentGameParticipant.get('summonerName')
+            self.summonerId : int = currentGameParticipant.get('summonerId')
+            self.spell1Id : int = currentGameParticipant.get('spell1Id')
+            self.spell2Id : int = currentGameParticipant.get('spell2Id')
+            self.gameCustomizationObjects = currentGameParticipant.get('gameCustomizationObjects')
+    
+    def __init__(self, watcher, encrypted_summoner_id : str):
+        self.watcher : Watcher = watcher
+        self.encrypted_summoner_id : str = encrypted_summoner_id
+        
+    async def fetchData(self):
+        currentGameDto : dict = self.watcher.spectator.by_summoner(self.watcher.region, self.encrypted_summoner_id)
+        await asyncio.sleep(0.1)
+        self.gameId : int = currentGameDto.get('gameId')
+        self.gameType : str = currentGameDto.get('gameType')
+        self.gameStartTime : int = currentGameDto.get('gameStartTime')
+        self.mapId : int = currentGameDto.get('mapId')
+        self.gameLength : int = currentGameDto.get('gameLength')
+        self.platformId : int = currentGameDto.get('platformId')
+        self.gameMode : str = currentGameDto.get('gameMode')
+        self.bannedChampions : list = currentGameDto.get("bannedChampions")
+        self.gameQueueConfigId : int = currentGameDto.get('gameQueueConfigId')
+        self.observers : list = currentGameDto.get("observers")
+        self.participants : list = currentGameDto.get("participants")
     
            
 
