@@ -116,5 +116,3 @@ class Almanax_scraper:
         cls.database.dump()
         return data
     
-
-#TODO only one year data base ?
