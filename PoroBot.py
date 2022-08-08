@@ -42,7 +42,7 @@ class PoroBot(InteractionBot):
         self.logger = logger
         self.logFormatter = logFormatter
         self.test_mode = test_mode
-
+        self.start_succed : bool = True
         intents = disnake.Intents.all()  # Allow the use of custom intents
         
         if test_mode:    
@@ -76,6 +76,8 @@ class PoroBot(InteractionBot):
         logging.info(f"| Python version: {platform.python_version()}")
         logging.info(f"| Running on: {platform.system()} {platform.release()} ({os.name})")
         logging.info(f"| Owner : {self.owner}")
+        logging.info(f"| Cogs loaded : "+", ".join([f'{cog}' for cog in self.cogs.keys()]))
+        logging.info("| Started successfully !" if self.start_succed else "| Started with some issues...")
         logging.info(f"| Ready !")
         
         await self.change_presence(activity = disnake.Activity(name='"/" -> commandes', type=disnake.ActivityType.playing))
@@ -91,15 +93,18 @@ class PoroBot(InteractionBot):
             except Exception as e:
                 exception = f"{type(e).__name__}: {e}"
                 logging.warning(f"Failed to load extension {extension}\n{exception}\n{self.tracebackEx(exception)}")
+                self.start_succed = False
 
     async def send_error_log(self, interaction: ApplicationCommandInteraction, error: Exception):
         tb = self.tracebackEx(error)
         logging.error(f"{error} raised on command /{interaction.application_command.name} from {interaction.guild.name} #{interaction.channel.name} by {interaction.author.name}.\n{tb}")
         await interaction.send(
+            content=self.owner.mention,
             embed= FS.Embed(
                 title=":x: __**ERROR**__ :x:",
                 description=f"Une erreur s'est produite lors de la commande **/{interaction.application_command.name}**\n{self.owner.mention} a été prévenu et corrigera ce bug au plus vite !\nUtilise `/beer` pour un bière de consolation :beer:",
-                thumbnail = FS.Images.Poros.Shock),
+                thumbnail = FS.Images.Poros.Shock,
+                color=disnake.Colour.red()),
             delete_after=10)
         await self.log_channel.send(
             embed = FS.Embed(
@@ -108,7 +113,7 @@ class PoroBot(InteractionBot):
                 fields = [
                     {
                         'name':f"Raised on command :",
-                        'value':f"**/{interaction.application_command.name}** from {interaction.guild.name} #{interaction.channel.mention} by {interaction.author.mention}."
+                        'value':f"**/{interaction.application_command.name}:{interaction.id}** from {interaction.guild.name} #{interaction.channel.mention} by {interaction.author.mention} at {interaction.created_at} with options {interaction.filled_options}" + (f" and target '{interaction.target}'." if interaction.target else ".")
                     }
                 ]
             )
@@ -125,13 +130,13 @@ class PoroBot(InteractionBot):
         )
         
     async def on_slash_command(self, interaction: disnake.ApplicationCommandInteraction) -> None:
-        logging.info(f"Slash command '{interaction.application_command.name}' from '{interaction.guild.name} #{interaction.channel.name}' by '{interaction.author.name}' started...")
+        logging.info(f"Slash command '{interaction.application_command.name}:{interaction.id}' from '{interaction.guild.name} #{interaction.channel.name}' by '{interaction.author.name}' started...")
         
     async def on_user_command(self, interaction: disnake.UserCommandInteraction) -> None:
-        logging.info(f"User command '{interaction.application_command.name}' from '{interaction.guild.name} #{interaction.channel.name}' by '{interaction.author.name}' started...")
+        logging.info(f"User command '{interaction.application_command.name}:{interaction.id}' from '{interaction.guild.name} #{interaction.channel.name}' by '{interaction.author.name}' started...")
 
     async def on_message_command(self, interaction: disnake.MessageCommandInteraction) -> None:
-        logging.info(f"Message command '{interaction.application_command.name}' from '{interaction.guild.name} #{interaction.channel.name}' by '{interaction.author.name}' started...")
+        logging.info(f"Message command '{interaction.application_command.name}:{interaction.id}' from '{interaction.guild.name} #{interaction.channel.name}' by '{interaction.author.name}' started...")
 
     async def on_slash_command_error(self, interaction: ApplicationCommandInteraction, error: Exception) -> None:
         await self.send_error_log(interaction, error)
@@ -143,15 +148,16 @@ class PoroBot(InteractionBot):
         await self.send_error_log(interaction, error)
         
     async def on_slash_command_completion(self, interaction: disnake.ApplicationCommandInteraction) -> None:
-        logging.info(f"Slash command '{interaction.application_command.name}' from '{interaction.guild.name} #{interaction.channel.name} by '{interaction.author.name}' run with succes")
+        logging.info(f"Slash command '{interaction.application_command.name}:{interaction.id}' from '{interaction.guild.name} #{interaction.channel.name}' by '{interaction.author.name}' at '{interaction.created_at}' runed with succes")
         
     async def on_user_command_completion(self, interaction: disnake.UserCommandInteraction) -> None:
-        logging.info(f"User command '{interaction.application_command.name}' from '{interaction.guild.name} #{interaction.channel.name}' by '{interaction.author.name}' run with succes")
+        logging.info(f"User command '{interaction.application_command.name}:{interaction.id}' from '{interaction.guild.name} #{interaction.channel.name}' by '{interaction.author.name}' at '{interaction.created_at}' runed with succes")
 
     async def on_message_command_completion(self, interaction: disnake.MessageCommandInteraction) -> None:
-        logging.info(f"Message command '{interaction.application_command.name}' from '{interaction.guild.name} #{interaction.channel.name}' by '{interaction.author.name}' run with succes")
+        logging.info(f"Message command '{interaction.application_command.name}:{interaction.id}' from '{interaction.guild.name} #{interaction.channel.name}' by '{interaction.author.name}' at '{interaction.created_at}' runed with succes")
   
-  
+
+    
   
 if __name__ == "__main__":
     
