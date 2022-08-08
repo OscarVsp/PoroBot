@@ -15,6 +15,7 @@ async def confirmation(
     inter : disnake.Interaction,
     title : str = "Confirmation",
     message : str = "Confirmer l'action ?",
+    thumbnail : str = disnake.Embed.Empty,
     timeout : int = None,
     color : disnake.Colour = disnake.Colour.red()) -> ConfirmationReturnData:
     """|coro|\n
@@ -47,7 +48,7 @@ async def confirmation(
     --------
         `ConfirmationReturnData`
     """
-    return ConfirmationReturnData((await process(ConfirmationView(inter=inter, title=title, message=message, timeout=timeout, color=color))))
+    return ConfirmationReturnData((await process(ConfirmationView(inter=inter, title=title, message=message, thumbnail = thumbnail, timeout=timeout, color=color))))
 
 
 async def memberSelection(
