@@ -77,7 +77,7 @@ class Tournament(commands.Cog):
             await inter.edit_original_message(embed=FS.Embed(description=f"Création du tournois annulée"), view=None)
         
     @newTournament2v2Roll.autocomplete("event")
-    async def autocomp_locked_chan(self, inter: disnake.ApplicationCommandInteraction, user_input: str):
+    async def autocomp_event_export(self, inter: disnake.ApplicationCommandInteraction, user_input: str):
         events = []
         for event in inter.guild.scheduled_events:
             if event.name.lower().startswith(user_input.lower()):

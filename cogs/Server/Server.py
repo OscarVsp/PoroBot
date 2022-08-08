@@ -1,5 +1,6 @@
 from enum import Enum
 import logging
+from urllib import response
 import disnake
 from disnake.ext import commands
 from disnake import ApplicationCommandInteraction, NotFound
@@ -142,12 +143,17 @@ class Server(commands.Cog):
         async for member in event.fetch_users():
             event_members.append(member)
         
-        selected_members : List[disnake.Member] = await FS.memberSelection(inter, title="Export role from event", message="Select members below", timeout=300, pre_selection=event_members)    
-        await inter.edit_original_message(embed=FS.Embed(description="\n".join(member.display_name for member in selected_members) if len(selected_members) > 0 else "*Aucun membre sélectionné*"), view = None)
-    
+        response = await FS.memberSelection(inter, title="Export role from event", message="Select members below", timeout=300, pre_selection=event_members)    
+        if response:
+            new_role : disnake.Role = await inter.guild.create_role(name=name)
+            for member in response.members:
+                await member.add_roles(new_role)
+            await inter.edit_original_message(embed=FS.Embed(description="\n".join(member.display_name for member in response.members) if (response.members and len(response.members) > 0 )else "*Aucun membre sélectionné*"), view = None)
+        else:
+            inter.edit_original_message(embed=FS.Embed(description=":o: Annuler"))
         
     @export_role_from_event.autocomplete("event")
-    async def autocomp_locked_chan(self, inter: disnake.ApplicationCommandInteraction, user_input: str):
+    async def autocomp_event(self, inter: disnake.ApplicationCommandInteraction, user_input: str):
         events = []
         for event in inter.guild.scheduled_events:
             if event.name.lower().startswith(user_input.lower()):
@@ -158,17 +164,23 @@ class Server(commands.Cog):
         name="from_role",
         description="Créer un role à partir d'un role existant."
     )
-    async def export_role_from_event(self, inter : disnake.ApplicationCommandInteraction,
+    async def export_role_from_role(self, inter : disnake.ApplicationCommandInteraction,
                               role : disnake.Role = commands.Param(description="Le role depuis lequel exporter les members"),
                               name : str = commands.Param(description='Le nom du role à créer (default = "role.name copy")', default=None)):
         await inter.response.defer(ephemeral=True)
         if not name:
             name = f"{role.name} copy"
-        
-        
-        selected_members : List[disnake.Member] = await FS.memberSelection(inter, title="Export role from role", size = 4, message="Select members to export to the new role", timeout=300, pre_selection=role.members)    
-        await inter.edit_original_message(embed=FS.Embed(description="\n".join(member.display_name for member in selected_members) if (selected_members and len(selected_members) > 0 )else "*Aucun membre sélectionné*"), view = None)
-    
+
+        response = await FS.memberSelection(inter, title="Export role from role", size = 4, message="Select members to export to the new role", timeout=300, pre_selection=role.members)    
+        if response:
+            new_role : disnake.Role = await inter.guild.create_role(name=name)
+            for member in response.members:
+                await member.add_roles(new_role)
+            await inter.edit_original_message(embed=FS.Embed(description="\n".join(member.display_name for member in response.members) if (response.members and len(response.members) > 0 )else "*Aucun membre sélectionné*"), view = None)
+        else:
+            inter.edit_original_message(embed=FS.Embed(description=":o: Annuler"))
+            
+            
     @commands.slash_command(
         name="embed",
         description="Envoyer un embed",
@@ -294,7 +306,7 @@ class Server(commands.Cog):
         dm_permission=False,
         description="Verrouiller un channel vocal."
         )
-    async def channel_lock(self, inter : ApplicationCommandInteraction,
+    async def lock(self, inter : ApplicationCommandInteraction,
                            channel : str = commands.Param(description="Le channel vocal à verrouiller"),
                            raison : str = commands.Param(description='La raison du verrouillage à préciser aux spectateurs (défaut : "Focus")', default="Focus"),
                            parler : int = commands.Param(description="Est-ce que les spectateurs ont le droit de parler (défaut : non).", choices = {"Oui":1,"Non":0}, default = 0),
@@ -311,10 +323,8 @@ class Server(commands.Cog):
         newLocker = Locker(inter, self, locked_channel,raison,timeout_on_no_participants=1, parler=bool(parler), streamer = bool(streamer))
         await newLocker.lock(inter)
         
-        
-        
-    #TODO Don't show hiden channel !        
-    @channel_lock.autocomplete("channel")
+            
+    @lock.autocomplete("channel")
     async def autocomp_locked_chan(self, inter: disnake.ApplicationCommandInteraction, user_input: str):
         unlocked_channel = []
         for channel in inter.guild.voice_channels:
