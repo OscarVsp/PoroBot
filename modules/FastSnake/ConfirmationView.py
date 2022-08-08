@@ -11,11 +11,12 @@ class State(Enum):
 
 class ConfirmationView(disnake.ui.View):
     
-    def __init__(self, inter : disnake.Interaction, title : str, message : str, timeout : int, color : disnake.Colour = disnake.Colour.default()):
+    def __init__(self, inter : disnake.Interaction, title : str, message : str, thumbnail : str, timeout : int, color : disnake.Colour = disnake.Colour.default()):
         super().__init__(timeout=timeout)
         self.inter : disnake.Interaction = inter
         self.title : str = title
         self.message : str = message
+        self.thumbnail : str = thumbnail
         self.color : disnake.Colour = color
         
         self.state : State = State.UNKOWN
@@ -26,6 +27,7 @@ class ConfirmationView(disnake.ui.View):
         return Embed(
             title=self.title,
             description=self.message,
+            thumbnail=self.thumbnail,
             color=self.color
         )
             
@@ -39,6 +41,11 @@ class ConfirmationView(disnake.ui.View):
         elif isinstance(self.inter, disnake.MessageInteraction):
             self.original_embeds = self.inter.message.embeds
             await self.inter.response.edit_message(embeds=self.original_embeds+[self.embed], view=self)
+        else:
+            if self.inter.response.is_done():
+                await self.inter.edit_original_message(embed=self.embed, view=self)
+            else:
+                await self.inter.response.send_message(embed=self.embed, view=self, ephemeral=True)
             
     async def update(self, inter : disnake.MessageInteraction = None):
         if inter == None:
