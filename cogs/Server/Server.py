@@ -311,7 +311,9 @@ class Server(commands.Cog):
         newLocker = Locker(inter, self, locked_channel,raison,timeout_on_no_participants=1, parler=bool(parler), streamer = bool(streamer))
         await newLocker.lock(inter)
         
-            
+        
+        
+    #TODO Don't show hiden channel !        
     @channel_lock.autocomplete("channel")
     async def autocomp_locked_chan(self, inter: disnake.ApplicationCommandInteraction, user_input: str):
         unlocked_channel = []
