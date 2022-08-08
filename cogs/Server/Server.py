@@ -150,7 +150,7 @@ class Server(commands.Cog):
                 await member.add_roles(new_role)
             await inter.edit_original_message(embed=FS.Embed(description="\n".join(member.display_name for member in response.members) if (response.members and len(response.members) > 0 )else "*Aucun membre sélectionné*"), view = None)
         else:
-            inter.edit_original_message(embed=FS.Embed(description=":o: Annuler"))
+            inter.edit_original_message(embed=FS.Embed(description=":o: Annulé"))
         
     @export_role_from_event.autocomplete("event")
     async def autocomp_event(self, inter: disnake.ApplicationCommandInteraction, user_input: str):
@@ -178,7 +178,7 @@ class Server(commands.Cog):
                 await member.add_roles(new_role)
             await inter.edit_original_message(embed=FS.Embed(description="\n".join(member.display_name for member in response.members) if (response.members and len(response.members) > 0 )else "*Aucun membre sélectionné*"), view = None)
         else:
-            inter.edit_original_message(embed=FS.Embed(description=":o: Annuler"))
+            inter.edit_original_message(embed=FS.Embed(description=":o: Annulé"))
             
             
     @commands.slash_command(
@@ -329,7 +329,8 @@ class Server(commands.Cog):
         unlocked_channel = []
         for channel in inter.guild.voice_channels:
             if channel not in self.locked_channels:
-                unlocked_channel.append(channel.name)
+                if channel.permissions_for(inter.author).view_channel:
+                    unlocked_channel.append(channel.name)
         return unlocked_channel    
     
     @commands.Cog.listener('on_voice_state_update')
