@@ -84,8 +84,11 @@ class Beer(disnake.ui.View):
             )
         
     async def on_timeout(self) -> None:
-        await self.inter.delete_original_message()
-        logging.debug(f"BeerView#{self.id} timeout.")
+        try:
+            await self.inter.delete_original_message()
+            logging.debug(f"BeerView#{self.id} timeout.")
+        except disnake.errors.NotFound:
+            pass
  
 class loreModal(disnake.ui.Modal):
     def __init__(self,bot,member) -> None:
