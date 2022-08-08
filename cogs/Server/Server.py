@@ -308,9 +308,7 @@ class Server(commands.Cog):
         )
     async def lock(self, inter : ApplicationCommandInteraction,
                            channel : str = commands.Param(description="Le channel vocal à verrouiller"),
-                           raison : str = commands.Param(description='La raison du verrouillage à préciser aux spectateurs (défaut : "Focus")', default="Focus"),
-                           parler : int = commands.Param(description="Est-ce que les spectateurs ont le droit de parler (défaut : non).", choices = {"Oui":1,"Non":0}, default = 0),
-                           streamer : int = commands.Param(description="Est-ce que les spectateurs ont le droit de streamer (défaut : non).", choices= {"Oui":1,"Non":0}, default = 0)
+                           raison : str = commands.Param(description='La raison du verrouillage à préciser aux spectateurs (défaut : "Focus")', default="Focus")
         ):  
         await inter.response.defer(ephemeral=True)
         for chan in inter.guild.voice_channels:
@@ -320,7 +318,7 @@ class Server(commands.Cog):
         if not locked_channel.permissions_for(inter.guild.default_role).speak:
             await inter.edit_original_message(embed=FS.Embed(description=f"Le channel vocal doit initialement permettre au role {inter.guild.default_role.mention} de parler."))
             return
-        newLocker = Locker(inter, self, locked_channel,raison,timeout_on_no_participants=1, parler=bool(parler), streamer = bool(streamer))
+        newLocker = Locker(inter, self, locked_channel,raison,timeout_on_no_participants=1)
         await newLocker.lock(inter)
         
             
