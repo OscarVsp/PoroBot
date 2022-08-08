@@ -76,7 +76,7 @@ class Admin(commands.Cog):
         
         
     @admin.sub_command(
-        name = "upadate",
+        name = "update",
         description="Update the bot"
     )
     @commands.check(is_owner)
