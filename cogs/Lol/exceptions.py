@@ -3,7 +3,17 @@ class NoCurrentTeam(Exception):
         self.message = "Summoner has currently no team."
         super().__init__()
 
-class SumomnerNotFound(Exception):
+class SummonerNotFound(Exception):
     def __init__(self):
-        self.message = "Data Not Found"
+        self.message = "Summoner Datas Not Found"
+        super().__init__()
+        
+class LeagueNotFound(Exception):
+    def __init__(self):
+        self.message = "League Data Not Found"
+        super().__init__()
+        
+class TeamNotFound(Exception):
+    def __init__(self):
+        self.message = "Team Not Found"
         super().__init__()
