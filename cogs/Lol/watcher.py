@@ -72,6 +72,10 @@ class Summoner:
     @property
     def tier_emote(self) -> str:
         return FS.Emotes.Lol.Rank.get(self.tier)
+    
+    @property
+    def opgg(self) -> str:
+        return f"https://euw.op.gg/summoners/euw/{self.name.replace(' ','%20')}"
 
 
 class ClashPlayer(Summoner):
