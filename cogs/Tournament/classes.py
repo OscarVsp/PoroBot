@@ -12,6 +12,72 @@ class State(Enum):
     SET = 1
     STARTED = 2
     ENDED = 3
+    
+    def __gt__(self, other):
+        try:
+            return self.value > other.value
+        except:
+            pass
+        try:
+            if isinstance(other, int):
+                return self.value > other
+        except:
+            pass
+        return NotImplemented
+
+    def __lt__(self, other):
+        try:
+            return self.value < other.value
+        except:
+            pass
+        try:
+            if isinstance(other, int):
+                return self.value < other
+        except:
+            pass
+        return NotImplemented
+
+    def __ge__(self, other):
+        try:
+            return self.value >= other.value
+        except:
+            pass
+        try:
+            if isinstance(other, int):
+                return self.value >= other
+            if isinstance(other, str):
+                return self.name == other
+        except:
+            pass
+        return NotImplemented
+
+    def __le__(self, other):
+        try:
+            return self.value <= other.value
+        except:
+            pass
+        try:
+            if isinstance(other, int):
+                return self.value <= other
+            if isinstance(other, str):
+                return self.name == other
+        except:
+            pass
+        return NotImplemented
+
+    def __eq__(self, other):
+        try:
+            return self.value == other.value
+        except:
+            pass
+        try:
+            if isinstance(other, int):
+                return self.value == other
+            if isinstance(other, str):
+                return self.name == other
+        except:
+            pass
+        return NotImplemented
 
 class SaveLoadError(Exception):
     pass
@@ -516,19 +582,18 @@ class Container:
     
 #Class for a match between two teams, with attributs for the teams and the winner, and method to add points to a team
 class Match(Container):
-    def __init__(self, phase, round_idx : int, match_idx : int, entities : List[Entity] = None, point_to_win : int = 2):
-        self._phase = phase
+    def __init__(self, phase, round_idx : int, match_idx : int, entities : List[Entity] = None):
+        self._phase : Phase = phase
         self._round_idx : int = round_idx
         self._match_idx : int = match_idx
         self._entities : List[Entity] = entities
-        self._point_to_win : int = point_to_win
 
     @property
     def state(self) -> State:
         if self._entities:
             started = False
             for entity in self._entities:
-                if round(entity.points) >= self._point_to_win:
+                if round(entity.points) >= self._phase.nb_point_to_win_match:
                     return State.ENDED
                 if entity.points > 0:
                     started = True
@@ -538,7 +603,6 @@ class Match(Container):
                 return State.SET
         else:
             return State.INIT
-
 
             
     @property
@@ -563,7 +627,7 @@ class Match(Container):
     
     @property
     def point_to_win(self) -> int:
-        return self._point_to_win
+        return self._phase.nb_point_to_win_match
     
     @property
     def title(self) -> str:
@@ -576,7 +640,7 @@ class Match(Container):
         else:
             indicators = ['⬛' for _ in range(len(self._entities))]
         for i,entity in enumerate(self._entities):
-            if round(entity.points) >= self._point_to_win:
+            if round(entity.points) >= self._phase.nb_point_to_win_match:
                 indicators[i] = '✅'
         return {'name':self.title,'value':"\n".join([f"{indicators[i]}{FS.Emotes.Num(round(e.points))} {e.display}" for i,e in enumerate(self._entities)]),'inline':True}
       
@@ -587,7 +651,7 @@ class Match(Container):
         else:
             indicators = ['⬛' for _ in range(len(self._entities))]
         for i,entity in enumerate(self._entities):
-            if round(entity.points) >= self._point_to_win:
+            if round(entity.points) >= self._phase.nb_point_to_win_match:
                 indicators[i] = '✅'
         return {'name':self.title,'value':"\n".join([f"{indicators[i]}{''.join([FS.Emotes.Num(round(score)) for score in e.scores])} {e.display}" for i,e in enumerate(self._entities)]),'inline':True}
       
@@ -727,8 +791,6 @@ class Round(Container):
     def log_id(self) -> str:
         return f"[ROUND {self._round_idx}]" 
     
-    
-    
     def get_match(self, match : Union[Match,int]) -> Optional[Match]:
         if isinstance(match, Match):
             if match in self._matches:
@@ -787,7 +849,7 @@ class Round(Container):
 
 class Phase(Container):
     
-    def __init__(self, stage_idx : int, phase_idx : int, name : str, size : int, nb_round : int = None, nb_matches_per_round : int = None, nb_teams_per_match : int = None, nb_players_per_team : int = None, size_of_scores : int = 1, weigths : List[float] = [1], scores_descriptor : List[str] = None):
+    def __init__(self, stage_idx : int, phase_idx : int, name : str, size : int, nb_round : int = None, nb_matches_per_round : int = None, nb_teams_per_match : int = None, nb_players_per_team : int = None, size_of_scores : int = 1, weigths : List[float] = [1], scores_descriptor : List[str] = None, score_emoji : List[str] =None,  nb_point_to_win_match : int = 2):
         super().__init__()
         if len(weigths) != size_of_scores:
             raise ValueError('"Size of scores" and "weights" are not compatible.')
@@ -799,22 +861,39 @@ class Phase(Container):
         self._role : disnake.Role = None
         self._rounds : List[Round] = None
         self._size_of_scores : int = size_of_scores
-        self._scores_descriptor : List[str] = scores_descriptor
+        self._scores_descriptor : List[str] = scores_descriptor if scores_descriptor else ['point']
+        self._score_emoji : List[str] = score_emoji if score_emoji else ["💎" for _ in range(size_of_scores)]
         self._weigths : List[float] = weigths
         self._nb_rounds : int = nb_round
         self._nb_matches_per_round : int = nb_matches_per_round
         self._nb_teams_per_match : int = nb_teams_per_match
         self._nb_players_per_team : int = nb_players_per_team
+        self._nb_point_to_win_match : int = nb_point_to_win_match
         self._last_state : dict = None
+        self.view : disnake.ui.View = None
+        self.start_flag : bool = False
         
-    def set_players(self, role : disnake.Role) -> None:
+    async def set_role(self, role : disnake.Role) -> None:
         self._role : disnake.Role = role
         self._players : List[Player] = [Player(member, size_of_scores=self._size_of_scores, weights=self._weigths) for member in role.members]
         self.generate()
+        await self.view.generate()
+        
+    async def start(self) -> None:
+        self.start_flag = True
+        await self.view.update()
+        
+    async def delete(self) -> None:
+        await self.view.delete_cat()
+        
         
     @property
     def name(self) -> str:
         return self._name
+    
+    @property
+    def emotes(self) -> str:
+        return f"{FS.Assets.Emotes.Num(self.stage_idx+1)}{FS.Assets.Emotes.Alpha[self.phase_idx]}"
     
     @property
     def role(self) -> disnake.Role:
@@ -830,11 +909,23 @@ class Phase(Container):
     
     @property
     def title(self) -> str:
-        return f"{self.stage_idx}{self.phase_idx} {self.name}"
+        return f"{self.stage_idx+1}{chr(ord('A') + self.phase_idx)} - {self.name}"
     
     @property
     def title_emote(self) -> str:
-        return f"{FS.Assets.Emotes.Num(self.stage_idx)}{FS.Assets.Emotes.Alpha[self.phase_idx]} {self.name}"
+        return f"{self.emotes} {self.name}"
+    
+    @property
+    def score_desriptor(self) -> List[str]:
+        return self._scores_descriptor
+    
+    @property
+    def score_emoji(self) -> List[str]:
+        return self._score_emoji
+    
+    @property
+    def nb_point_to_win_match(self) -> int:
+        return self._nb_point_to_win_match
     
     @staticmethod
     def rank_emotes(sorted_players : List[Player]) -> List[str]:
@@ -850,7 +941,7 @@ class Phase(Container):
 
     @property
     def state(self) -> State:
-        if self._players and self._rounds:
+        if self._players and self._rounds and self.start_flag:
             seted = True
             started = False
             ended = True
@@ -926,33 +1017,40 @@ class Phase(Container):
     
     @property
     def classement_embed(self) -> disnake.Embed:
-        pass
+        if self.state == State.INIT:
+            return FS.Embed(
+                title="🏆 __**CLASSEMENT**__ 🏆",
+                color = disnake.Colour.gold(),
+                description="*Le classement sera affiché ici lorsque les participants auront été sélectionnés.*"
+            )
+        else:
+            return None
        
     @property
     def rounds_embeds(self) -> List[disnake.Embed]:
-        pass
+        if self.state <= State.SET:
+            return FS.Embed(
+                title="📅 __**ROUNDS**__",
+                color = disnake.Colour.lighter_grey(),
+                description="*Les rounds seront affichés ici une fois que la phase aura commencée.*"
+            )
+        else:
+            return None
     
     @property
     def rules_embed(self) -> disnake.Embed:
-        pass
+        return None  
     
     @property
     def admin_embeds(self) -> List[disnake.Embed]:
-        pass
-        
-    @property
-    def rules(self) -> disnake.Embed:
-        pass
-    
-    def rounds_embeds(self, detailled : bool = False) -> List[disnake.Embed]:
-        embeds : List[disnake.Embed] = []
-        if detailled:
-            for round in self.rounds:
-                embeds.append(round.embed_detailled)
+        if self.state == State.INIT:
+            return FS.Embed(
+                title="__**ADMIN DASHBOARD**__",
+                color = disnake.Colour.lighter_grey(),
+                description="*Utilise le dashboard du tournoi pour sélectionner les participants du tournoi et commencer la phase.*"  #TODO link
+            )
         else:
-            for round in self.rounds:
-                embeds.append(round.embed)
-        return embeds
+            return None
     
     def generate(self) -> None:
         pass
@@ -1111,7 +1209,9 @@ class Phase2v2Roll(Phase):
             nb_players_per_team=len(self._seeding[0][0][0]), 
             size_of_scores=3, 
             weigths=[1.001,1,0.989],
-            scores_descriptor=["kill(s)","turret(s)","cs"]
+            scores_descriptor=["kill(s)","turret(s)","cs"],
+            score_emoji=["⚔️","🧱","🧙‍♂️"],
+            nb_point_to_win_match=2
         )
            
     def generate(self) -> None:
@@ -1131,10 +1231,13 @@ class Phase2v2Roll(Phase):
         
     @property
     def classement_embed(self) -> disnake.Embed:
+        embed = super().classement_embed
+        if embed:
+            return embed
         sorted_players : List[Player] = self.getRanking()
         ranks = self.rank_emotes(sorted_players)
         return FS.Embed(
-            title = "🏆 __**CLASSEMENT**__🏆 ",
+            title = "🏆 __**CLASSEMENT**__ 🏆",
             color = disnake.Colour.gold(),
             fields=[
                 {
@@ -1161,6 +1264,9 @@ class Phase2v2Roll(Phase):
    
     @property
     def rounds_embeds(self) -> List[disnake.Embed]:
+        embed = super().rounds_embeds
+        if embed:
+            return [embed]
         return [round.embed for round in self.rounds]
        
     @property
@@ -1218,6 +1324,9 @@ class Phase2v2Roll(Phase):
          
     @property
     def admin_embeds(self) -> List[disnake.Embed]:
+        embed = super().admin_embeds
+        if embed:
+            return [embed]
         embeds = [round.embed_detailled for round in self.rounds]
         sorted_players : List[Player] = self.getRanking()
         ranks = self.rank_emotes(sorted_players)
@@ -1296,17 +1405,33 @@ class Tournament:
         elif stage_index == len(self._stages):
             new_stage : Stage = Stage()
             new_stage.add_phase(phase)
-            self._stages.append(Stage())
+            self._stages.append(new_stage)
         else:
             raise IndexError("Index cannot be higher that the current size of phase")
+        
+    async def remove_phase(self, phase_to_remove : Phase):
+        for stage in self._stages:
+            for phase in stage._phases:
+                if phase == phase_to_remove:
+                    stage._phases.remove(phase)
+                    await phase.delete()
+                    if len(stage._phases) == 0:
+                        self._stages.remove(stage)
+                    return
+        
+    
                 
     @property
-    def stage(self) -> List[Stage]:
+    def stages(self) -> List[Stage]:
         return self._stages
         
     @property
     def phases(self) -> List[Phase]:
-        return [(p for p in s.phases) for s in self._stages]
+        phases : list[Phase] = []
+        for stage in self._stages:
+            for phase in stage.phases:
+                phases.append(phase)
+        return phases
 
     @property
     def role(self) -> disnake.Role:
@@ -1321,18 +1446,19 @@ class Tournament:
     def embed(self) -> disnake.Embed:
         fields = []
         
-        for i,phases in enumerate(self._phases):
+        for stage in self._stages:
+            phases = stage.phases
             if len(phases) > 1:
-                fields.append({'name':f"__**Phase **__{FS.Assets.Emotes.Num(i+1)}", 'value':'➖'})
-                for j,phase in enumerate(phases):
-                    fields.append({'name':f"{FS.Assets.Emotes.Num(i+1)}{FS.Assets.Emotes.Alpha[j]} __**{phase.name}**__", 'value':("\n> ".join([f'{p.display_name}' for p in phase.players]) if phase.players else "*À déterminer...*"), 'inline':True})
+                fields.append({'name':f"__**Phase **__{FS.Assets.Emotes.Num(self._stages.index(stage)+1)}", 'value':'➖'})
+                for phase in phases:
+                    fields.append({'name':f"{phase.emotes} __**{phase.name}**__", 'value':("\n> ".join([f'{p.display_name}' for p in phase.players]) if phase.players else "*À déterminer...*"), 'inline':True})
             else:
-                fields.append({'name':f"__**Phase **__{FS.Assets.Emotes.Num(i+1)}{FS.Assets.Emotes.Alpha[j]} : __**{phase.name}**__", 'value':("\n> ".join([f'{p.display_name}' for p in phase.players]) if phase.players else "*À déterminer...*"), 'inline':False})
+                fields.append({'name':f"__**Phase **__{phases[0].emotes} : __**{phases[0].name}**__", 'value':("\n> ".join([f'{p.display_name}' for p in phases[0].players]) if phases[0].players else "*À déterminer...*"), 'inline':False})
         
         return FS.Embed(
-            title = f"🏆 __**{self._name.upper()}***__ 🏆",
-            description="__Joueurs :__"+"\n> ".join([f'{member.mention}' for member in self._role.members]),
-            fields= []
+            title = f"🏆 __**{self._name.upper()}**__ 🏆",
+            description="__**Joueurs :**__\n"+"\n".join([f'> {member.mention}' for member in self._role.members]),
+            fields = fields
         )
             
             

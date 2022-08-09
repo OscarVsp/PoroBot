@@ -1,6 +1,6 @@
 from typing import List, Optional, Tuple, Union
 
-from modules.FastSnake.ChoicesView import QCMReturnData, QCMView, QRMReturnData, QRMView
+from modules.FastSnake.ChoicesView import ButtonChoice, QCMReturnData, QCMView, QRMReturnData, QRMView
 from .ConfirmationView import ConfirmationReturnData, ConfirmationView
 from .MemberSelectionView import MemberSelectionReturnData, MemberSelectionView
 
@@ -57,7 +57,7 @@ async def memberSelection(
     message : str = "",
     size : Union[int, List[int]] = None,
     timeout : int = None,
-    pre_selection : List[disnake.Member] = [],
+    pre_selection : List[disnake.Member] = None,
     check = None,
     color : disnake.Colour = disnake.Colour.blue()) -> MemberSelectionReturnData:
     """|coro|\n
@@ -87,7 +87,7 @@ async def memberSelection(
             Defaults to `None`.
         pre_selection (`List[disnake.Member]`, `optional`): 
             The member to include into the selection at the beginning.
-            Defaults to `[]`.
+            Defaults to `None`.
         check (`func(**kwargs) -> bool`, `optional`): 
             A function that can be used to filter if a member can be added to the selection or not.
             Defaults to `None`.
@@ -117,7 +117,7 @@ async def memberSelection(
 
 async def QCM(
     inter : disnake.Interaction,
-    choices : List[str],
+    choices : List[ButtonChoice],
     pre_selection : Optional[str],
     title : str = "Choix",
     message : str = "Choisissez parmit les propositions ci-dessous",
@@ -136,7 +136,7 @@ async def QCM(
     ----------
         inter (`disnake.Interaction`):
             The interaction for which the confirmation occurs.
-        choices (`List[str]`)
+        choices (`List[ButtonChoice]`)
             The choices available. Either `str` for label only, or `Tuple[str,str]` for `(label,emoji)`.
         pre_selection (`Optional[str]`):
             The pre-selected choice.
@@ -162,8 +162,8 @@ async def QCM(
 
 async def QRM(
     inter : disnake.Interaction,
-    choices : List[str],
-    pre_selection : list[str] = None,
+    choices : List[ButtonChoice],
+    pre_selection : list[ButtonChoice] = None,
     min : int = 0,
     max : int = None,
     title : str = "Choix",
@@ -183,9 +183,9 @@ async def QRM(
     ----------
         inter (`disnake.Interaction`):
             The interaction for which the confirmation occurs.
-        choices (`List[str]`):
-            The choices available. Either `str` for label only, or `Tuple[str,str]` for `(label,emoji)`.
-        pre_selection (`List[str]`):
+        choices (`List[ButtonChoice]`):
+            The choices available.
+        pre_selection (`List[ButtonChoice]`):
             The preselected choices.
             Defaults to `None`
         min (`int`):

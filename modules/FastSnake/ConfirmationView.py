@@ -11,12 +11,12 @@ class State(Enum):
 
 class ConfirmationView(disnake.ui.View):
     
-    def __init__(self, inter : disnake.Interaction, title : str, message : str, thumbnail : str, timeout : int, color : disnake.Colour = disnake.Colour.default()):
+    def __init__(self, inter : disnake.Interaction, title : str, message : str, timeout : int, color : disnake.Colour = disnake.Colour.default(), thumbnail : str = None):
         super().__init__(timeout=timeout)
         self.inter : disnake.Interaction = inter
         self.title : str = title
         self.message : str = message
-        self.thumbnail : str = thumbnail
+        self.thumbnail : str = thumbnail if thumbnail else disnake.Embed.Empty
         self.color : disnake.Colour = color
         
         self.state : State = State.UNKOWN
@@ -32,15 +32,12 @@ class ConfirmationView(disnake.ui.View):
         )
             
     async def send(self):
-        if isinstance(self.inter, disnake.ApplicationCommandInteraction):
+        if isinstance(self.inter, disnake.ApplicationCommandInteraction) or isinstance(self.inter, disnake.MessageInteraction):
             if self.inter.response.is_done():
                 self.original_embeds = (await self.inter.original_message()).embeds
                 await self.inter.edit_original_message(embeds=self.original_embeds+[self.embed], view=self)
             else:
                 await self.inter.response.send_message(embed=self.embed, view=self, ephemeral=True)
-        elif isinstance(self.inter, disnake.MessageInteraction):
-            self.original_embeds = self.inter.message.embeds
-            await self.inter.response.edit_message(embeds=self.original_embeds+[self.embed], view=self)
         else:
             if self.inter.response.is_done():
                 await self.inter.edit_original_message(embed=self.embed, view=self)
@@ -54,10 +51,16 @@ class ConfirmationView(disnake.ui.View):
                 view = self
             )
         else:
-            await inter.response.edit_message(
-                embeds=self.original_embeds+[self.embed],
-                view=self
-            )
+            if inter.response.is_done():
+                await inter.edit_original_message(
+                    embeds=self.original_embeds+[self.embed],
+                    view=self
+                )
+            else:
+                await inter.response.edit_message(
+                    embeds=self.original_embeds+[self.embed],
+                    view=self
+                )
 
     @disnake.ui.button(label = "Confirmer", emoji="✅", style=disnake.ButtonStyle.green)
     async def confirm(self, button : disnake.ui.Button, interaction : disnake.MessageInteraction):

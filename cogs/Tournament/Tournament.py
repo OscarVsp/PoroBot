@@ -32,84 +32,61 @@ class Tournament(commands.Cog):
     @tournament.sub_command(
         name="new"
     )
-    async def new_tournament(self, inter):
-        await 
-    
-    @tournament.sub_command_group(
-        name="2v2_roll"
-    )
-    async def tournamant2v2Roll(self, inter):
-        pass
+    async def new_tournament(self, inter : ApplicationCommandInteraction,
+                             nom : str = commands.Param(description="Nom du tournoi"),
+                             description : str = commands.Param(description="Description du tournoi",default=None),
+                             banniere : str = commands.Param(description="""Le lien "https" de l'image à utiliser comme bannière""", default = FS.Images.Tournament.ClashBanner),
+                             participants : str = commands.Param(description="Filtrer les membres à afficher par un role ou un évenement.", default=None)
+                        ):
 
-        
+        filtre_members : List[disnake.Member] = None
+                
+        if participants:
+            filtre_clean = participants.split(' ')[1]
+            for role in inter.guild.roles:
+                if role.name == filtre_clean:
+                    filtre_members = role.members
+                    break
+            
+            if filtre_members == None:       
+                for event in inter.guild.scheduled_events:
+                    if event.name == filtre_clean:
+                        filtre_members = [member async for member in event.fetch_users()]
+                        break
+            
+            if filtre_members == None:
+                filtre_members = inter.guild.members
     
-
-    #command to create a new tournament
-    @tournamant2v2Roll.sub_command(
-        name="new", description="Créer un tournois 2v2 roll de 4, 5 ou 8 joueurs"
-    )
-    async def newTournament2v2Roll(self, inter: ApplicationCommandInteraction,
-                                name : str = commands.Param(description="Nom du tournoi", default="Tournoi"),
-                                annonce : str = commands.Param(description="Le text à inclure dans l'annonce initial du tournoi", default=None),
-                                role : disnake.Role = commands.Param(description="Un role depuis lequel importer des joureurs", default = None),
-                                event : str = commands.Param(description="Un évent depuis lequel importer des joueurs", default = None),
-                                banniere : str = commands.Param(description="""Le lien "https" de l'image à utiliser comme bannière""", default = FS.Images.Tournament.ClashBanner)):
-        """Create a tournament 2v2 roll of 4, 5 or 8 players
-        """
-        await inter.response.defer(ephemeral=True)
-        members : list[disnake.Member] = []
-        if role:
-            members += role.members
-        if event:
-            async for member in event.fetch_users():
-                if member not in members:
-                    members.append(member)
-        selection = await FS.memberSelection(inter, title="Sélection des joueurs.", message= "Sélectionne les membres participant au tournois.", size = [4,5,8], pre_selection=members)
-        if selection.is_confirmed:
-            await inter.edit_original_message(
-                embed = FS.Embed(description=f"⌛ Création du tournois {name} en cours..."),
-                view=None
-            )
-            self.bot.tournaments_name += [name]
-            await self.bot.change_presence(activity = disnake.Activity(name=", ".join(self.bot.tournaments_name), type=disnake.ActivityType.playing)) 
-            tournament_role = await inter.guild.create_role(name=f"Tournament {name} role")
+        title = "Création du tournoi"
+        selection = await FS.memberSelection(inter, title=title, message= "Sélectionne les membres participant au tournois.", pre_selection=filtre_members)
+        if selection:
+            new_role = await inter.guild.create_role(name=f"tournoi {nom}")
             for member in selection.members:
-                await member.add_roles(tournament_role, reason=f"Tournement {name}")    
-            await asyncio.sleep(2)
-            new_tournament = Tournament2v2RollView(inter, self.bot, tournament_role, name = name, banner = banniere, annonce = annonce)
-            await new_tournament.makeChannels()
+                await member.add_roles(new_role)
+            await asyncio.sleep(1)
+            tournament = TournamentView(inter,self,new_role,name=nom,description=description,banner=banniere)
             await inter.edit_original_message(
-                embed = FS.Embed(description=f"Tournois {name} créé.\n[Dashboard]({new_tournament.channel_dashboard.jump_url})")
+                embed = tournament.tournament.embed,
+                view = tournament
             )
         else:
-            await inter.edit_original_message(embed=FS.Embed(description=f"Création du tournois annulée"), view=None)
+            await inter.edit_original_message(embed=FS.Embed(title=title,description=f":o: Création du tournoi annulée"), view=None)
         
-    @newTournament2v2Roll.autocomplete("event")
-    async def autocomp_event_export(self, inter: disnake.ApplicationCommandInteraction, user_input: str):
-        events = []
+        
+    @new_tournament.autocomplete("participants")
+    def autocomple_filtre(self, inter: disnake.ApplicationCommandInteraction, user_input: str):
+        filtres = []
+        for role in inter.guild.roles:
+                if role.name.lower().startswith(user_input.lower()):
+                        filtres.append(f"👥 {role.name}")
         for event in inter.guild.scheduled_events:
-            if event.name.lower().startswith(user_input.lower()):
-                events.append(event.name)
-        return events    
+                if event.name.lower().startswith(user_input.lower()):
+                        filtres.append(f"📅 {event.name}")
+        if len(filtres) > 25:
+            filtres = filtres[:25]
+        return filtres
     
-        
-    #command to load a tournament
-    @tournamant2v2Roll.sub_command(
-        name="load", description="Load un tournois 2v2 roll de 4, 5 ou 8 joueurs"
-    )
-    async def loadTournament2v2Roll(self, inter: ApplicationCommandInteraction,
-                                file : disnake.Attachment = commands.Param(description="Le fichier .json depuis lequel load le tournois.")):
-        """Load a tournament 2v2 roll of 4, 5 or 8 players
-        """
-        await inter.response.defer(ephemeral=True)  
-        file = await file.to_file()          
-        new_tournament : Tournament2v2RollView = await Tournament2v2RollView.load_from_save(inter, file)
-        self.bot.tournaments_name += [new_tournament.name]
-        await self.bot.change_presence(activity = disnake.Activity(name=", ".join(self.bot.tournaments_name), type=disnake.ActivityType.playing))       
-        await inter.edit_original_message(
-            embed = FS.Embed(description=f"Tournois {new_tournament.name} créé.\n[Dashboard]({new_tournament.channel_dashboard.jump_url})")
-        )
-        
+    
     
 
 def setup(bot):

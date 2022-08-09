@@ -46,7 +46,7 @@ class QCMView(ConfirmationView):
     def embed(self) -> disnake.Embed:
         embed = super().embed
         if self.response:
-            embed.add_field(name="__**Choix actuel**__",value=f"> {self.response.emoji if self.reponse.emoji else '◾'} **{self.response.label}**")
+            embed.add_field(name="__**Choix actuel**__",value=f"> {self.response.emoji if self.response.emoji else '◾'} **{self.response.label}**")
         embed.set_footer(text="Un seul choix possible.")
         return embed
      

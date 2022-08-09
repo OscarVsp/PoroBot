@@ -11,7 +11,8 @@ class MemberSelectionView(ConfirmationView):
         super().__init__(inter, title, message, timeout, color)
         
         self.size : Union[List[int],int] = size
-        self.selected_members : List[disnake.Member] = pre_selection.copy()
+
+        self.selected_members : List[disnake.Member] = pre_selection.copy() if pre_selection else []
         if check:
             self.check = check
         else:
