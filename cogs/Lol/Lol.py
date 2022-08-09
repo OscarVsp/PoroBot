@@ -146,11 +146,30 @@ class Lol(commands.Cog):
                 
                 for summoner in sorted_summoners:
                         sorted_members.append(members[summoners.index(summoner)])
+                        
+                ranks = ""
+                players = ""
+                
+                for i in range(len(sorted_members)):
+                        ranks += f"{sorted_summoners[i].tier_emote} **{sorted_summoners[i].rank}**\n"
+                        players += f"__**{sorted_members[i].mention}**__ *({sorted_summoners[i].name})*\n"
 
                 await inter.edit_original_message(
                         embed = FS.Embed(
                                 title=f"{FS.Assets.Emotes.lol} __**CLASSEMENT LOL**__",
-                                description='\n'.join([ f"> {sorted_summoners[i].tier_emote} **{sorted_summoners[i].rank}** __**{sorted_members[i].mention}**__ *({sorted_summoners[i].name})*"  for i in range(len(sorted_members))]) + (f"\n\n*Filtre : {filtre}*\n" if filtre else "\n"),
+                                description=(f"> *Filtre : {filtre}*" if filtre else ""),
+                                fields = [
+                                        {
+                                                'name':"◾",
+                                                'value':ranks,
+                                                "inline":True
+                                        },
+                                        {
+                                                'name':"◾",
+                                                'value':players,
+                                                "inline":True
+                                        }
+                                ],
                                 footer_text="""Tu n'es pas dans le classement ?\nLie ton compte League of Legends en utilisant "/lol account" !"""
                         )
                 )
