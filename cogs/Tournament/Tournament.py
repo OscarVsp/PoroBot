@@ -28,11 +28,19 @@ class Tournament(commands.Cog):
     async def tournament(self, inter):
         pass
     
+    
+    @tournament.sub_command(
+        name="new"
+    )
+    async def new_tournament(self, inter):
+        await 
+    
     @tournament.sub_command_group(
         name="2v2_roll"
     )
     async def tournamant2v2Roll(self, inter):
         pass
+
         
     
 
