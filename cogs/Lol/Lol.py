@@ -111,13 +111,31 @@ class Lol(commands.Cog):
                 name="classement",
                 description="Classement League of Legends des members du serveur"
         )
-        async def classement(self, inter : ApplicationCommandInteraction):
+        async def classement(self, inter : ApplicationCommandInteraction,
+                             filtre : str = commands.Param(description="Filtrer les membres à afficher par un role ou un évenement.", default=None)):
                 await inter.response.defer(ephemeral=False)
+                
+                filtre_members : List[disnake.Member] = None
+                if filtre:
+                        for role in inter.guild.roles:
+                                if role.name == filtre:
+                                        filtre_members = role.members
+                                        break
+                        
+                        if filtre_members == None:       
+                                for event in inter.guild.scheduled_events:
+                                        if event.name == filtre:
+                                                filtre_members = await event.fetch_users()
+                                                break
+                        
+                        if filtre_members == None:
+                                filtre_members = inter.guild.members
+                
                 members : List[disnake.Member] = []
                 summoners : List[Summoner] = []
                 for user_id_str in self.summoners.getall():
                         member = inter.guild.get_member(int(user_id_str))
-                        if member:
+                        if member and member in filtre_members:
                                 summoners.append(await self.watcher.get_summoner_by_name(self.summoners.get(user_id_str)))
                                 members.append(member)
                 
@@ -135,6 +153,17 @@ class Lol(commands.Cog):
                                 footer_text="""Tu n'es pas dans le classement ? Lie ton compte discord avec ton compte League of Legends en utilisant "/lol account" !"""
                         )
                 )
+                
+        @classement.autocomplete("filtre")
+        def autocomple_filtre(self, inter: disnake.ApplicationCommandInteraction, user_input: str):
+                filtres = []
+                for role in inter.guild.roles:
+                        if role.name.lower().startswith(user_input.lower()):
+                                filtres.append(f"@{role.name}")
+                for event in inter.guild.scheduled_events:
+                        if event.name.lower().startswith(user_input.lower()):
+                                filtres.append(event.name)
+                return filtres  
                 
  
                 
