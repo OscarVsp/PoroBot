@@ -116,16 +116,18 @@ class Lol(commands.Cog):
                 await inter.response.defer(ephemeral=False)
                 
                 filtre_members : List[disnake.Member] = None
+                
                 if filtre:
+                        filtre_clean = filtre.split(' ')[1]
                         for role in inter.guild.roles:
-                                if role.name == filtre:
+                                if role.name == filtre_clean:
                                         filtre_members = role.members
                                         break
                         
                         if filtre_members == None:       
                                 for event in inter.guild.scheduled_events:
-                                        if event.name == filtre:
-                                                filtre_members = await event.fetch_users()
+                                        if event.name == filtre_clean:
+                                                filtre_members = [member async for member in event.fetch_users()]
                                                 break
                         
                         if filtre_members == None:
@@ -135,7 +137,7 @@ class Lol(commands.Cog):
                 summoners : List[Summoner] = []
                 for user_id_str in self.summoners.getall():
                         member = inter.guild.get_member(int(user_id_str))
-                        if member and member in filtre_members:
+                        if member and (filtre_members == None or member in filtre_members):
                                 summoners.append(await self.watcher.get_summoner_by_name(self.summoners.get(user_id_str)))
                                 members.append(member)
                 
@@ -148,9 +150,8 @@ class Lol(commands.Cog):
                 await inter.edit_original_message(
                         embed = FS.Embed(
                                 title=f"{FS.Assets.Emotes.lol} __**CLASSEMENT LOL**__",
-                                description="\n".join([ f"> {sorted_summoners[i].tier_emote} **{sorted_summoners[i].rank}** __**{sorted_members[i].display_name}**__"  for i in range(len(sorted_members))]),
-                                thumbnail=FS.Assets.Images.Tournament.ClashBanner,
-                                footer_text="""Tu n'es pas dans le classement ? Lie ton compte discord avec ton compte League of Legends en utilisant "/lol account" !"""
+                                description='\n'.join([ f"> {sorted_summoners[i].tier_emote} **{sorted_summoners[i].rank}** __**{sorted_members[i].mention}**__ *({sorted_summoners[i].name})*"  for i in range(len(sorted_members))]) + (f"\n\n*Filtre : {filtre}*\n" if filtre else "\n"),
+                                footer_text="""Tu n'es pas dans le classement ?\nLie ton compte League of Legends en utilisant "/lol account" !"""
                         )
                 )
                 
@@ -159,10 +160,10 @@ class Lol(commands.Cog):
                 filtres = []
                 for role in inter.guild.roles:
                         if role.name.lower().startswith(user_input.lower()):
-                                filtres.append(f"@{role.name}")
+                                filtres.append(f"👥 {role.name}")
                 for event in inter.guild.scheduled_events:
                         if event.name.lower().startswith(user_input.lower()):
-                                filtres.append(event.name)
+                                filtres.append(f"📅 {event.name}")
                 return filtres  
                 
  
