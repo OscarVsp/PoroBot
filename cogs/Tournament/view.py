@@ -1,12 +1,6 @@
-from code import interact
-from collections import namedtuple
-import os
-from secrets import choice
-from tabnanny import check
 import disnake 
 from disnake import ApplicationCommandInteraction
 from disnake.ext.commands import InteractionBot
-from cogs.Tournament.classes import Tournament2v2Roll
 import modules.FastSnake as FS
 from modules.FastSnake.ChoicesView import ButtonChoice
 from modules.FastSnake.Embed import Embed
