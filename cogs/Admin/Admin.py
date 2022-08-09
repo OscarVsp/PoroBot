@@ -34,7 +34,7 @@ class Admin(commands.Cog):
                         description=f"```{stdout.decode().strip()}```"
                     )
                 await inter.edit_original_message(embed=embed)
-                if restart:
+                if restart and stdout.decode().strip() != "Already up to date.":
                     await self.restart_proc(inter)
             else :
                 await inter.edit_original_message(embed=FS.Embed(
