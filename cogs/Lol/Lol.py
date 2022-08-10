@@ -163,7 +163,7 @@ class Lol(commands.Cog):
                         "inline": True
                     },
                     {
-                        'name': "◾◾◾◾◾◾◾◾◾◾◾◾",
+                        'name': "◾◾◾◾◾◾◾◾◾◾",
                         'value': players,
                         "inline": True
                     }
