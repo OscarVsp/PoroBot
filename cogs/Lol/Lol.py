@@ -106,13 +106,33 @@ class Lol(commands.Cog):
         name="classement",
         description="Classement League of Legends des members du serveur"
     )
-    async def classement(self, inter: ApplicationCommandInteraction):
+    async def classement(self, inter: ApplicationCommandInteraction,
+                         filtre: str = commands.Param(description="Filtrer les membres à afficher par un role ou un évenement.", default=None)):
         await inter.response.defer(ephemeral=False)
+
+        filtre_members: List[disnake.Member] = None
+
+        if filtre:
+            filtre_clean = filtre.split(' ')[1]
+            for role in inter.guild.roles:
+                if role.name == filtre_clean:
+                    filtre_members = role.members
+                    break
+
+            if filtre_members == None:
+                for event in inter.guild.scheduled_events:
+                    if event.name == filtre_clean:
+                        filtre_members = [member async for member in event.fetch_users()]
+                        break
+
+            if filtre_members == None:
+                filtre_members = inter.guild.members
+
         members: List[disnake.Member] = []
         summoners: List[Summoner] = []
         for user_id_str in self.summoners.getall():
             member = inter.guild.get_member(int(user_id_str))
-            if member:
+            if member and (filtre_members == None or member in filtre_members):
                 new_summoner = await Summoner.by_name(self.summoners.get(user_id_str))
                 await new_summoner.leagues()
                 summoners.append(new_summoner)
@@ -125,15 +145,45 @@ class Lol(commands.Cog):
         for summoner in sorted_summoners:
             sorted_members.append(members[summoners.index(summoner)])
 
+        ranks = ""
+        players = ""
+
+        for i in range(len(sorted_members)):
+            ranks += f"{(await sorted_summoners[i].leagues()).first.tier_emote} **{(await sorted_summoners[i].leagues()).first.rank}**\n"
+            players += f"**{sorted_members[i].mention}** (`{sorted_summoners[i].name}`)\n"
+
         await inter.edit_original_message(
             embed=FS.Embed(
                 title=f"{FS.Assets.Emotes.lol} __**CLASSEMENT LOL**__",
-                description="\n".join(
-                    [f"> {(await sorted_summoners[i].leagues()).first.tier_emote} **{(await sorted_summoners[i].leagues()).first.rank}** __**{sorted_members[i].display_name}**__" for i in range(len(sorted_members))]),
-                thumbnail=FS.Assets.Images.Tournament.ClashBanner,
-                footer_text="""Tu n'es pas dans le classement ? Lie ton compte discord avec ton compte League of Legends en utilisant "/lol account" !"""
+                description=(f"> *Filtre : {filtre}*" if filtre else ""),
+                fields=[
+                    {
+                        'name': "◾",
+                        'value': ranks,
+                        "inline": True
+                    },
+                    {
+                        'name': "◾◾◾◾◾◾◾◾◾◾◾◾◾◾",
+                        'value': players,
+                        "inline": True
+                    }
+                ],
+                footer_text="""Tu n'es pas dans le classement ?\nLie ton compte League of Legends en utilisant "/lol account" !"""
             )
         )
+
+    @classement.autocomplete("filtre")
+    def autocomple_filtre(self, inter: disnake.ApplicationCommandInteraction, user_input: str):
+        filtres = []
+        for role in inter.guild.roles:
+            if role.name.lower().startswith(user_input.lower()):
+                filtres.append(f"👥 {role.name}")
+        for event in inter.guild.scheduled_events:
+            if event.name.lower().startswith(user_input.lower()):
+                filtres.append(f"📅 {event.name}")
+        if len(filtres) > 25:
+            filtres = filtres[:25]
+        return filtres
 
     @commands.slash_command(
         description="Voir combien de temps et d'argent tu as dépensés sur LOL"
