@@ -62,23 +62,25 @@ class Lol(commands.Cog):
         pass
 
     async def set_summoner(self, inter: ApplicationCommandInteraction, target: disnake.User, invocateur: str):
-
-        if str(target.id) in self.summoners.getall():
-            confirm = await confirmation(inter, title="Invocateur déjà existant", message=("Tu as" if target == inter.author else f"{target.mention} a")+f" déjà le nom d'invocateur suivant enregistré : ***{self.summoners.get(str(target.id))}***\n Veux-tu le remplacer ?", timeout=120)
-            if not confirm:
-                await inter.edit_original_message(embed=FS.Embed(title="Invocteur déjà existant", description="Nom d'invocateur non changé", footer_text="Tu peux rejeter ce message pour le faire disparaitre"), view=None)
-                return
         try:
             summoner = await Summoner.by_name(invocateur)
         except SummonerNotFound:
             await inter.edit_original_message(embed=FS.Embed(title="Invocateur inconnu", description=f"Le nom d'invocateur ***{invocateur}*** ne correspond à aucun invocateur...", footer_text="Tu peux rejeter ce message pour le faire disparaitre"), view=None)
             return
 
-        confirm = await confirmation(inter, title="Valider l'invocateur", message=f"{(await summoner.leagues()).first.tier_emote} **{(await summoner.leagues()).first.rank}** __**{summoner.name}**__\n__Level :__ **{summoner.summonerLevel}**", thumbnail=summoner.icon)
+        await inter.edit_original_message(embed=(await summoner.embed(force_update=True)))
+        confirm = await confirmation(inter, title="Valider l'invocateur", message=f"Est-ce bien ton compte ?")
 
         if not confirm:
-            await inter.edit_original_message(embed=FS.Embed(title="Invocteur déjà existant", description="Nom d'invocateur non changé", footer_text="Tu peux rejeter ce message pour le faire disparaitre"), view=None)
+            await inter.edit_original_message(embed=FS.Embed(title="Invocateur refusé.", description="Nom d'invocateur non changé.", footer_text="Tu peux rejeter ce message pour le faire disparaitre"), view=None)
             return
+
+        if str(target.id) in self.summoners.getall():
+            confirm = await confirmation(inter, title="Invocateur déjà existant", message=("Tu as" if target == inter.author else f"{target.mention} a")+f" déjà le nom d'invocateur suivant enregistré : ***{self.summoners.get(str(target.id))}***\n Veux-tu le remplacer ?", timeout=120)
+            if not confirm:
+                await inter.edit_original_message(embed=FS.Embed(title="Invocteur inchangé", description="Nom d'invocateur non changé", footer_text="Tu peux rejeter ce message pour le faire disparaitre"), view=None)
+                return
+
         self.summoners.set(str(target.id), invocateur)
         self.summoners.dump()
         await inter.edit_original_message(embed=FS.Embed(title="Invocateur enregistré", description=f"L'invocateur ***{invocateur}*** à bien été lié avec " + ("ton compte discord !" if inter.author == target else f"le compte discord de {target.mention}"), footer_text="Tu peux rejeter ce message pour le faire disparaitre."), view=None)
@@ -154,7 +156,7 @@ class Lol(commands.Cog):
 
         await inter.edit_original_message(
             embed=FS.Embed(
-                title=f"{FS.Assets.Emotes.lol} __**CLASSEMENT LOL**__",
+                title=f"{FS.Assets.Emotes.Lol.Logo} __**CLASSEMENT LOL**__",
                 description=(f"> *Filtre : {filtre}*" if filtre else ""),
                 fields=[
                     {
@@ -184,6 +186,37 @@ class Lol(commands.Cog):
         if len(filtres) > 25:
             filtres = filtres[:25]
         return filtres
+    
+    @lol.sub_command(
+        name="live",
+        description="Info sur une partie en cours"
+    )
+    async def live(self, inter: ApplicationCommandInteraction,
+                         invocateur: str = commands.Param(description="Le nom de l'invocateur.")):
+        await inter.response.defer(ephemeral=False)
+        
+        try:
+            summoner = await Summoner.by_name(invocateur)
+        except SummonerNotFound:
+            await inter.edit_original_message(embed=FS.Embed(title="Invocateur inconnu", description=f"Le nom d'invocateur ***{invocateur}*** ne correspond à aucun invocateur...", footer_text="Tu peux rejeter ce message pour le faire disparaitre"), view=None)
+            await inter.delete_original_message(delay = 3)
+            return
+        
+        await inter.edit_original_message(embeds=[await summoner.embed(force_update=True),FS.Embed(description="*Recherche de game en cours...*")])
+
+        live_game = await summoner.currentGame()
+        if live_game:
+            await inter.edit_original_message(embeds=[await summoner.embed(),(await live_game.embed())])
+        
+        else:
+            await inter.edit_original_message(embeds=[(await summoner.embed()),FS.Embed(description="*Pas de partie en cours*")])
+            await inter.delete_original_message(delay=30)
+            
+            
+
+        
+
+        
 
     @commands.slash_command(
         description="Voir combien de temps et d'argent tu as dépensés sur LOL"

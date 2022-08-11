@@ -1,19 +1,39 @@
+import time
 from typing import Dict, List, Optional
 from riotwatcher import LolWatcher, ApiError
 from .exceptions import LeagueNotFound, MasteriesNotFound, SummonerNotFound, TeamNotFound, WatcherNotInit
 import modules.FastSnake as FS
 import disnake
 import asyncio
+import requests
+import json
 
 
 class Watcher:
 
-    REGION = "euw1"
-    WATCHER = None
+    REGION: str = "euw1"
+    WATCHER: LolWatcher = None
+    VERSION: str = None
+    CHAMPIONS: dict = {}
+    QUEUETYPE : List[dict] = []
+    QUEUES : List[dict] = []
+    MAPS : List[dict] = []
+
 
     @classmethod
     def init(cls, api_key: str):
         cls.WATCHER = LolWatcher(api_key=api_key)
+        cls.VERSION = json.loads(requests.get(
+            "https://ddragon.leagueoflegends.com/api/versions.json").text)[0]
+        cls.CHAMPIONS = json.loads(requests.get(
+            f"https://ddragon.leagueoflegends.com/cdn/{cls.VERSION}/data/en_US/champion.json").text).get('data')
+        cls.QUEUETYPE = json.loads(requests.get(
+            f"https://static.developer.riotgames.com/docs/lol/queues.json").text)
+        cls.MAPS = json.loads(requests.get(
+            f"https://static.developer.riotgames.com/docs/lol/maps.json").text)
+        cls.QUEUES = json.loads(requests.get(
+            f"https://static.developer.riotgames.com/docs/lol/queues.json").text)
+
 
     @property
     def watcher(self) -> LolWatcher:
@@ -31,6 +51,28 @@ class Watcher:
             return cls.WATCHER
         raise WatcherNotInit
 
+    @classmethod
+    def champion_name_from_id(cls, champion_id: int) -> str:
+        for champion in cls.CHAMPIONS.values():
+            if champion.get('key') == str(champion_id):
+                return champion.get('name')
+        return f"Unknown (id: {champion_id})"
+            
+    @classmethod
+    def maps_name_from_id(cls, map_id : int) -> str:
+        for map in cls.MAPS:
+            if map.get('mapID') == map_id:
+                return map.get('mapName')
+        return f"Unknown (id: {map_id})"
+    
+    @classmethod
+    def queue_dict_from_id(cls, queue_id : int) -> dict:
+        for queue in cls.QUEUES:
+            if queue.get('queueId') == queue_id:
+                return queue
+        return {'map':'UNKNOWN MAP','description':'UNKNOWN GAME'}
+
+
 
 class Leagues(Watcher):
 
@@ -41,7 +83,6 @@ class Leagues(Watcher):
     TIERS = ['UNRANKED', 'IRON', 'BRONZE', 'SILVER', 'GOLD',
              'PLATINUM', 'DIAMOND', 'MASTER', 'GRANDMASTER', 'CHALLENGER']
     RANKS = ['-', 'IV', 'III', 'II', 'I']
-    
 
     class League:
 
@@ -61,14 +102,14 @@ class Leagues(Watcher):
             self.freshBlood: bool = leagueEntryDto.get('freshBlood')
             self.inactive: bool = leagueEntryDto.get('inactive')
             self.miniSeries = leagueEntryDto.get('miniSeries')
-            
+
         @staticmethod
         def default(queueType: str):
             return Leagues.League({
-                'queueType':queueType,
-                'tier':Leagues.TIERS[0],
-                'rank':Leagues.RANKS[0],
-                'leaguePoints':0
+                'queueType': queueType,
+                'tier': Leagues.TIERS[0],
+                'rank': Leagues.RANKS[0],
+                'leaguePoints': 0
             })
 
         @property
@@ -81,8 +122,8 @@ class Leagues(Watcher):
 
     def __init__(self, listLeagueEntryDto: dict):
         self._listLeagueEntryDto: List[dict] = listLeagueEntryDto
-        self.solo : Leagues.League = None
-        self.flex : Leagues.League = None
+        self.solo: Leagues.League = None
+        self.flex: Leagues.League = None
         for leagueEntryDto in listLeagueEntryDto:
             new_league = Leagues.League(leagueEntryDto)
             if new_league.queueType == Leagues.QueueType.RANKED_SOLO_5x5:
@@ -90,9 +131,11 @@ class Leagues(Watcher):
             elif new_league.queueType == Leagues.QueueType.RANKED_FLEX_SR:
                 self.flex = new_league
         if self.solo == None:
-            self.sol = Leagues.League.default(Leagues.QueueType.RANKED_SOLO_5x5)
+            self.solo = Leagues.League.default(
+                Leagues.QueueType.RANKED_SOLO_5x5)
         if self.flex == None:
-            self.flex = Leagues.League.default(Leagues.QueueType.RANKED_FLEX_SR)
+            self.flex = Leagues.League.default(
+                Leagues.QueueType.RANKED_FLEX_SR)
 
     @classmethod
     async def by_summoner_id(cls, summoner_id: str):
@@ -106,26 +149,15 @@ class Leagues(Watcher):
 
     @property
     def highest(self) -> Optional[League]:
-        if self.solo and self.flex:
-            if self.solo.absolut_score > self.flex.absolut_score:
-                return self.solo
-        elif self.solo:
+        if self.solo.absolut_score > self.flex.absolut_score:
             return self.solo
-        elif self.flex:
-            return self.flex
-        return None
+        return self.flex
 
     @property
     def first(self) -> Optional[League]:
-        if self.solo and self.flex:
-            if self.solo.tier == Leagues.RANKS[0]:
-                return self.flex
+        if self.solo.absolut_score > 0:
             return self.solo
-        elif self.solo:
-            return self.solo
-        elif self.flex:
-            return self.flex
-        return None
+        return self.flex
 
 
 class CurrentGame(Watcher):
@@ -137,6 +169,14 @@ class CurrentGame(Watcher):
             self.perkIds: List[int] = perksInfo.get('perkIds')
             self.perkStyle: int = perksInfo.get('perkIds')
             self.perkSubStyle: int = perksInfo.get('perkSubStyle')
+        
+        @property    
+        def emote(self) -> str:
+            return FS.Assets.Emotes.Lol.Rune.Generic
+        
+        @property    
+        def subEmote(self) -> str:
+            return FS.Assets.Emotes.Lol.Rune.Generic
 
     class CustomizationObject:
 
@@ -144,23 +184,51 @@ class CurrentGame(Watcher):
             self._customizationObjectInfo: dict = customizationObjectInfo
             self.category: str = customizationObjectInfo.get('category')
             self.content: str = customizationObjectInfo.get('content')
+            
+    class Team:
+        
+        def __init__(self, team_id : int) -> None:
+            self.bannedChampions : List[CurrentGame.BannedChampion] = []
+            self.participants : List[CurrentGame.Participant] = []
+            self.id : int = team_id
+            
+        @property
+        def bans_block(self) -> str:
+            return "\n".join([f"> `{b.name}`" for b in self.bannedChampions])
+        
+        async def participants_block(self) -> str:
+            return "\n".join([f"> {(await (await p.summoner()).leagues()).first.tier_emote} **{p._summoner._leagues.first.rank}** **{p.summonerName if len(p.summonerName) < 15 else p.summonerName[:15]}** - `{p.championName}`" for p in self.participants])
+            
+        @property
+        def opgg(self) -> str:
+            return f"https://euw.op.gg/multi/query={''.join([p.summonerName.replace(' ','%20')+'%2C' for p in self.participants])}"
 
+        
     class Participant:
 
         def __init__(self, participantInfo: dict):
             self._participantInfo: dict = participantInfo
-            self.championId: int = participantInfo.get('championId')
+            self.championId: str = str(participantInfo.get('championId'))
             self.perks: CurrentGame.Perks = CurrentGame.Perks(
                 participantInfo.get('perks'))
             self.profileIconId: int = participantInfo.get('profileIconId')
             self.bot: bool = participantInfo.get('bot')
             self.teamId: int = participantInfo.get('teamId')
             self.summonerName: int = participantInfo.get('summonerName')
-            self.summonerId: int = participantInfo.get('summonerId')
+            self.summonerId: str = participantInfo.get('summonerId')
             self.spell1Id: int = participantInfo.get('spell1Id')
             self.spell2Id: int = participantInfo.get('spell2Id')
             self.gameCustomizationObjects: List[CurrentGame.CustomizationObject] = [CurrentGame.CustomizationObject(
                 customizationObjectInfo) for customizationObjectInfo in participantInfo.get('gameCustomizationObjects')]
+            
+            self.championName : str = Watcher.champion_name_from_id(self.championId)
+            
+            self._summoner : Summoner = None
+            
+        async def summoner(self, force_update : bool = False):
+            if self._summoner == None or force_update:
+                self._summoner = await Summoner.by_id(self.summonerId)
+            return self._summoner
 
     class BannedChampion:
 
@@ -170,8 +238,11 @@ class CurrentGame(Watcher):
             self.championId: int = bannedChampionInfo.get('championId')
             self.teamId: int = bannedChampionInfo.get('teamId')
 
+            self.name: str = Watcher.champion_name_from_id(self.championId) if self.championId > 0 else "-"
+            
+
     def __init__(self, CurrentGameInfo: dict):
-        self._CurrentGameInfo: dict = CurrentGameInfo
+        self._currentGameInfo: dict = CurrentGameInfo
         self.gameId: int = CurrentGameInfo.get('gameId')
         self.gameType: str = CurrentGameInfo.get('gameType')
         self.gameStartTime: int = CurrentGameInfo.get('gameStartTime')
@@ -186,7 +257,40 @@ class CurrentGame(Watcher):
             "observers")).get('encryptionKey')
         self.participants: List[CurrentGame.Participant] = [CurrentGame.Participant(
             participantInfo) for participantInfo in CurrentGameInfo.get("participants")]
-
+        
+        self.teams : List[CurrentGame.Team] = []
+        for participant in self.participants:
+            team = next((team for team in self.teams if team.id == participant.teamId), None)
+            if team == None:
+                team = CurrentGame.Team(participant.teamId)
+                self.teams.append(team)
+            team.participants.append(participant)
+            
+        for bannedChampion in self.bannedChampions:
+            team = next((team for team in self.teams if team.id == bannedChampion.teamId), None)
+            team.bannedChampions.append(bannedChampion)
+            
+        for team in self.teams:
+            team.bannedChampions.sort(key=lambda b:b.pickTurn)
+        
+        self.gameLengthFormatted : str = time.strftime("%M:%S", time.gmtime(self.gameLength))
+        
+        queue : dict = self.queue_dict_from_id(self.gameQueueConfigId)
+        self.mapName : str = queue.get('map')
+        self.gameName : str = queue.get('description')[4:]
+        
+        if self.mapName == "Summoner's Rift":
+            self.mapImage : str = FS.Images.Lol.Rift
+            self.mapIcon : str = FS.Emotes.Lol.Rift
+        elif self.mapName == "Howling Abyss":
+            self.mapImage : str = FS.Images.Lol.Aram
+            self.mapIcon : str = FS.Emotes.Lol.Aram
+        else:
+            self.mapImage : str = None
+            
+        
+            
+            
     @classmethod
     async def by_summoner(cls, summoner_id: str):
         try:
@@ -195,23 +299,44 @@ class CurrentGame(Watcher):
             return CurrentGame(currentGameInfo)
         except (ApiError):
             return None
-
+        
+    
+    async def embed(self) -> disnake.Embed:
+        embed = FS.Embed(
+            title=f"{FS.Emotes.Lol.Logo} __**GAME EN COURS**__",
+            description=f"**Map :** `{self.mapName}` {self.mapIcon}\n**Type :** `{self.gameName}`\n**Durée :** `{self.gameLengthFormatted}`",
+            color=disnake.Colour.blue()
+        )
+        for i,team in enumerate(self.teams):
+            embed.add_field(
+                name=f"**__TEAM {FS.Assets.Emotes.Num(i+1)}__**",
+                value=f"{(await team.participants_block())}\n**__BANS__**\n{team.bans_block}\n\n[opgg]({team.opgg})"
+            )
+        return embed
 
 class ChampionMastery(Watcher):
 
     def __init__(self, championMasteryDto: dict):
         self._championMasteryDto: dict = championMasteryDto
-        self.id: int = championMasteryDto.get("championId")
-        self.level: int = championMasteryDto.get('championLevel')
-        self.point: int = championMasteryDto.get('championPoints')
-        self.pointToNextLevel: int = championMasteryDto.get(
+        self.championId: str = str(championMasteryDto.get("championId"))
+        self.championLevel: int = championMasteryDto.get('championLevel')
+        self.championPoints: int = championMasteryDto.get('championPoints')
+        self.championPointsUntilNextLevel: int = championMasteryDto.get(
             'championPointsUntilNextLevel')
-        self.pointSinceLastLevel: int = championMasteryDto.get(
+        self.championPointsSinceLastLevel: int = championMasteryDto.get(
             'championPointsSinceLastLevel')
-        self.chest: bool = championMasteryDto.get('chestGranted')
+        self.chestGranted: bool = championMasteryDto.get('chestGranted')
         self.lastPlayTime: int = championMasteryDto.get('lastPlayTime')
-        self.level: int = championMasteryDto.get('championLevel')
         self.currentToken: int = championMasteryDto.get('tokensEarned')
+
+        self.name: str = Watcher.champion_name_from_id(self.championId)
+        num = float('{:.3g}'.format(self.championPoints))
+        magnitude = 0
+        while abs(num) >= 1000:
+            magnitude += 1
+            num /= 1000.0
+        self.championPointsFormatted: str = '{}{}'.format('{:f}'.format(
+            num).rstrip('0').rstrip('.'), ['', 'K', 'M', 'B', 'T'][magnitude])
 
     @classmethod
     async def by_summoner_and_champion(cls, encrypted_summoner_id: str, champion_id: str):
@@ -222,14 +347,19 @@ class ChampionMastery(Watcher):
             return ChampionMastery(championMasteryDto)
         raise WatcherNotInit
 
+    @property
+    def line_description(self) -> str:
+        return f"{FS.Assets.Emotes.Lol.Mastery[self.championLevel]} **{self.name}** *({self.championPointsFormatted})*"
+
 
 class Masteries(Watcher):
 
-    def __init__(self, listChampionMasteryDto):
+    def __init__(self, listChampionMasteryDto : dict):
         self._listChampionMasteryDto: List[dict] = listChampionMasteryDto
         self.champions: List[ChampionMastery] = []
         for championMasteryDto in listChampionMasteryDto:
             self.champions.append(ChampionMastery(championMasteryDto))
+        self.champions.sort(key=lambda x: x.championPoints, reverse=True)
 
     @classmethod
     async def by_summoner(cls, id: str):
@@ -255,6 +385,7 @@ class Summoner(Watcher):
         self.profileIconId = summonerDto.get('profileIconId')
 
         self.icon = f"https://raw.communitydragon.org/pbe/plugins/rcp-be-lol-game-data/global/default/v1/profile-icons/{self.profileIconId}.jpg"
+        self.opgg = f"https://euw.op.gg/summoners/euw/{self.name.replace(' ','%20')}"
 
         self._leagues: Leagues = None
         self._masteries: Masteries = None
@@ -279,19 +410,19 @@ class Summoner(Watcher):
         except (ApiError):
             return None
 
-    async def leagues(self, force_request: bool = False) -> Leagues:
-        if self._leagues == None or force_request:
+    async def leagues(self, force_update: bool = False) -> Leagues:
+        if self._leagues == None or force_update:
             self._leagues = await Leagues.by_summoner_id(self.id)
         return self._leagues
 
-    async def masteries(self, force_request: bool = False) -> Masteries:
-        if self._masteries == None or force_request:
+    async def masteries(self, force_update: bool = False) -> Masteries:
+        if self._masteries == None or force_update:
             self._masteries = await Masteries.by_summoner(self.id)
         return self._masteries
 
-    async def currentGame(self, force_request: bool = True) -> Optional[CurrentGame]:
-        if self._currentGame == None or force_request:
-            if force_request:
+    async def currentGame(self, force_update: bool = True) -> Optional[CurrentGame]:
+        if self._currentGame == None or force_update:
+            if force_update:
                 self._lastGame = self._currentGame
             self._currentGame = await CurrentGame.by_summoner(self.id)
         return self._currentGame
@@ -299,6 +430,32 @@ class Summoner(Watcher):
     def lastGame(self) -> Optional[CurrentGame]:
         return self._lastGame
 
+    async def embed(self, force_update : bool = False) -> disnake.Embed:
+        embed = FS.Embed(
+            description=f"{FS.Assets.Emotes.Lol.Xp} **LEVEL**\n> **{self.summonerLevel}**",
+            author_icon_url=FS.Assets.Images.Lol.Logo,
+            author_url=self.opgg,
+            author_name=self.name,
+            color=disnake.Colour.blue(),
+            thumbnail=self.icon
+        )
+        if force_update:
+            await self.leagues(force_update=True)
+            await self.masteries(force_update=True)
+        if self._masteries:
+            embed.add_field(
+                name=f'{FS.Assets.Emotes.Lol.Mastery[0]} **MASTERIES**',
+                value=("\n".join([f"> {self._masteries.champions[i].line_description}" for i in range(min(3,len(self._masteries.champions)))]) if len(self._masteries.champions) > 0 else f"{FS.Assets.Emotes.Lol.Mastery[0]} *Aucune maitrise*"),
+                inline=False
+            )
+        if self._leagues or force_update:
+            leagues = (await self.leagues())
+            embed.add_field(
+                name=f'{FS.Assets.Emotes.Lol.Rank.Generic} **RANKED**',
+                value=f"> **Solo/Duo :** {leagues.solo.tier_emote} **{leagues.solo.rank}** *({leagues.solo.leaguePoints} LP)*\n> **Flex :** {leagues.flex.tier_emote} **{leagues.flex.rank}** *({leagues.flex.leaguePoints} LP)*",
+                inline=False
+            )
+        return embed
 
 class ClashPlayer(Summoner):
 
@@ -350,8 +507,8 @@ class ClashTeam(Watcher):
         self.listPlayerDto: dict = TeamDto.get('players')
         self._players: List[ClashPlayer] = None
 
-    async def players(self, force_request: bool = False) -> List[ClashPlayer]:
-        if self._players == None or force_request:
+    async def players(self, force_update: bool = False) -> List[ClashPlayer]:
+        if self._players == None or force_update:
             temp: Dict[List[ClashPlayer]] = {"TOP": [], "JUNGLE": [], "MIDDLE": [
             ], "BOTTOM": [], "UTILITY": [], "FILL": [], "UNSELECTED": []}
             for playerDto in self.listPlayerDto:
