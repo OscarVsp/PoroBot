@@ -8,7 +8,7 @@ from typing import List, Union
 import modules.FastSnake as FS
 from modules.FastSnake.ConfirmationView import ConfirmationReturnData
 from modules.FastSnake.ShadowMember import MISSING
-from modules.FastSnake.Views import confirmation
+from modules.FastSnake.Views import confirmation, memberSelection
 from .view import Locker
 from deep_translator import GoogleTranslator
 
@@ -76,9 +76,9 @@ class Server(commands.Cog):
             gt = 0
         )
     ):
-        confirm : ConfirmationReturnData = await FS.confirmation(inter,
+        confirm : ConfirmationReturnData = await confirmation(inter,
                                title=f"__**Suppression de {nombre} message(s)**__",
-                               message=f"Êtes-vous sûr de vouloir supprimer les {nombre} dernier(s) message(s) de ce channel ?\nCette action est irréversible !",
+                               description=f"Êtes-vous sûr de vouloir supprimer les {nombre} dernier(s) message(s) de ce channel ?\nCette action est irréversible !",
                                timeout=30)
         if confirm:
             await inter.edit_original_message(embed=FS.Embed(description = f"Suppression de {nombre} message(s) en cours... ⌛", color=disnake.Colour.green()), view=None)
@@ -97,9 +97,9 @@ class Server(commands.Cog):
         categorie : disnake.CategoryChannel = commands.Param(description = "Choisissez categorie à suppimer")
     ):
 
-        if await FS.confirmation(inter,
+        if await confirmation(inter,
                               title=f"__**Suppression de la categorie *{categorie.name}***__",
-                              message=f"Êtes-vous sûr de vouloir supprimer la catégorie ***{categorie.mention}*** ?\nCela supprimera également les {len(categorie.channels)} channels contenus dans celle-ci :\n"+"\n".join(channel.mention for channel in categorie.channels)+"\nCette action est irréversible !"):
+                              description=f"Êtes-vous sûr de vouloir supprimer la catégorie ***{categorie.mention}*** ?\nCela supprimera également les {len(categorie.channels)} channels contenus dans celle-ci :\n"+"\n".join(channel.mention for channel in categorie.channels)+"\nCette action est irréversible !"):
             await inter.edit_original_message(embed=FS.Embed(description = f"Suppression de la catégorie *{categorie.name}* en cours... ⌛", color=disnake.Colour.green()), view=None)
             for channel in categorie.channels:
                 await channel.delete()
@@ -143,7 +143,7 @@ class Server(commands.Cog):
         async for member in event.fetch_users():
             event_members.append(member)
         
-        response = await FS.memberSelection(inter, title="Export role from event", message="Select members below", timeout=300, pre_selection=event_members)    
+        response = await memberSelection(inter, title="Export role from event", description="Select members below", timeout=300, pre_selection=event_members)    
         if response:
             new_role : disnake.Role = await inter.guild.create_role(name=name)
             for member in response.members:
@@ -171,7 +171,7 @@ class Server(commands.Cog):
         if not name:
             name = f"{role.name} copy"
 
-        response = await FS.memberSelection(inter, title="Export role from role", size = 4, message="Select members to export to the new role", timeout=300, pre_selection=role.members)    
+        response = await memberSelection(inter, title="Export role from role", size = 4, description="Select members to export to the new role", timeout=300, pre_selection=role.members)    
         if response:
             new_role : disnake.Role = await inter.guild.create_role(name=name)
             for member in response.members:
@@ -234,7 +234,7 @@ class Server(commands.Cog):
                     footer_icon_url=footer_icon_url
                 ) 
             await inter.edit_original_message(embed=embed)
-            if (await confirmation(inter, message="Confirmer l'envoie du message ?",color=disnake.Colour.purple())):
+            if (await confirmation(inter, description="Confirmer l'envoie du message ?",color=disnake.Colour.purple())):
                 await channel.send(
                     content=mention.mention if mention else None,
                     embed=embed
@@ -286,7 +286,7 @@ class Server(commands.Cog):
                     footer_icon_url=footer_icon_url
                 ) 
             await inter.edit_original_message(embed=embed)
-            if (await confirmation(inter, message="Confirmer l'envoie du message ?",color=disnake.Colour.purple())):
+            if (await confirmation(inter, description="Confirmer l'envoie du message ?",color=disnake.Colour.purple())):
                 if isinstance(target, disnake.Role):
                     for member in target.members:
                         await member.send(embed=embed)

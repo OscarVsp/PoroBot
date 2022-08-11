@@ -1,14 +1,14 @@
 import disnake
 from typing import List, Optional, Union
-from modules.FastSnake.ConfirmationView import ConfirmationReturnData, ConfirmationView
+from modules.FastSnake.ConfirmationView import ConfirmationReturnData, ConfirmationView, Target
 
 from .Assets import Emotes
 
 
 class MemberSelectionView(ConfirmationView):
     
-    def __init__(self, inter : disnake.Interaction, title : str, message : str, timeout : int, pre_selection : List[disnake.Member], check,  size : Union[List[int],int] = None, color : disnake.Colour = disnake.Colour.default()):
-        super().__init__(inter, title, message, timeout, color)
+    def __init__(self, target : Target, title : str, description : str, timeout : int, pre_selection : List[disnake.Member] = None, check = None,  size : Union[List[int],int] = None, color : disnake.Colour = disnake.Colour.default()):
+        super().__init__(target, title, description, timeout, color)
         
         self.size : Union[List[int],int] = size
 
@@ -50,13 +50,13 @@ class MemberSelectionView(ConfirmationView):
         self.remove.options = []
         self.add.options = []
         self.options_limited = False
-        for member in self.inter.guild.members:
+        for member in self.target.guild.members:
             if member in self.selected_members:
                 if len(self.remove.options) < 25:
                     self.remove.options.append(disnake.SelectOption(label=member.display_name, value=str(member.id)))
                 else:
                     self.options_limited = True
-            elif self.check(member=member, selected_members=self.selected_members, original_interaction=self.inter, size=self.size):
+            elif self.check(member=member, selected_members=self.selected_members, original_interaction=self.target, size=self.size):
                 if len(self.add.options) < 25:
                     self.add.options.append(disnake.SelectOption(label=member.display_name, value=str(member.id)))
                 else:

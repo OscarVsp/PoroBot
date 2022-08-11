@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union
 import disnake
 from .Embed import Embed
 from enum import Enum
@@ -8,14 +8,17 @@ class State(Enum):
     CONFIRMED = 1
     TIMEOUT = 2
     UNKOWN = 3
+    
+Target = Union[disnake.Interaction,disnake.TextChannel,disnake.Message]
 
 class ConfirmationView(disnake.ui.View):
     
-    def __init__(self, inter : disnake.Interaction, title : str, message : str, timeout : int, color : disnake.Colour = disnake.Colour.default(), thumbnail : str = None):
+    def __init__(self, target : Target, title : str, description : str, timeout : int, color : disnake.Colour = disnake.Colour.default(), thumbnail : str = None):
         super().__init__(timeout=timeout)
-        self.inter : disnake.Interaction = inter
+        self.target : Target = target
+        self.message_to_delete : disnake.Message = None
         self.title : str = title
-        self.message : str = message
+        self.description : str = description
         self.thumbnail : str = thumbnail if thumbnail else disnake.Embed.Empty
         self.color : disnake.Colour = color
         
@@ -26,58 +29,60 @@ class ConfirmationView(disnake.ui.View):
     def embed(self) -> disnake.Embed:
         return Embed(
             title=self.title,
-            description=self.message,
+            description=self.description,
             thumbnail=self.thumbnail,
             color=self.color
         )
             
     async def send(self):
-        if isinstance(self.inter, disnake.ApplicationCommandInteraction) or isinstance(self.inter, disnake.MessageInteraction):
-            if self.inter.response.is_done():
-                self.original_embeds = (await self.inter.original_message()).embeds
-                await self.inter.edit_original_message(embeds=self.original_embeds+[self.embed], view=self)
+        if isinstance(self.target, disnake.ApplicationCommandInteraction) or isinstance(self.target, disnake.MessageInteraction):
+            if self.target.response.is_done():
+                self.original_embeds = (await self.target.original_message()).embeds
+                await self.target.edit_original_message(embeds=self.original_embeds+[self.embed], view=self)
             else:
-                await self.inter.response.send_message(embed=self.embed, view=self, ephemeral=True)
+                await self.target.response.send_message(embed=self.embed, view=self, ephemeral=True)
+        elif isinstance(self.target, disnake.TextChannel):
+            self.message_to_delete = await self.target.send(embed=self.embed, view=self)
+        elif isinstance(self.target, disnake.Message):
+            self.message_to_delete = await self.target.channel.send(embed=self.embed,view=self)
         else:
-            if self.inter.response.is_done():
-                await self.inter.edit_original_message(embed=self.embed, view=self)
+            if self.target.response.is_done():
+                await self.target.edit_original_message(embed=self.embed, view=self)
             else:
-                await self.inter.response.send_message(embed=self.embed, view=self, ephemeral=True)
+                await self.target.response.send_message(embed=self.embed, view=self, ephemeral=True)
             
-    async def update(self, inter : disnake.MessageInteraction = None):
-        if inter == None:
-            await self.inter.edit_original_message(
-                embeds = self.original_embeds+ self.embed,
-                view = self
+    async def update(self, inter : disnake.MessageInteraction):
+        if inter.response.is_done():
+            await inter.edit_original_message(
+                embeds=self.original_embeds+[self.embed],
+                view=self
             )
         else:
-            if inter.response.is_done():
-                await inter.edit_original_message(
-                    embeds=self.original_embeds+[self.embed],
-                    view=self
-                )
-            else:
-                await inter.response.edit_message(
-                    embeds=self.original_embeds+[self.embed],
-                    view=self
-                )
+            await inter.response.edit_message(
+                embeds=self.original_embeds+[self.embed],
+                view=self
+            )
+            
+    async def end(self) -> None:
+        self.stop()
+        if self.message_to_delete:
+            await self.message_to_delete.delete()
 
     @disnake.ui.button(label = "Confirmer", emoji="✅", style=disnake.ButtonStyle.green)
     async def confirm(self, button : disnake.ui.Button, interaction : disnake.MessageInteraction):
         await interaction.response.defer()
         self.state = State.CONFIRMED
-        self.stop()
+        await self.end()
         
-            
     @disnake.ui.button(label = "Annuler", emoji="❌", style=disnake.ButtonStyle.danger)
     async def cancel(self, button : disnake.ui.Button, interaction : disnake.MessageInteraction):
         await interaction.response.defer()
         self.state = State.CANCELLED
-        self.stop()
+        await self.end()
         
     async def on_timeout(self) -> None:
-        await self.inter.edit_original_message(embed=Embed(description="⭕ Timeout",color=disnake.Colour.dark_grey()))
         self.state = State.TIMEOUT
+        await self.end()
           
           
 

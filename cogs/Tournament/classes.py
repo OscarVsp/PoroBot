@@ -848,6 +848,7 @@ class Round(Container):
         
 class TournamentData(Container):
     def __init__(self,
+                 guild : disnake.Guild,
                  name : str, 
                  size : int, 
                  nb_round : int, 
@@ -862,6 +863,7 @@ class TournamentData(Container):
         super().__init__()
         if len(weigths) != size_of_scores:
             raise ValueError('"Size of scores" and "weights" are not compatible.')
+        self.guild : disnake.Guild = guild
         self._name : str = name
         self._size : int = size
         self._players : List[Player] = None
@@ -876,6 +878,26 @@ class TournamentData(Container):
         self._nb_players_per_team : int = nb_players_per_team
         self._nb_point_to_win_match : int = nb_point_to_win_match
         self._last_state : dict = None
+        self._classement_title : str = "🏆 __**CLASSEMENT**__ 🏆"
+        self._rounds_title : str = "📅 __**ROUNDS**__ 📅"
+        self._rules_title : str = "📜 __**RÈGLES**__ 📜"
+        self._admin_title : str = "🛠️ __**ADMIN DASHBOARD**__ 🛠️"
+        
+        self.everyone: disnake.Role = self.guild.default_role
+        self.category: disnake.CategoryChannel = None
+        self.notif_channel: disnake.TextChannel = None
+        self.classement_channel: disnake.TextChannel = None
+        self.rounds_channel: disnake.TextChannel = None
+        self.rules_channel: disnake.TextChannel = None
+        self.admin_channel: disnake.TextChannel = None
+        self.voice_channels: List[List[disnake.VoiceChannel]] = []
+        self.voice_general: disnake.VoiceChannel = None
+        self.notif_messages: List[disnake.Message] = []
+        self.classement_message: disnake.Message = None
+        self.rounds_message: disnake.Message = None
+        self.rules_message: disnake.Message = None
+        self.admin_message: disnake.Message = None
+        
         
     @property
     def name(self) -> str:
@@ -985,9 +1007,9 @@ class TournamentData(Container):
     def classement_embed(self) -> disnake.Embed:
         if self.state == State.INIT:
             return FS.Embed(
-                title="🏆 __**CLASSEMENT**__ 🏆",
+                title=self._classement_title,
                 color = disnake.Colour.gold(),
-                description="*Le classement sera affiché ici lorsque les participants auront été sélectionnés.*"
+                description="*Le classement sera affiché ici une fois que le tournoi aura commencée.*"
             )
         else:
             return None
@@ -996,9 +1018,9 @@ class TournamentData(Container):
     def rounds_embeds(self) -> List[disnake.Embed]:
         if self.state <= State.SET:
             return FS.Embed(
-                title="📅 __**ROUNDS**__",
+                title=self._rounds_title,
                 color = disnake.Colour.lighter_grey(),
-                description="*Les rounds seront affichés ici une fois que la phase aura commencée.*"
+                description="*Les rounds seront affichés ici une fois que le tournoi aura commencée.*"
             )
         else:
             return None
@@ -1011,14 +1033,20 @@ class TournamentData(Container):
     def admin_embeds(self) -> List[disnake.Embed]:
         if self.state == State.INIT:
             return FS.Embed(
-                title="__**ADMIN DASHBOARD**__",
+                title=self._admin_title,
                 color = disnake.Colour.lighter_grey(),
-                description="*Utilise le dashboard du tournoi pour sélectionner les participants du tournoi et commencer la phase.*"  #TODO link
+                description="ERROR !"
             )
         else:
             return None
+        
+    async def build(self) -> None:
+        pass
     
-    def generate(self) -> None:
+    async def set_players(self, players : List[disnake.Member]) -> None:
+        self._players = players
+        
+    async def update(self) -> None:
         pass
     
     def getRanking(self) -> List[Player]:
@@ -1064,7 +1092,7 @@ class TournamentData(Container):
         self.get_round(round).clear_score(match, entity, index)   
 
     def clear_scores(self, round : Union[Round,int], match : Union[Match,int], entity : Union[Entity,int],) -> None:
-        self.get_round(round).clear_scores(match, entity)   
+        self.get_round(round).clear_scores(match, entity)  
         
     @property
     def MSE(self) -> int:
@@ -1088,7 +1116,7 @@ class TournamentData(Container):
     def save_state(self) -> None:
         self._last_state : dict = dict(self)
   
-    def restore_from_last_state(self) -> None:
+    async def restore_from_last_state(self) -> None:
         for round in self.last_state.get('rounds'):
             for match in round.get('entities'):
                 for team in match.get("entities"):

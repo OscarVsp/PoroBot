@@ -1,7 +1,7 @@
 from typing import List, Optional, Tuple, Union
 
 from modules.FastSnake.ChoicesView import ButtonChoice, QCMReturnData, QCMView, QRMReturnData, QRMView
-from .ConfirmationView import ConfirmationReturnData, ConfirmationView
+from .ConfirmationView import ConfirmationReturnData, ConfirmationView, Target
 from .MemberSelectionView import MemberSelectionReturnData, MemberSelectionView
 
 import disnake
@@ -12,9 +12,9 @@ async def process(confirmationvView : ConfirmationView) -> ConfirmationView:
     return confirmationvView
 
 async def confirmation(
-    inter : disnake.Interaction,
+    target : Target,
     title : str = "Confirmation",
-    message : str = "Confirmer l'action ?",
+    description : str = "Confirmer l'action ?",
     thumbnail : str = disnake.Embed.Empty,
     timeout : int = None,
     color : disnake.Colour = disnake.Colour.red()) -> ConfirmationReturnData:
@@ -29,12 +29,12 @@ async def confirmation(
 
     Parameters
     ----------
-        inter (`disnake.Interaction`):
+        target (`Target`):
             The interaction for which the confirmation occurs.
         title (`str`, `optional`): 
             Title of the confirmation embed.
             Defaults to `"Confirmation"`.
-        message (`str`, `optional`): 
+        description (`str`, `optional`): 
             Message of the confirmation embed.
             Defaults to `"Confirmer l'action ?"`.
         timeout (`int`, `optional`): 
@@ -48,13 +48,13 @@ async def confirmation(
     --------
         `ConfirmationReturnData`
     """
-    return ConfirmationReturnData((await process(ConfirmationView(inter=inter, title=title, message=message, thumbnail = thumbnail, timeout=timeout, color=color))))
+    return ConfirmationReturnData((await process(ConfirmationView(target=target, title=title, description=description, thumbnail = thumbnail, timeout=timeout, color=color))))
 
 
 async def memberSelection(
-    inter : disnake.Interaction,
+    target : Target,
     title : str = "Sélection des membres",
-    message : str = "",
+    description : str = "",
     size : Union[int, List[int]] = None,
     timeout : int = None,
     pre_selection : List[disnake.Member] = None,
@@ -71,12 +71,12 @@ async def memberSelection(
 
     Parameters
     ----------
-        inter (`disnake.Interaction`):
+        target (`Target`):
             The interaction for which the confirmation occurs.
         title (`str`, `optional`): 
             Title of the confirmation embed.
             Defaults to `"Confirmation"`.
-        message (`str`, `optional`): 
+        description (`str`, `optional`): 
             Message of the confirmation embed.
             Defaults to `"Confirmer l'action ?"`.
         size (`int`|`List[int]`, `optional`): 
@@ -104,7 +104,7 @@ async def memberSelection(
             The list of members that are already selected.
         size (`List[int]`):
             The list of possible nombre(s) of member selected to be able to validate.
-        original_interaction (`disnake.Interaction`):
+        original_interaction (`Target`):
             The original interaction received by the confirmationView at the beginning.
             
 
@@ -112,15 +112,15 @@ async def memberSelection(
     --------
         `MemberSelectionReturnData`
     """
-    return MemberSelectionReturnData(await process(MemberSelectionView(inter=inter, title=title, message=message, timeout=timeout, size=size, pre_selection=pre_selection, check=check, color=color)))
+    return MemberSelectionReturnData(await process(MemberSelectionView(target=target, title=title, description=description, timeout=timeout, size=size, pre_selection=pre_selection, check=check, color=color)))
 
 
 async def QCM(
-    inter : disnake.Interaction,
+    target : Target,
     choices : List[ButtonChoice],
     pre_selection : Optional[str],
     title : str = "Choix",
-    message : str = "Choisissez parmit les propositions ci-dessous",
+    description : str = "Choisissez parmit les propositions ci-dessous",
     timeout : int = None,
     color : disnake.Colour = disnake.Colour.purple()) -> QCMReturnData:
     """|coro|\n
@@ -134,7 +134,7 @@ async def QCM(
 
     Parameters
     ----------
-        inter (`disnake.Interaction`):
+        target (`Target`):
             The interaction for which the confirmation occurs.
         choices (`List[ButtonChoice]`)
             The choices available. Either `str` for label only, or `Tuple[str,str]` for `(label,emoji)`.
@@ -143,7 +143,7 @@ async def QCM(
         title (`str`, `optional`): 
             Title of the confirmation embed.
             Defaults to `"Confirmation"`.
-        message (`str`, `optional`): 
+        description (`str`, `optional`): 
             Message of the confirmation embed.
             Defaults to `"Confirmer l'action ?"`.
         timeout (`int`, `optional`): 
@@ -157,17 +157,17 @@ async def QCM(
     --------
         `QCMReturnData`
     """
-    return QCMReturnData(await process(QCMView(inter, title, message, timeout, color, choices, pre_selection)))
+    return QCMReturnData(await process(QCMView(target, title, description, timeout, color, choices, pre_selection)))
 
 
 async def QRM(
-    inter : disnake.Interaction,
+    target : Target,
     choices : List[ButtonChoice],
     pre_selection : list[ButtonChoice] = None,
     min : int = 0,
     max : int = None,
     title : str = "Choix",
-    message : str = "Choisissez parmit les propositions ci-dessous",
+    description : str = "Choisissez parmit les propositions ci-dessous",
     timeout : int = None,
     color : disnake.Colour = disnake.Colour.purple()) -> QRMReturnData:
     """|coro|\n
@@ -181,7 +181,7 @@ async def QRM(
 
     Parameters
     ----------
-        inter (`disnake.Interaction`):
+        target (`Target`):
             The interaction for which the confirmation occurs.
         choices (`List[ButtonChoice]`):
             The choices available.
@@ -197,7 +197,7 @@ async def QRM(
         title (`str`, `optional`): 
             Title of the confirmation embed.
             Defaults to `"Choix"`.
-        message (`str`, `optional`): 
+        description (`str`, `optional`): 
             Message of the confirmation embed.
             Defaults to `"Choisissez parmit les propositions ci-dessous"`.
         timeout (`int`, `optional`): 
@@ -211,4 +211,4 @@ async def QRM(
     --------
         `QRMReturnData`
     """
-    return QRMReturnData(await process(QRMView(inter, title, message, timeout, color, choices, pre_selection, min, max)))
+    return QRMReturnData(await process(QRMView(target, title, description, timeout, color, choices, pre_selection, min, max)))
