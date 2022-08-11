@@ -197,7 +197,7 @@ class Player(ShadowMember):
 class Team:
     
     def __init__(self, phase, players : List[Player], round_idx : int, match_idx : int, team_idx : int, size_of_scores : int = 1):
-        self._phase : Phase = phase
+        self._phase : TournamentData = phase
         self._players : List[Player] = players
         self._round_idx : int = round_idx
         self._match_idx : int = match_idx
@@ -583,7 +583,7 @@ class Container:
 #Class for a match between two teams, with attributs for the teams and the winner, and method to add points to a team
 class Match(Container):
     def __init__(self, phase, round_idx : int, match_idx : int, entities : List[Entity] = None):
-        self._phase : Phase = phase
+        self._phase : TournamentData = phase
         self._round_idx : int = round_idx
         self._match_idx : int = match_idx
         self._entities : List[Entity] = entities
@@ -721,7 +721,7 @@ class Round(Container):
     
     def __init__(self, phase, round_idx : int, matches : List[Match] = None):
         super().__init__()
-        self._phase : Phase = phase
+        self._phase : TournamentData = phase
         self._round_idx : int = round_idx
         self._matches : List[Match] = matches
         
@@ -846,19 +846,25 @@ class Round(Container):
         yield 'round_idx', self.round_idx
         yield 'entities', [dict(e) for e in self._matches]
         
-
-class Phase(Container):
-    
-    def __init__(self, stage_idx : int, phase_idx : int, name : str, size : int, nb_round : int = None, nb_matches_per_round : int = None, nb_teams_per_match : int = None, nb_players_per_team : int = None, size_of_scores : int = 1, weigths : List[float] = [1], scores_descriptor : List[str] = None, score_emoji : List[str] =None,  nb_point_to_win_match : int = 2):
+class TournamentData(Container):
+    def __init__(self,
+                 name : str, 
+                 size : int, 
+                 nb_round : int, 
+                 nb_matches_per_round : int, 
+                 nb_teams_per_match : int, 
+                 nb_players_per_team : int, 
+                 size_of_scores : int, 
+                 weigths : List[float], 
+                 scores_descriptor : List[str], 
+                 score_emoji : List[str],  
+                 nb_point_to_win_match : int):
         super().__init__()
         if len(weigths) != size_of_scores:
             raise ValueError('"Size of scores" and "weights" are not compatible.')
-        self._stage_idx : int = stage_idx
-        self._phase_idx : int = phase_idx
         self._name : str = name
         self._size : int = size
         self._players : List[Player] = None
-        self._role : disnake.Role = None
         self._rounds : List[Round] = None
         self._size_of_scores : int = size_of_scores
         self._scores_descriptor : List[str] = scores_descriptor if scores_descriptor else ['point']
@@ -870,51 +876,11 @@ class Phase(Container):
         self._nb_players_per_team : int = nb_players_per_team
         self._nb_point_to_win_match : int = nb_point_to_win_match
         self._last_state : dict = None
-        self.view : disnake.ui.View = None
-        self.start_flag : bool = False
-        
-    async def set_role(self, role : disnake.Role) -> None:
-        self._role : disnake.Role = role
-        self._players : List[Player] = [Player(member, size_of_scores=self._size_of_scores, weights=self._weigths) for member in role.members]
-        self.generate()
-        await self.view.generate()
-        
-    async def start(self) -> None:
-        self.start_flag = True
-        await self.view.update()
-        
-    async def delete(self) -> None:
-        await self.view.delete_cat()
-        
         
     @property
     def name(self) -> str:
         return self._name
-    
-    @property
-    def emotes(self) -> str:
-        return f"{FS.Assets.Emotes.Num(self.stage_idx+1)}{FS.Assets.Emotes.Alpha[self.phase_idx]}"
-    
-    @property
-    def role(self) -> disnake.Role:
-        return self._role
-    
-    @property
-    def stage_idx(self) -> int:
-        return self._stage_idx
-    
-    @property
-    def phase_idx(self) -> int:
-        return self._phase_idx
-    
-    @property
-    def title(self) -> str:
-        return f"{self.stage_idx+1}{chr(ord('A') + self.phase_idx)} - {self.name}"
-    
-    @property
-    def title_emote(self) -> str:
-        return f"{self.emotes} {self.name}"
-    
+        
     @property
     def score_desriptor(self) -> List[str]:
         return self._scores_descriptor
@@ -941,7 +907,7 @@ class Phase(Container):
 
     @property
     def state(self) -> State:
-        if self._players and self._rounds and self.start_flag:
+        if self._players and self._rounds:
             seted = True
             started = False
             ended = True
@@ -989,7 +955,7 @@ class Phase(Container):
     
     @property
     def weights(self) -> List[int]:
-        return self._weights
+        return self._weigths
     
     @property
     def nb_rounds(self) -> int:
@@ -1130,370 +1096,3 @@ class Phase(Container):
                     if (players[0].get('id') == self.rounds[round.get('round_idx')].matches[match.get('match_idx')].teams[team.get("team_idx")].players[0].id
                     and players[1].get('id') == self.rounds[round.get('round_idx')].matches[match.get('match_idx')].teams[team.get("team_idx")].players[1].id):
                         self.set_scores(round.get("round_idx"),match.get('match_idx'),team.get("team_idx"),team.get('scores'))   
-  
-class Phase2v2Roll(Phase):
- 
-    class Score:
-        KILLS : int = 0
-        TURRETS : int = 1
-        CS : int = 2
-        
-    class Seeding:
-        S4 : List[List[List[List[int]]]] = [
-            [
-                [[2, 3],[1, 4]]
-            ],[
-                [[1, 3],[2, 4]]
-            ],[
-                [[1, 2],[3, 4]]
-            ]
-        ]
-    
-        S5 : List[List[List[List[int]]]] = [
-            [
-                [[4, 5],[2, 3]]
-            ],[
-                [[1, 3],[2, 4]]
-            ],[
-                [[1, 5],[3, 4]]
-            ],[
-                [[2, 5],[1, 4]]
-            ],[
-                [[1, 2],[3, 5]]
-            ]
-        ]
-        
-        S8 : List[List[List[List[int]]]] = [
-            [
-                [[3, 4],[7, 8]],
-                [[5, 6],[1, 2]]
-            ],[
-                [[6, 8],[5, 7]],
-                [[1, 3],[2, 4]]
-            ],[
-                [[1, 4],[5, 8]],
-                [[6, 7],[2, 3]]
-            ],[
-                [[4, 8],[2, 6]],
-                [[3, 7],[1, 5]]
-            ],[
-                [[3, 8],[1, 6]],
-                [[2, 5],[4, 7]]
-            ],[
-                [[2, 8],[3, 5]],
-                [[4, 6],[1, 7]]
-            ],[
-                [[1, 8],[2, 7]],
-                [[4, 5],[3, 6]]
-            ]
-        ]
-
-    def __init__(self, stage_idx : int, phase_idx : int, size):
-
-        if size == 4:
-            self._seeding : List[List[List[List[int]]]] = Phase2v2Roll.Seeding.S4
-        elif size == 5:
-            self._seeding : List[List[List[List[int]]]] = Phase2v2Roll.Seeding.S5
-        elif size == 8:
-            self._seeding : List[List[List[List[int]]]] = Phase2v2Roll.Seeding.S8 
-
-        
-        super().__init__(
-            stage_idx,
-            phase_idx,
-            "2v2 Roll",
-            size,
-            nb_round=len(self._seeding), 
-            nb_matches_per_round=len(self._seeding[0]), 
-            nb_teams_per_match=len(self._seeding[0][0]),
-            nb_players_per_team=len(self._seeding[0][0][0]), 
-            size_of_scores=3, 
-            weigths=[1.001,1,0.989],
-            scores_descriptor=["kill(s)","turret(s)","cs"],
-            score_emoji=["⚔️","🧱","🧙‍♂️"],
-            nb_point_to_win_match=2
-        )
-           
-    def generate(self) -> None:
-        if self.players == None:
-            raise PlayersNotSetError
-        self.shuffle_players()
-        self._rounds = []
-        for round_idx in range(self._nb_rounds):
-            matches = []
-            for match_idx in range(self._nb_matches_per_round):
-                teams = []
-                for team_idx in range(2):
-                    teams.append(Team(self,[self._players[self._seeding[round_idx][match_idx][team_idx][0]-1],self._players[self._seeding[round_idx][match_idx][team_idx][1]-1]],round_idx,match_idx,team_idx,3))
-                matches.append(Match(self, round_idx, match_idx, teams))
-            self._rounds.append(Round(self, round_idx, matches))
-        self.save_state()
-        
-    @property
-    def classement_embed(self) -> disnake.Embed:
-        embed = super().classement_embed
-        if embed:
-            return embed
-        sorted_players : List[Player] = self.getRanking()
-        ranks = self.rank_emotes(sorted_players)
-        return FS.Embed(
-            title = "🏆 __**CLASSEMENT**__ 🏆",
-            color = disnake.Colour.gold(),
-            fields=[
-                {
-                    'name':"🎖️➖__*Joueurs*__",
-                    'value':"\n".join([f"{ranks[i]}➖**{p.display}**" for i,p in enumerate(sorted_players)]),
-                    'inline':True
-                },
-                {
-                    'name':"💎",
-                    'value':"\n".join([f" **{round(p.points)}**" for p in self.getRanking()]),
-                    'inline':True
-                },
-                {
-                    'name':"➖➖➖➖➖➖➖➖➖➖➖➖➖",
-                    'value':"""> **Calcul des points**
-                    > 💎 Points **=** ⚔️ Kill  **+**  🧱 Tour  **+**  🧙‍♂️ 100cs
-                    > **En cas d'égalité**
-                    > ⚔️ Kill  **>**  🧱 Tour  **>**  🧙‍♂️ 100cs
-                    """,
-                    'inline':False
-                }
-            ]
-        )
-   
-    @property
-    def rounds_embeds(self) -> List[disnake.Embed]:
-        embed = super().rounds_embeds
-        if embed:
-            return [embed]
-        return [round.embed for round in self.rounds]
-       
-    @property
-    def rules_embed(self) -> disnake.Embed:
-        return FS.Embed(
-            title = ":scroll: __**RÈGLES**__ :scroll:",
-            color = disnake.Colour.purple(),
-            fields = [
-                {
-                    'name':"__**Format du tournoi**__",
-                    'value':f"""Le tournoi se joue individuellement mais les matchs se font par **équipe de 2**. Ces équipes changent à chaque match. Ceci est fait en s'assurant que chacun joue
-                            > ✅ __avec__ chaque autres joueurs exactement :one: fois
-                            > :x: __contre__ chaque autres joueurs exactement :two: fois.
-                            Il y aura donc **{self._nb_rounds} rounds**"""+(f"avec **{self._nb_matches_per_round} matchs** en parallèles." if self._nb_matches_per_round>1 else ".")
-                },
-                {
-                    'name':"__**Format d'un match**__",
-                    'value':"""Les matchs sont en **BO1** se jouant en 2v2 selon le format suivant :
-                            > 🌍 __Map__ : Abime hurlante
-                            > 👓 __Mode__ : Blind
-                            > ❌ __Bans__ : 3 par équipe *(à faire via le chat dans le lobby **pré-game**)*"""
-                },
-                {
-                    'name':"__**Règles d'un match**__",
-                    'value':"""> ⛔ __Interdiction__ de prendre les healts **extérieurs** *(ceux entre la **T1** et la **T2**)*.
-                            > ✅ __Le suicide__ est autorisé et ne compte pas comme un kill.
-                            > ✅ __L'achat d'objet__ lors d'une mort est autorisé."""
-                },
-                {
-                    'name':"__**Score d'un match**__",
-                    'value':"""Le match se finit lorsque l'une des deux équipes a **2 points**. Une équipe gagne **1 point** pour :
-                            > ⚔️  __Chaque kills__
-                            > 🧱 __1e tourelle de la game__
-                            > 🧙‍♂️ __1e joueur d'une équipe à 100cs__"""
-                },
-                {
-                    'name':"__**Score personnel**__",
-                    'value':f"""Les points obtenus en équipe lors d'un match sont ajoutés au score personnel de chaque joueur *(indépendamment de qui a marqué le point)*.
-                            À la fin des {self._nb_rounds} rounds, c'est les points personnels qui détermineront le classement."""
-                },
-                {
-                    'name':"__**Égalité**__",
-                    'value':f"""En cas d'égalité, on départage avec ⚔️ **kills** > 🧱 **Tourelles** > 🧙‍♂️ **100cs**.
-                            En cas d'égalité parfaite pour la 2ième place, un **1v1** en BO1 est organisé *(même règles, mais **1 point** suffit pour gagner)*."""
-                },
-                {
-                    'name':"__**Phase finale**__",
-                    'value':f"""À la fin des {self._nb_rounds} rounds, un BO5 en **1v1** sera joué entre le **1er** et le **2ième** du classement pour derterminer le grand vainqueur. Pour chaque **{round((self._nb_rounds*2)/5)} point(s)** d'écart, un match d'avance sera accordé au **1er** *(jusqu'à un maximum de 2 matchs d'avance)*.
-                    > __*Exemple :*__
-                    > **Lỳf** est 1er avec **{self._nb_rounds*2} points** mais **Gay Prime** est 2ième avec **{self._nb_rounds*2-round((self._nb_rounds*2)/5)} points**
-                    > ⏭️ **BO5** commençant à **1-0** en faveur de **Lỳf**."""
-                }
-            ]
-        )
-         
-    @property
-    def admin_embeds(self) -> List[disnake.Embed]:
-        embed = super().admin_embeds
-        if embed:
-            return [embed]
-        embeds = [round.embed_detailled for round in self.rounds]
-        sorted_players : List[Player] = self.getRanking()
-        ranks = self.rank_emotes(sorted_players)
-        embeds.append(FS.Embed(
-            title = "🏆 __**CLASSEMENT**__🏆 ",
-            color = disnake.Colour.gold(),
-            fields=[
-                {
-                    'name':"🎖️➖__*Joueurs*__",
-                    'value':"\n".join([f"{ranks[i]}➖**{p.display}**" for i,p in enumerate(sorted_players)]),
-                    'inline':True
-                },
-                {
-                    'name':"💎 __**Points**__",
-                    'value':"\n".join([f"**{round(p.points)}** *({p.scores[self.Score.KILLS]}  {p.scores[self.Score.TURRETS]}  {p.scores[self.Score.CS]})*" for p in self.getRanking()]),
-                    'inline':True
-                },
-                {
-                    'name':"➖➖➖➖➖➖➖➖➖➖➖➖➖",
-                    'value':f"> MSE = {self.MSE}",
-                    'inline':False
-                }
-            ]
-        ))
-        return embeds
-    
-                  
-  
-class Stage(Container):
-    
-    def __init__(self):
-        self._phases : List[Phase] = []       
-        
-    @property
-    def state(self) -> State:
-        if self._phases:
-            seted = True
-            started = False
-            ended = True
-            
-            for phase in self._phases:
-                seted = seted and (phase.state >= State.SET)
-                started = started or (phase.state >= State.STARTED)
-                ended = ended and (phase.state == State.ENDED)
-                
-            if ended:
-                return State.ENDED
-            elif started:
-                return State.STARTED
-            elif seted:
-                return State.SET
-        
-        return State.INIT
-        
-    @property
-    def phases(self) -> List[Phase]:
-        return self._phases
-    
-    def add_phase(self, phase : Phase) -> None:
-        self._phases.append(phase)
-  
-                
-class Tournament:
-    
-    def __init__(self, name : str, role : disnake.Role):
-        self._name : str = name
-        self._role: disnake.Role = role
-        self._stages : List[Stage] = []
-        
-    def add_phase(self, phase : Phase, stage_index : int = None):
-        if stage_index == None:
-            stage_index = len(self._stages)
-
-        if stage_index < len(self._stages):
-            self._stages[stage_index].add_phase(phase)
-        elif stage_index == len(self._stages):
-            new_stage : Stage = Stage()
-            new_stage.add_phase(phase)
-            self._stages.append(new_stage)
-        else:
-            raise IndexError("Index cannot be higher that the current size of phase")
-        
-    async def remove_phase(self, phase_to_remove : Phase):
-        for stage in self._stages:
-            for phase in stage._phases:
-                if phase == phase_to_remove:
-                    stage._phases.remove(phase)
-                    await phase.delete()
-                    if len(stage._phases) == 0:
-                        self._stages.remove(stage)
-                    return
-        
-    
-                
-    @property
-    def stages(self) -> List[Stage]:
-        return self._stages
-        
-    @property
-    def phases(self) -> List[Phase]:
-        phases : list[Phase] = []
-        for stage in self._stages:
-            for phase in stage.phases:
-                phases.append(phase)
-        return phases
-
-    @property
-    def role(self) -> disnake.Role:
-        return self._role
-    
-    @property
-    def name(self) -> str:
-        return self._name
-
-
-    @property
-    def embed(self) -> disnake.Embed:
-        fields = []
-        
-        for stage in self._stages:
-            phases = stage.phases
-            if len(phases) > 1:
-                fields.append({'name':f"__**Phase **__{FS.Assets.Emotes.Num(self._stages.index(stage)+1)}", 'value':'➖'})
-                for phase in phases:
-                    fields.append({'name':f"{phase.emotes} __**{phase.name}**__", 'value':("\n> ".join([f'{p.display_name}' for p in phase.players]) if phase.players else "*À déterminer...*"), 'inline':True})
-            else:
-                fields.append({'name':f"__**Phase **__{phases[0].emotes} : __**{phases[0].name}**__", 'value':("\n> ".join([f'{p.display_name}' for p in phases[0].players]) if phases[0].players else "*À déterminer...*"), 'inline':False})
-        
-        return FS.Embed(
-            title = f"🏆 __**{self._name.upper()}**__ 🏆",
-            description="__**Joueurs :**__\n"+"\n".join([f'> {member.mention}' for member in self._role.members]),
-            fields = fields
-        )
-            
-            
-    def next_phase_ready(self) -> bool:
-        for stage in self._stages:
-            if stage.state == State.SET:
-                return True
-            elif stage.state == State.INIT or stage.state == State.STARTED:
-                return False
-        return False
-            
-            
-    def next_phases(self) -> List[Phase]:
-        for stage in self._stages:
-            if stage.state == State.SET:
-                return stage.phases
-            elif stage.state == State.INIT or stage.state == State.STARTED:
-                return None
-        return None
-    
-    def current_phases(self) -> Optional[List[Phase]]:
-        current_stage : Stage = None
-        for stage in self._stages:
-            if stage.state == State.SET or stage.state == State.STARTED:
-                current_stage = stage
-                break
-            elif stage.state == State.ENDED:
-                current_stage = stage
-            elif stage.state == State.INIT:
-                return None
-        return current_stage.phases if current_stage else None
-            
-
-        
-        
-
-
-    
