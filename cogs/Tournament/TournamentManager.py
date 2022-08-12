@@ -1,32 +1,49 @@
 from typing import List
-from modules.FastSnake.Views import memberSelection
 from .classes import *
-from .view import TournamentView
+from .view import PlayerSelectionView, AdminView
 
 
 class Tournament(TournamentData):
 
-    def __init__(self, guild: disnake.Guild, name: str, size: int, nb_round: int = None, nb_matches_per_round: int = None, nb_teams_per_match: int = None, nb_players_per_team: int = None, size_of_scores: int = 1, weigths: List[float] = [1], scores_descriptor: List[str] = None, score_emoji: List[str] = None,  nb_point_to_win_match: int = 2):
-        super().__init__(guild, name, size, nb_round, nb_matches_per_round, nb_teams_per_match,
-                         nb_players_per_team, size_of_scores, weigths, scores_descriptor, score_emoji,  nb_point_to_win_match)
-        self.admin_view: TournamentView = None
+    def __init__(self,
+                 guild: disnake.Guild,
+                 name: str,
+                 size: int, 
+                 banner: str = None, 
+                 nb_round: int = None, 
+                 nb_matches_per_round: int = None, 
+                 nb_teams_per_match: int = None, 
+                 nb_players_per_team: int = None, 
+                 scoreSet : ScoreSet = ScoreSet.default(),
+                 nb_point_to_win_match: int = 2):
+        super().__init__(guild, 
+                         name, 
+                         banner if banner else FS.Images.Tournament.ClashBanner, 
+                         size, 
+                         nb_round, 
+                         nb_matches_per_round,
+                         nb_teams_per_match,
+                         nb_players_per_team, 
+                         scoreSet,
+                         nb_point_to_win_match)
+        self.admin_view: PlayerSelectionView = None
 
     async def build(self) -> None:
         self.category = await self.guild.create_category(self.name.upper())
         cat_perm_everyone = disnake.PermissionOverwrite()
         cat_perm_everyone.send_messages = False
         cat_perm_everyone.connect = True
+        cat_perm_everyone.view_channel = False
         await self.category.set_permissions(self.everyone, overwrite=cat_perm_everyone)
         self.notif_channel = await self.category.create_text_channel(name="🔔 Annonces")
         self.classement_channel = await self.category.create_text_channel(name="🏅 Classement")
         self.rounds_channel = await self.category.create_text_channel(name="📅 Rounds")
         self.rules_channel = await self.category.create_text_channel(name="📜 Règles")
         self.admin_channel = await self.category.create_text_channel(name="🔧 Admin")
-        voice_perm = disnake.PermissionOverwrite()
-        voice_perm.connect = True
-        voice_perm.send_messages = True
-        self.voice_general = await self.category.create_text_channel(name="🏆 General")
-        await self.voice_general.set_permissions(self.everyone, overwrite=voice_perm)
+        admin_perm = disnake.PermissionOverwrite()
+        admin_perm.view_channel = False
+        await self.admin_channel.set_permissions(self.everyone, overwrite=admin_perm)
+        self.voice_general = await self.category.create_voice_channel(name="🏆 General")
         for i in range(self._nb_matches_per_round):
             self.voice_channels.append([])
             for j in range(self._nb_teams_per_match):
@@ -39,35 +56,41 @@ class Tournament(TournamentData):
         self.classement_message = await self.classement_channel.send(embed=self.classement_embed)
         self.rounds_message = await self.rounds_channel.send(embeds=self.rounds_embeds)
         self.rules_message = await self.rules_channel.send(embed=self.rules_embed)
-        
+        playerSelectionView = PlayerSelectionView(self)
+        self.admin_message = await self.admin_channel.send(embed=playerSelectionView.embed, view=playerSelectionView)
+        cat_perm_everyone.send_messages = False
+        cat_perm_everyone.connect = True
+        cat_perm_everyone.view_channel = True
+        await self.category.set_permissions(self.everyone, overwrite=cat_perm_everyone)
+        text_voice_channel_perm = disnake.PermissionOverwrite()
+        text_voice_channel_perm.send_messages = True
+        await self.voice_general.set_permissions(self.everyone, overwrite=text_voice_channel_perm)
+        for match in self.voice_channels:
+            for team in match:
+                await team.set_permissions(self.everyone, overwrite=text_voice_channel_perm)
 
-    async def set_players(self) -> None:
-        selection = await memberSelection(target=self.admin_channel,title=self._admin_title,description="Sélectionner les participants",size=self.size)#custom View for it
-        if selection:
-            self._players = selection.members
-            await self.generate()
-            self.admin_view = TournamentView(self)
-            self.admin_message = await self.admin_message.edit(embeds=self.admin_embeds,view=self.admin_view)
-            await self.update()
-        else:
-            await self.delete()
-        
+    async def set_players(self, members: List[disnake.Member]) -> None:
+        await self.admin_message.delete()
+        await super().set_players(members)
+        self.generate_round()
+        self.admin_view = AdminView(self)
+        self.admin_message = await self.admin_channel.send(embeds=self.admin_embeds, view=self.admin_view)
+        await self.update()
 
-    async def generate(self) -> None:
+    def generate_round(self) -> None:
         pass
 
     async def update(self) -> None:
         self.classement_message = await self.classement_message.edit(embed=self.classement_embed)
         self.rounds_message = await self.rounds_message.edit(embeds=self.rounds_embeds)
         self.rules_message = await self.rules_message.edit(embed=self.rules_embed)
-        
-    async def set_score(self, round: Union[Round, int], match: Union[Match, int], entity: Union[Entity, int], value: int = 1, index: int = 0) -> None:
-        super().set_score(round, match, entity, value, index)
-        await self.update()
+        self.save_state()
 
-    async def set_scores(self, round: Union[Round, int], match: Union[Match, int], entity: Union[Entity, int], values: List[int]) -> None:
+    def set_score(self, round: Union[Round, int], match: Union[Match, int], entity: Union[Entity, int], value: int = 1, index: int = 0) -> None:
+        super().set_score(round, match, entity, value, index)
+
+    def set_scores(self, round: Union[Round, int], match: Union[Match, int], entity: Union[Entity, int], values: List[int]) -> None:
         super().set_scores(round, match, entity, values)
-        await self.update()
 
     async def send_notif(self, title: str, description: str) -> None:
         self.notif_messages.append(await self.notif_channel.send(FS.Embed(
@@ -92,11 +115,6 @@ class Tournament(TournamentData):
 
 
 class Tournament2v2Roll(Tournament):
-
-    class Score:
-        KILLS: int = 0
-        TURRETS: int = 1
-        CS: int = 2
 
     class Seeding:
         S4: List[List[List[List[int]]]] = [
@@ -168,14 +186,15 @@ class Tournament2v2Roll(Tournament):
             nb_matches_per_round=len(self._seeding[0]),
             nb_teams_per_match=len(self._seeding[0][0]),
             nb_players_per_team=len(self._seeding[0][0][0]),
-            size_of_scores=3,
-            weigths=[1.001, 1, 0.989],
-            scores_descriptor=["kill(s)", "turret(s)", "cs"],
-            score_emoji=["⚔️", "🧱", "🧙‍♂️"],
+            scoreSet=ScoreSet([
+                    Score(id=1,score_size=3,name="Kill",emoji="⚔️",weigth=1.001,per_team=2),
+                    Score(id=2,score_size=3,name="Turret",emoji="🧱",weigth=1.0,per_team=1),
+                    Score(id=3,score_size=3,name="CS",emoji="🧙‍♂️",weigth=0.989,per_team=1),
+                ]),
             nb_point_to_win_match=2
         )
 
-    def generate(self) -> None:
+    def generate_round(self) -> None:
         if self.players == None:
             raise PlayersNotSetError
         self.shuffle_players()
@@ -185,10 +204,27 @@ class Tournament2v2Roll(Tournament):
             for match_idx in range(self._nb_matches_per_round):
                 teams = []
                 for team_idx in range(2):
-                    teams.append(Team(self, [self._players[self._seeding[round_idx][match_idx][team_idx][0]-1],
-                                 self._players[self._seeding[round_idx][match_idx][team_idx][1]-1]], round_idx, match_idx, team_idx, 3))
-                matches.append(Match(self, round_idx, match_idx, teams))
-            self._rounds.append(Round(self, round_idx, matches))
+                    teams.append(Team(
+                        [
+                            self._players[self._seeding[round_idx][match_idx][team_idx][0]-1],
+                            self._players[self._seeding[round_idx][match_idx][team_idx][1]-1]
+                        ], 
+                        round_idx, 
+                        match_idx, 
+                        team_idx, 
+                        self._scoreSet
+                    ))
+                matches.append(Match(
+                    self.nb_point_to_win_match,
+                    round_idx,
+                    match_idx, 
+                    teams
+                ))
+            self._rounds.append(Round(
+                self, 
+                round_idx, 
+                matches
+            ))
         self.save_state()
 
     @property
@@ -214,7 +250,7 @@ class Tournament2v2Roll(Tournament):
                 },
                 {
                     'name': "➖➖➖➖➖➖➖➖➖➖➖➖➖",
-                    'value': """> **Calcul des points**
+                    'value': f"""> **Calcul des points**
                     > 💎 Points **=** ⚔️ Kill  **+**  🧱 Tour  **+**  🧙‍♂️ 100cs
                     > **En cas d'égalité**
                     > ⚔️ Kill  **>**  🧱 Tour  **>**  🧙‍♂️ 100cs
@@ -286,11 +322,10 @@ class Tournament2v2Roll(Tournament):
 
     @property
     def admin_embeds(self) -> List[disnake.Embed]:
-        embed = super().admin_embeds
-        if embed:
-            return [embed]
-        embeds = [FS.Embed(title=self._admin_title)] + \
-            [round.embed_detailled for round in self.rounds]
+        embeds = super().admin_embeds
+        if embeds:
+            return embeds
+        embeds = [FS.Embed(title=self._admin_title)]
         sorted_players: List[Player] = self.getRanking()
         ranks = self.rank_emotes(sorted_players)
         embeds.append(FS.Embed(
@@ -304,7 +339,7 @@ class Tournament2v2Roll(Tournament):
                 },
                 {
                     'name': "💎 __**Points**__",
-                    'value': "\n".join([f"**{round(p.points)}** *({p.scores[self.Score.KILLS]}  {p.scores[self.Score.TURRETS]}  {p.scores[self.Score.CS]})*" for p in self.getRanking()]),
+                    'value': "\n".join([f"**{round(p.points)}** *({' '.join([str(score) for score in p.scores])})*" for p in sorted_players]),
                     'inline':True
                 },
                 {
@@ -314,4 +349,5 @@ class Tournament2v2Roll(Tournament):
                 }
             ]
         ))
+        embeds += [round.embed_detailled for round in self.rounds]
         return embeds

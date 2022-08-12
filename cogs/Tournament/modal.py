@@ -1,9 +1,10 @@
 import disnake
 from modules import FastSnake as FS
+from .classes import TournamentData
 
 class NotificationModal(disnake.ui.Modal):
     
-    def __init__(self, phaseView):
+    def __init__(self, tournament : TournamentData):
         components = [
             disnake.ui.TextInput(
                 label="Le titre du message à envoyer",
@@ -24,23 +25,21 @@ class NotificationModal(disnake.ui.Modal):
                 custom_id="banner"
             ),
         ]
-        self.phaseView = phaseView
+        self.tournament : TournamentData = tournament
         super().__init__(title="Création d'une annonce", components=components, timeout=600)
             
        
         
     async def callback(self, interaction: disnake.ModalInteraction) -> None:
         await interaction.response.defer()
-        embed = self.phaseView.annonce_embed(
+        embed = FS.Embed(
             title=f"__**{interaction.text_values.get('title')}**__",
             description=interaction.text_values.get("description"),
-            banner = interaction.text_values.get("banner")
+            image = interaction.text_values.get("banner") if interaction.text_values.get("banner") else self.tournament.banner
         )
-        msg : disnake.Message = await self.phaseView.channel_overview.send(
-            content=self.phaseView.phase.role.mention,
-            embed=embed
-        )
-        msg = await interaction.edit_original_message(embed=FS.Embed(title="✅ __**Notification sent**__",description=f"[Notification]({msg.jump_url}) has been sent to {self.phaseView.channel_overview.mention} !"))
+        msg = await self.tournament.notif_channel.send(embed=embed)
+        self.tournament.notif_messages.append(msg)
+        msg = await interaction.edit_original_message(embed=FS.Embed(title="✅ __**Notification sent**__",description=f"[Notification]({msg.jump_url}) has been sent to {self.tournament.notif_channel.mention} !"))
         await msg.delete(delay=2)
         
         

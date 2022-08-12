@@ -73,7 +73,7 @@ class MemberSelectionView(ConfirmationView):
         self.add.max_values = len(self.add.options)
         
         if self.size:
-            self.confirm.disabled = (not len(self.selected_members) in self.size if isinstance(self.size, list) else len(self.selected_members) == self.size)
+            self.confirm.disabled = (not len(self.selected_members) in self.size if isinstance(self.size, list) else len(self.selected_members) != self.size)
             if self.confirm.disabled:
                 self.confirm.label = "Nombre de membre invalide"
             else:
@@ -96,7 +96,7 @@ class MemberSelectionView(ConfirmationView):
                             ])
     async def add(self, select : disnake.ui.Select, interaction : disnake.MessageInteraction):
         for member in interaction.guild.members:
-            if str(member.id) in select.values:
+            if str(member.id) in select.values and member not in self.selected_members:
                 self.selected_members.append(member)
                 self.remove.disabled=False
         self.refresh_selection()

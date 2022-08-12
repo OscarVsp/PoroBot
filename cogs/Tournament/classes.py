@@ -4,7 +4,7 @@ import disnake
 import modules.FastSnake as FS
 from modules.FastSnake.ShadowMember import ShadowMember, VocalGuildChannel, Components
 import logging
-from typing import List, Union, Optional, Sequence, overload
+from typing import List, Tuple, Union, Optional, Sequence, overload
 
 class State(Enum):
     
@@ -89,17 +89,17 @@ class PlayersNotSetError(Exception):
         
 class UnknownRoundError(Exception):
     def __init__(self):
-        self.message = "This round does not belong to this phase"
+        self.message = "This round does not belong to this tournament"
         super().__init__()
         
 class UnknownMatchError(Exception):
     def __init__(self):
-        self.message = "This match does not belong to this phase"
+        self.message = "This match does not belong to this tournament"
         super().__init__()
         
 class UnknownEntityError(Exception):
     def __init__(self):
-        self.message = "This entity does not belong to this phase"
+        self.message = "This entity does not belong to this tournament"
         super().__init__()
         
 class ScoreIndexOutOfRange(Exception):
@@ -112,12 +112,59 @@ class ScoreSizeNotMatching(Exception):
         self.message = "The size of the score don't match"
         super().__init__()
         
+class Score:
+    
+    def __init__(self, id : int = 1, score_size : int = 1, name : str = "Point", emoji : str = "💎", weigth : float = 1.0, per_team : int = 1):
+        self.name : str = name
+        self.emoji : str = emoji
+        self.weigth : float = weigth
+        self.per_team : int = per_team
+        self.id : int = id-1
+        self.score_size : int = score_size
+        
+    @property
+    def options(self) -> List[disnake.SelectOption]:
+        return [disnake.SelectOption(label=self.name, emoji=self.emoji, value=f"{self.id}{i}") for i in range(self.per_team)]
+    
+class ScoreSet:
+    
+    def __init__(self, scores : List[Score]):
+        self.scores : List[Score] = scores
+    
+    @property
+    def options(self) -> List[disnake.SelectOption]:
+        options : List[disnake.SelectOption] = []
+        for score in self.scores:
+            options += score.options
+        options.append(disnake.SelectOption(label="Rien",emoji="⭕", value="-"))
+        return options
+    
+    @property
+    def size(self) -> int:
+        return len(self.scores)
+    
+    @property
+    def weights(self) -> List[float]:
+        return [s.weigth for s in self.scores]
+    
+    @property
+    def names(self) -> List[str]:
+        return [s.name for s in self.scores]
+    
+    @property
+    def emojis(self) -> List[str]:
+        return [s.emoji for s in self.scores]
+    
+    @staticmethod
+    def default():
+        return ScoreSet([Score()])
+        
 class Player(ShadowMember):
     
-    def __init__(self, member : disnake.Member, size_of_scores : int = 1, weights : List[float] = [1]):
+    def __init__(self, member : disnake.Member, scoreSet : ScoreSet):
         super().__init__(member)
-        self._scores : List[int] = [0 for _ in range(size_of_scores)]
-        self._weights : List[float] = weights
+        self._scores : List[int] = [0 for _ in range(scoreSet.size)]
+        self._scoreSet : ScoreSet = scoreSet
         
     @property
     def score(self, index : int = 0) -> int:
@@ -134,7 +181,7 @@ class Player(ShadowMember):
     
     @property
     def points(self) -> int:
-        return sum([self._scores[i]*self._weights[i] for i in range(len(self._scores))])
+        return sum([self._scores[i]*self._scoreSet.weights[i] for i in range(len(self._scores))])
 
     
     @property
@@ -196,13 +243,13 @@ class Player(ShadowMember):
         
 class Team:
     
-    def __init__(self, phase, players : List[Player], round_idx : int, match_idx : int, team_idx : int, size_of_scores : int = 1):
-        self._phase : TournamentData = phase
+    def __init__(self, players : List[Player], round_idx : int, match_idx : int, team_idx : int, scoreSet : ScoreSet):
         self._players : List[Player] = players
         self._round_idx : int = round_idx
         self._match_idx : int = match_idx
         self._team_idx : int = team_idx
-        self._scores : List[int] = [0 for _ in range(size_of_scores)]
+        self._scores : List[int] = [0 for _ in range(scoreSet.size)]
+        self._scoreSet : ScoreSet = scoreSet
         
     @property
     def round_idx(self) -> int:
@@ -245,21 +292,19 @@ class Team:
         return self._scores
     
     @property
-    def scores_description(self) -> str:
-        descriptor = self._phase._scores_descriptor
-        if descriptor:      
-            text = ""
-            for i in range(len(self._scores)):
-                if self._scores[i]:
-                    text += f"{self._scores[i]} {descriptor[i]}, "
-            if text == "":
-                return "Nothing"
-            return text[:len(text)-2]
-        return str(self._scores)
+    def scores_description(self) -> str:  
+        text = ""
+        for i in range(len(self._scores)):
+            if self._scores[i]:
+                text += f"{self._scores[i]} {self._scoreSet.names[i]}, "
+        if text == "":
+            return "Rien"
+        return text[:len(text)-2]
+   
     
     @property
     def points(self) -> int:
-        return sum([self._scores[i]*self.phase.weights[i] for i in range(len(self._scores))])
+        return sum([self._scores[i]*self._scoreSet.weights[i] for i in range(len(self._scores))])
     
     @property
     def log_id(self) -> str:
@@ -582,8 +627,8 @@ class Container:
     
 #Class for a match between two teams, with attributs for the teams and the winner, and method to add points to a team
 class Match(Container):
-    def __init__(self, phase, round_idx : int, match_idx : int, entities : List[Entity] = None):
-        self._phase : TournamentData = phase
+    def __init__(self, nb_point_to_win_match : int, round_idx : int, match_idx : int, entities : List[Entity] = None):
+        self._nb_point_to_win_match : int = nb_point_to_win_match
         self._round_idx : int = round_idx
         self._match_idx : int = match_idx
         self._entities : List[Entity] = entities
@@ -593,7 +638,7 @@ class Match(Container):
         if self._entities:
             started = False
             for entity in self._entities:
-                if round(entity.points) >= self._phase.nb_point_to_win_match:
+                if round(entity.points) >= self._nb_point_to_win_match:
                     return State.ENDED
                 if entity.points > 0:
                     started = True
@@ -627,7 +672,7 @@ class Match(Container):
     
     @property
     def point_to_win(self) -> int:
-        return self._phase.nb_point_to_win_match
+        return self._nb_point_to_win_match
     
     @property
     def title(self) -> str:
@@ -640,7 +685,7 @@ class Match(Container):
         else:
             indicators = ['⬛' for _ in range(len(self._entities))]
         for i,entity in enumerate(self._entities):
-            if round(entity.points) >= self._phase.nb_point_to_win_match:
+            if round(entity.points) >= self._nb_point_to_win_match:
                 indicators[i] = '✅'
         return {'name':self.title,'value':"\n".join([f"{indicators[i]}{FS.Emotes.Num(round(e.points))} {e.display}" for i,e in enumerate(self._entities)]),'inline':True}
       
@@ -651,7 +696,7 @@ class Match(Container):
         else:
             indicators = ['⬛' for _ in range(len(self._entities))]
         for i,entity in enumerate(self._entities):
-            if round(entity.points) >= self._phase.nb_point_to_win_match:
+            if round(entity.points) >= self._nb_point_to_win_match:
                 indicators[i] = '✅'
         return {'name':self.title,'value':"\n".join([f"{indicators[i]}{''.join([FS.Emotes.Num(round(score)) for score in e.scores])} {e.display}" for i,e in enumerate(self._entities)]),'inline':True}
       
@@ -719,9 +764,9 @@ class Match(Container):
 #Class for rounds, with attributs for the matches
 class Round(Container):
     
-    def __init__(self, phase, round_idx : int, matches : List[Match] = None):
+    def __init__(self, tournament, round_idx : int, matches : List[Match] = None):
         super().__init__()
-        self._phase : TournamentData = phase
+        self._tournament : TournamentData = tournament
         self._round_idx : int = round_idx
         self._matches : List[Match] = matches
         
@@ -782,7 +827,7 @@ class Round(Container):
     def embed_color(self) -> disnake.Color:
         if self.state == State.ENDED:
             return disnake.Colour.lighter_grey()
-        elif self.round_idx == 0 or self._phase.rounds[self._phase.rounds.index(self)-1].state == State.ENDED:
+        elif self.round_idx == 0 or self._tournament.rounds[self._tournament.rounds.index(self)-1].state == State.ENDED:
             return disnake.Colour.green()
         return disnake.Embed.Empty
         
@@ -850,28 +895,26 @@ class TournamentData(Container):
     def __init__(self,
                  guild : disnake.Guild,
                  name : str, 
+                 banner : str,
                  size : int, 
                  nb_round : int, 
                  nb_matches_per_round : int, 
                  nb_teams_per_match : int, 
-                 nb_players_per_team : int, 
-                 size_of_scores : int, 
-                 weigths : List[float], 
-                 scores_descriptor : List[str], 
-                 score_emoji : List[str],  
+                 nb_players_per_team : int,
+                 scoreSet : ScoreSet,
+                 #size_of_scores : int, 
+                 #weigths : List[float], 
+                 #scores_descriptor : List[str], 
+                 #score_emoji : List[str],  
                  nb_point_to_win_match : int):
         super().__init__()
-        if len(weigths) != size_of_scores:
-            raise ValueError('"Size of scores" and "weights" are not compatible.')
         self.guild : disnake.Guild = guild
+        self.banner : str = banner
         self._name : str = name
         self._size : int = size
         self._players : List[Player] = None
         self._rounds : List[Round] = None
-        self._size_of_scores : int = size_of_scores
-        self._scores_descriptor : List[str] = scores_descriptor if scores_descriptor else ['point']
-        self._score_emoji : List[str] = score_emoji if score_emoji else ["💎" for _ in range(size_of_scores)]
-        self._weigths : List[float] = weigths
+        self._scoreSet : ScoreSet = scoreSet
         self._nb_rounds : int = nb_round
         self._nb_matches_per_round : int = nb_matches_per_round
         self._nb_teams_per_match : int = nb_teams_per_match
@@ -903,13 +946,6 @@ class TournamentData(Container):
     def name(self) -> str:
         return self._name
         
-    @property
-    def score_desriptor(self) -> List[str]:
-        return self._scores_descriptor
-    
-    @property
-    def score_emoji(self) -> List[str]:
-        return self._score_emoji
     
     @property
     def nb_point_to_win_match(self) -> int:
@@ -972,14 +1008,6 @@ class TournamentData(Container):
         return None
     
     @property
-    def size_of_scores(self) -> int:
-        return self._size_of_scores
-    
-    @property
-    def weights(self) -> List[int]:
-        return self._weigths
-    
-    @property
     def nb_rounds(self) -> int:
         return self._nb_rounds
     
@@ -1016,7 +1044,7 @@ class TournamentData(Container):
        
     @property
     def rounds_embeds(self) -> List[disnake.Embed]:
-        if self.state <= State.SET:
+        if self.state < State.SET:
             return FS.Embed(
                 title=self._rounds_title,
                 color = disnake.Colour.lighter_grey(),
@@ -1032,21 +1060,26 @@ class TournamentData(Container):
     @property
     def admin_embeds(self) -> List[disnake.Embed]:
         if self.state == State.INIT:
-            return FS.Embed(
+            return [FS.Embed(
                 title=self._admin_title,
                 color = disnake.Colour.lighter_grey(),
                 description="ERROR !"
-            )
+            )]
         else:
             return None
         
     async def build(self) -> None:
         pass
     
-    async def set_players(self, players : List[disnake.Member]) -> None:
-        self._players = players
+    async def set_players(self, members : List[disnake.Member]) -> None:
+        self._players = []
+        for member in members:
+            self._players.append(Player(member,self._scoreSet))
         
     async def update(self) -> None:
+        pass
+    
+    async def delete(self) -> None:
         pass
     
     def getRanking(self) -> List[Player]:
@@ -1116,7 +1149,7 @@ class TournamentData(Container):
     def save_state(self) -> None:
         self._last_state : dict = dict(self)
   
-    async def restore_from_last_state(self) -> None:
+    def restore_from_last_state(self) -> None:
         for round in self.last_state.get('rounds'):
             for match in round.get('entities'):
                 for team in match.get("entities"):

@@ -37,7 +37,6 @@ class Tournament(commands.Cog):
         tournament = Tournament2v2Roll(inter.guild,size,name=nom)
         await tournament.build()
         await inter.edit_original_message(embed=FS.Embed(description=f"Tournois [{tournament.name}]({tournament.admin_message.jump_url}) crée !"))  
-        await tournament.set_players()  
     
 
 def setup(bot):

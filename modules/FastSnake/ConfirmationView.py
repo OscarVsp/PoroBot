@@ -3,7 +3,7 @@ import disnake
 from .Embed import Embed
 from enum import Enum
 
-class State(Enum):
+class ViewState(Enum):
     CANCELLED = 0
     CONFIRMED = 1
     TIMEOUT = 2
@@ -22,7 +22,7 @@ class ConfirmationView(disnake.ui.View):
         self.thumbnail : str = thumbnail if thumbnail else disnake.Embed.Empty
         self.color : disnake.Colour = color
         
-        self.state : State = State.UNKOWN
+        self.state : ViewState = ViewState.UNKOWN
         self.original_embeds : List[disnake.Embed] = []
         
     @property
@@ -71,17 +71,17 @@ class ConfirmationView(disnake.ui.View):
     @disnake.ui.button(label = "Confirmer", emoji="✅", style=disnake.ButtonStyle.green)
     async def confirm(self, button : disnake.ui.Button, interaction : disnake.MessageInteraction):
         await interaction.response.defer()
-        self.state = State.CONFIRMED
+        self.state = ViewState.CONFIRMED
         await self.end()
         
     @disnake.ui.button(label = "Annuler", emoji="❌", style=disnake.ButtonStyle.danger)
     async def cancel(self, button : disnake.ui.Button, interaction : disnake.MessageInteraction):
         await interaction.response.defer()
-        self.state = State.CANCELLED
+        self.state = ViewState.CANCELLED
         await self.end()
         
     async def on_timeout(self) -> None:
-        self.state = State.TIMEOUT
+        self.state = ViewState.TIMEOUT
         await self.end()
           
           
@@ -93,19 +93,19 @@ class ConfirmationReturnData:
         
     @property
     def is_ended(self) -> bool:
-        return self._state != State.UNKOWN
+        return self._state != ViewState.UNKOWN
               
     @property
     def is_confirmed(self) -> bool:
-        return self._state ==  State.CONFIRMED
+        return self._state ==  ViewState.CONFIRMED
     
     @property
     def is_cancelled(self) -> bool:
-        return self._state == State.CANCELLED
+        return self._state == ViewState.CANCELLED
     
     @property
     def is_timeout(self) -> bool:
-        return self._state == State.TIMEOUT
+        return self._state == ViewState.TIMEOUT
     
     def __bool__(self) -> bool:
         return self.is_confirmed
