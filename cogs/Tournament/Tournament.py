@@ -26,9 +26,9 @@ class Tournament(commands.Cog):
     
     
     @tournament.sub_command(
-        name="new"
+        name="roll2v2"
     )
-    async def new_tournament(self, inter : ApplicationCommandInteraction,
+    async def roll2v2(self, inter : ApplicationCommandInteraction,
                              nom : str = commands.Param(description="Nom du tournoi"),
                              size : int = commands.Param(description="Nombre de participants", choices=[4,5,8])
                         ):
@@ -39,5 +39,5 @@ class Tournament(commands.Cog):
         await inter.edit_original_message(embed=FS.Embed(description=f"Tournois [{tournament.name}]({tournament.admin_message.jump_url}) crée !"))  
     
 
-def setup(bot):
+def setup(bot : InteractionBot):
     bot.add_cog(Tournament(bot))

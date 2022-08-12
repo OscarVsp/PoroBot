@@ -1,3 +1,4 @@
+import asyncio
 from typing import List, Union
 import disnake
 from .Embed import Embed

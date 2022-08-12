@@ -63,20 +63,7 @@ class Admin(commands.Cog):
             embeds.append(FS.Embed(
                 title=f"❌ Restart failed due to *FileNotFoundError*",
                 description=f"Couldn't find file ***{cmd_split[0]}***"))
-            await inter.edit_original_message(embeds=embeds)
-
-    @commands.slash_command(
-        name="test",
-        default_member_permissions=disnake.Permissions.all()
-    )
-    async def test(self, inter : disnake.ApplicationCommandInteraction):
-        await inter.response.defer(ephemeral=True)
-        selection = await memberSelection(target=inter, timeout=5)
-        if selection:
-            await inter.edit_original_message(embed=FS.Embed(description="\n".join([f"{m.mention}" for m in selection.members])), view = None)
-        else:
-            await inter.edit_original_message(embed=FS.Embed(description="Nop"), view = None)
-        
+            await inter.edit_original_message(embeds=embeds)        
         
 
     @commands.slash_command(

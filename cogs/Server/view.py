@@ -142,6 +142,11 @@ class Locker(disnake.ui.View):
                 embed = self.embed,
                 view = self
             )
+        elif inter.response.is_done():
+            await inter.edit_original_message(
+                embed = self.embed,
+                view = self
+            ) 
         else:
             await inter.response.edit_message(
                 embed = self.embed,
@@ -239,12 +244,13 @@ class Locker(disnake.ui.View):
         
     @disnake.ui.button(emoji = "🔓", label = "Déverrouiller le channel", style=disnake.ButtonStyle.danger)
     async def unlock_button(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
+        await interaction.response.defer()
         if (await FS.confirmation(interaction, 
                                title=f"🔓 __**Déverrouiller le channel *{self.channel.name}***__", 
                                description=f"Es-tu sûr de vouloir déverrouiller le channel {self.channel.mention} ?\nCeci va automatiquement dé-mute tous les spectateurs, préviens les avant !")):
             await self.unlock(interaction)
         else:
-            await self.update()
+            await self.update(interaction)
         
     @disnake.ui.select(min_values = 1, max_values = 1, row = 2, placeholder="🚫 Restreindre des participants",options= [
                                 disnake.SelectOption(label = "placeholder",value="1")

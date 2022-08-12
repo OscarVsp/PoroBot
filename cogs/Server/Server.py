@@ -171,7 +171,7 @@ class Server(commands.Cog):
         if not name:
             name = f"{role.name} copy"
 
-        response = await memberSelection(inter, title="Export role from role", size = 4, description="Select members to export to the new role", timeout=300, pre_selection=role.members)    
+        response = await memberSelection(inter, title="Export role from role", description="Select members to export to the new role", timeout=300, pre_selection=role.members)    
         if response:
             new_role : disnake.Role = await inter.guild.create_role(name=name)
             for member in response.members:

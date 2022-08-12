@@ -212,6 +212,23 @@ class Lol(commands.Cog):
             await inter.edit_original_message(embeds=[(await summoner.embed()),FS.Embed(description="*Pas de partie en cours*")])
             await inter.delete_original_message(delay=30)
             
+    @lol.sub_command(
+        name="invocateur",
+        description="Info sur un invocateur"
+    )
+    async def invocateur(self, inter: ApplicationCommandInteraction,
+                         invocateur: str = commands.Param(description="Le nom de l'invocateur.")):
+        await inter.response.defer(ephemeral=False)
+        
+        try:
+            summoner = await Summoner.by_name(invocateur)
+            await inter.edit_original_message(embed=await summoner.embed(force_update=True))
+        except SummonerNotFound:
+            await inter.edit_original_message(embed=FS.Embed(title="Invocateur inconnu", description=f"Le nom d'invocateur ***{invocateur}*** ne correspond à aucun invocateur...", footer_text="Tu peux rejeter ce message pour le faire disparaitre"), view=None)
+            await inter.delete_original_message(delay = 3)
+
+
+            
             
 
         
