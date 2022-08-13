@@ -1,3 +1,6 @@
+from math import ceil
+from random import shuffle
+from typing import Tuple
 import pickledb
 import disnake
 from disnake.ext import commands
@@ -61,7 +64,7 @@ class Lol(commands.Cog):
     async def lol(self, inter):
         pass
 
-    async def set_summoner(self, inter: ApplicationCommandInteraction, target: disnake.User, invocateur: str):
+    async def set_summoner(self, inter: disnake.Interaction, target: disnake.User, invocateur: str):
         try:
             summoner = await Summoner.by_name(invocateur)
         except SummonerNotFound:
@@ -104,6 +107,27 @@ class Lol(commands.Cog):
     async def summoner_set(self, inter: ApplicationCommandInteraction, target: disnake.User):
         await inter.response.send_modal(SimpleModal(f"Définir le nom d'invocateur de {target.display_name}", questions=[disnake.ui.TextInput(label="Nom d'invocateur", custom_id="summoner_name")], callback=self.modal_callback, callback_datas={'target': target}))
 
+    async def get_lol_classement(self, members_filter : List[disnake.Member]) -> Tuple[List[disnake.Member],List[Summoner]]:
+        members: List[disnake.Member] = []
+        summoners: List[Summoner] = []
+        
+        for member in members_filter:
+            if str(member.id) in self.summoners.getall():
+                new_summoner = await Summoner.by_name(self.summoners.get(str(member.id)))
+                await new_summoner.leagues()
+                summoners.append(new_summoner)
+                members.append(member)
+
+        sorted_summoners: List[Summoner] = sorted(
+            summoners, key=lambda x: x._leagues.first.absolut_score, reverse=True)
+        sorted_members: List[disnake.Member] = []
+
+        for summoner in sorted_summoners:
+            sorted_members.append(members[summoners.index(summoner)])
+            
+        return (sorted_members,sorted_summoners)
+
+
     @lol.sub_command(
         name="classement",
         description="Classement League of Legends des members du serveur"
@@ -127,26 +151,11 @@ class Lol(commands.Cog):
                         filtre_members = [member async for member in event.fetch_users()]
                         break
 
-            if filtre_members == None:
-                filtre_members = inter.guild.members
+        if filtre_members == None or filtre == None:
+            filtre_members = inter.guild.members
 
-        members: List[disnake.Member] = []
-        summoners: List[Summoner] = []
-        for user_id_str in self.summoners.getall():
-            member = inter.guild.get_member(int(user_id_str))
-            if member and (filtre_members == None or member in filtre_members):
-                new_summoner = await Summoner.by_name(self.summoners.get(user_id_str))
-                await new_summoner.leagues()
-                summoners.append(new_summoner)
-                members.append(member)
-
-        sorted_summoners: List[Summoner] = sorted(
-            summoners, key=lambda x: x._leagues.first.absolut_score, reverse=True)
-        sorted_members: List[disnake.Member] = []
-
-        for summoner in sorted_summoners:
-            sorted_members.append(members[summoners.index(summoner)])
-
+        (sorted_members,sorted_summoners) = await self.get_lol_classement(filtre_members)
+        
         ranks = ""
         players = ""
 
@@ -226,14 +235,66 @@ class Lol(commands.Cog):
         except SummonerNotFound:
             await inter.edit_original_message(embed=FS.Embed(title="Invocateur inconnu", description=f"Le nom d'invocateur ***{invocateur}*** ne correspond à aucun invocateur...", footer_text="Tu peux rejeter ce message pour le faire disparaitre"), view=None)
             await inter.delete_original_message(delay = 3)
-
-
             
             
+    def seeding_check(self, **kwargs) -> bool:
+        return str(kwargs.get("member").id) in self.summoners.getall()
+            
+    @lol.sub_command(
+        name="seeding",
+        description="Diviser un groupe en sous groupes en utilisant le classement lol comme seeding"
+    )
+    async def seeding(self, inter: ApplicationCommandInteraction,
+                      nombre : int = commands.Param(description="Nombre de sous groupe", gt=1)):
+        await inter.response.defer(ephemeral=True)
+        selection = await memberSelection(target=inter,description="Compose le groupe de membre à diviser.", check=self.seeding_check)
+        if selection:
+            await inter.edit_original_message(embed=FS.Embed(description="Composition des groupes..."),view=None)
+            (sorted_members,sorted_summoners) = await self.get_lol_classement(selection.members)
+            groupes : List[List[Tuple[disnake.Member,Summoner]]] = [[] for _ in range(nombre)]
+            for i in range(ceil(len(sorted_members)/nombre)):
+                tier_groupe : List[Tuple[disnake.Member,Summoner]] = []
+                for j in range(nombre):
+                    if i*nombre+j < len(sorted_members):
+                        tier_groupe.append((sorted_members[i*nombre+j],sorted_summoners[i*nombre+j]))
+                    else:
+                        tier_groupe.append(None)
+                shuffle(tier_groupe)
+                for j,player in enumerate(tier_groupe):
+                    if player:
+                        groupes[j].append(player)
+                    
+            ranks = ""
+            players = ""
 
-        
+            for i in range(len(sorted_members)):
+                ranks += f"{(await sorted_summoners[i].leagues()).first.tier_emote} **{(await sorted_summoners[i].leagues()).first.rank}**\n"
+                players += f"**{sorted_members[i].mention}** (`{sorted_summoners[i].name}`)\n"
 
-        
+            await inter.channel.send(
+                embed=FS.Embed(
+                    title=f"{FS.Assets.Emotes.Lol.Logo} __**CLASSEMENT LOL**__",
+                    fields=[
+                        {
+                            'name': "◾",
+                            'value': ranks,
+                            "inline": True
+                        },
+                        {
+                            'name': "◾◾◾◾◾◾◾◾◾◾",
+                            'value': players,
+                            "inline": True
+                        }
+                    ] + [
+                        {'name':f"**Groupe {FS.Emotes.Alpha[i]}**",'value':'\n'.join([f"> {member[0].mention}" for member in members])}
+                        for i,members in enumerate(groupes)
+                    ]
+                ),
+                view=None
+            )  
+            await inter.edit_original_message(embed=FS.Embed(description="Groupes crées !",footer_text="Tu peux rejeter ce message pour le faire disparaitre"),view=None)
+        else:
+            await inter.edit_original_message(embed=FS.Embed(description=":x Annulé",footer_text="Tu peux rejeter ce message pour le faire disparaitre"),view=None) 
 
     @commands.slash_command(
         description="Voir combien de temps et d'argent tu as dépensés sur LOL"
