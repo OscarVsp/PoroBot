@@ -55,8 +55,8 @@ class Emotes:
     
     class Lol:
         
-        Logo : str = '<:Lol:658237632786071593>'
-        OPGG : str = '<:Opgg:948174103557312563>'
+        Logo : str = '<:lol:1007993779984277606>'
+        OPGG : str = '<:opgg:1007995866092671006>'
         Captain : str = "<:captain:1007206303992643624>"
         Champion : str = "<:champion:1007206305326452806>"
         Chest : str = "<:chest:1007206306693795930>"
@@ -87,13 +87,13 @@ class Emotes:
             
         
         class Position:
-            UNSELECTED : str = "<:unselected:1007206323693301853>"
-            TOP : str = '<:Top:797548227004071956>'
-            JUNGLE : str = '<:Jungle:797548226998829078>'
-            MIDDLE : str = '<:Mid:797548226944565298>'
-            BOTTOM : str = '<:Bot:829047436563054632>'
-            UTILITY : str = '<:Support:797548227347480593>'
-            FILL : str = "<:Fill:829062843717386261>"
+            UNSELECTED : str = "<:unselected:1007994502318923896>"
+            TOP : str = '<:top:1007994503858245672>'
+            JUNGLE : str = '<:jungle:1007994500066574407>'
+            MIDDLE : str = '<:mid:1007994497810059304>'
+            BOTTOM : str = '<:bot:1007994496245579916>'
+            UTILITY : str = '<:support:1007994494744002631>'
+            FILL : str = "<:fill:1007994493250850897>"
             
             @classmethod
             def get(cls, key : str) -> Optional[str]:
@@ -117,16 +117,16 @@ class Emotes:
         class Rank:
             Generic : str = "<:rankedemblem:1007206349509242880>"
             
-            UNRANKED : str = "<:Unranked:829242191020032001>"
-            IRON : str = "<:Iron:829240724871577600>"
-            BRONZE : str = "<:Bronze:829240724754792449>"
-            SILVER : str = "<:Silver:829240724867514378>"
-            GOLD : str = "<:Gold:829240724842872872>"
-            PLATINUM : str = "<:Platinum:829240724797128754>"
-            DIAMOND : str = "<:Diamond:829240724830027796>"
-            MASTER : str = "<:Master:829240724943405096>"
-            GRANDMASTER : str = "<:Grandmaster:829240724767768576>"
-            CHALLENGER : str = "<:Challenger:829240724712456193>"
+            UNRANKED : str = "<:unranked:1007976696487608431>"
+            IRON : str = "<:iron:1007976694646313032>"
+            BRONZE : str = "<:bronze:1007976693165727785>"
+            SILVER : str = "<:silver:1007992585664614471>"
+            GOLD : str = "<:gold:1007976698182111312>"
+            PLATINUM : str = "<:platinum:1007976699587207259>"
+            DIAMOND : str = "<:diamond:1007976701130715146>"
+            MASTER : str = "<:master:1007976691521564692> "
+            GRANDMASTER : str = "<:grandmaster:1007976690078732348>"
+            CHALLENGER : str = "<:challenger:1007976687948009544>"
             
             @classmethod
             def get(cls, key : str) -> Optional[str]:
