@@ -48,9 +48,9 @@ class Tournament(TournamentData):
             self.voice_channels.append([])
             for j in range(self._nb_teams_per_match):
                 if self._nb_matches_per_round == 1:
-                    name = f"Team {j+1}"
+                    name = f"Équipe {j+1}"
                 else:
-                    name = f"Match {chr(ord('A') + i)} Team {j+1}"
+                    name = f"Match {chr(ord('A') + i)} Équipe {j+1}"
                 self.voice_channels[i].append(await self.category.create_voice_channel(name=name))
 
         self.classement_message = await self.classement_channel.send(embed=self.classement_embed)

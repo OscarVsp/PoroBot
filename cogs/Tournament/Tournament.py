@@ -26,7 +26,8 @@ class Tournament(commands.Cog):
     
     
     @tournament.sub_command(
-        name="roll2v2"
+        name="roll2v2",
+        description="Créer un tournoi en format 2v2 roll"
     )
     async def roll2v2(self, inter : ApplicationCommandInteraction,
                              nom : str = commands.Param(description="Nom du tournoi"),
@@ -36,7 +37,7 @@ class Tournament(commands.Cog):
         await inter.response.defer(ephemeral=True)
         tournament = Tournament2v2Roll(inter.guild,size,name=nom)
         await tournament.build()
-        await inter.edit_original_message(embed=FS.Embed(description=f"Tournois [{tournament.name}]({tournament.admin_message.jump_url}) crée !"))  
+        await inter.edit_original_message(embed=FS.Embed(description=f"Tournois [{tournament.name}]({tournament.admin_message.jump_url}) créé !"))  
     
 
 def setup(bot : InteractionBot):

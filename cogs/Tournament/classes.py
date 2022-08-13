@@ -902,10 +902,6 @@ class TournamentData(Container):
                  nb_teams_per_match : int, 
                  nb_players_per_team : int,
                  scoreSet : ScoreSet,
-                 #size_of_scores : int, 
-                 #weigths : List[float], 
-                 #scores_descriptor : List[str], 
-                 #score_emoji : List[str],  
                  nb_point_to_win_match : int):
         super().__init__()
         self.guild : disnake.Guild = guild
@@ -1025,7 +1021,7 @@ class TournamentData(Container):
     
     @property
     def log_id(self) -> str:
-        return f"[PHASE {self._name}]"
+        return f"[TOURNAMENT {self._name}]"
     
     @property
     def last_state(self) -> dict:

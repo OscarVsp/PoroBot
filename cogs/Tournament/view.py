@@ -53,15 +53,15 @@ class AdminView(disnake.ui.View):
             self.set_team_2_score.disabled = False
             self.set_team_2_score.placeholder = f"{self.match_selected.teams[1].display_name} : {self.match_selected.teams[1].scores_description}"
         else:
-            self.match_selection.placeholder = f"Select a match"
+            self.match_selection.placeholder = f"Sélectionner un match"
             self.match_selection.options = [disnake.SelectOption(label=f"{j+1}{chr(ord('A') + i)} : {self.tournament.rounds[j].matches[i].teams[0].display_name} vs {self.tournament.rounds[j].matches[i].teams[1].display_name}",value=f"{j}{i}",emoji="🆕") for j in range(self.tournament.nb_rounds) for i in range(self.tournament.nb_matches_per_round) if not self.tournament.rounds[j].matches[i].state >= State.ENDED]
             self.match_selection.options += [disnake.SelectOption(label=f"{j+1}{chr(ord('A') + i)} : {self.tournament.rounds[j].matches[i].teams[0].display_name} vs {self.tournament.rounds[j].matches[i].teams[1].display_name}",value=f"{j}{i}",emoji="↩️") for j in range(self.tournament.nb_rounds) for i in range(self.tournament.nb_matches_per_round) if self.tournament.rounds[j].matches[i].state >= State.ENDED]
             if len(self.match_selection.options) > 25:
                 self.match_selection.options = self.match_selection.options[:25]
             self.set_team_1_score.disabled = True
-            self.set_team_1_score.placeholder = f"Select a match first."
+            self.set_team_1_score.placeholder = f"Score de l'équipe 1"
             self.set_team_2_score.disabled = True
-            self.set_team_2_score.placeholder = f"Select a match first."
+            self.set_team_2_score.placeholder = f"Score de l'équipe 2"
         if interaction.response.is_done():
             await interaction.edit_original_message(embeds=self.tournament.admin_embeds, view=self)
         else:
@@ -74,13 +74,13 @@ class AdminView(disnake.ui.View):
         self.round_selected = None
         self.match_selected = None
                      
-    @disnake.ui.button(emoji = "✅", label = "Validate", style=disnake.ButtonStyle.green, row = 1)
+    @disnake.ui.button(emoji = "✅", label = "Valider", style=disnake.ButtonStyle.green, row = 1)
     async def update_button(self, button: disnake.ui.Button, interaction : disnake.MessageInteraction):
         self.reset_selection()
         await self.tournament.update()
         await self.update(interaction)
         
-    @disnake.ui.button(emoji = "🔁", label = "Cancel", style=disnake.ButtonStyle.primary, row = 1)
+    @disnake.ui.button(emoji = "🔁", label = "Annuler", style=disnake.ButtonStyle.primary, row = 1)
     async def discard_button(self, button: disnake.ui.Button, interaction : disnake.MessageInteraction):
         self.reset_selection()
         self.tournament.restore_from_last_state()
@@ -91,13 +91,13 @@ class AdminView(disnake.ui.View):
     async def notif(self, button: disnake.ui.Button, interaction : disnake.MessageInteraction):
         await interaction.response.send_modal(NotificationModal(self.tournament))       
         
-    @disnake.ui.button(emoji = "⚠️", label = "End", style=disnake.ButtonStyle.danger, row = 1)
+    @disnake.ui.button(emoji = "⚠️", label = "Stop", style=disnake.ButtonStyle.danger, row = 1)
     async def arret(self, button: disnake.ui.Button, interaction : disnake.MessageInteraction):
         await interaction.response.defer()
         confirmation = await FS.confirmation(
             interaction.channel,
-            title=f"⚠️ __**Tournament ending confirmation**__ ",
-            description=f"Are you sure you want to end the tournament ?\nThis will erase all related channels and send you the result in private.",
+            title=f"⚠️ __**ARRÊTER LE TOURNOI**__ ",
+            description=f"Es-tu sûr de vouloir arrêter le tournoi ?\nCela va supprimer tout les channels de la catégorie et t'envoyer les résultats en privé.",
             color=disnake.Colour.red()
         )
         if confirmation:
@@ -107,13 +107,13 @@ class AdminView(disnake.ui.View):
             await self.update(interaction)
 
  
-    @disnake.ui.select(min_values = 1, max_values = 1, row = 2, placeholder="Select a match")
+    @disnake.ui.select(min_values = 1, max_values = 1, row = 2, placeholder="Sélectionner un match")
     async def match_selection(self, select : disnake.ui.Select, interaction : disnake.MessageInteraction):
         self.round_selected = self.tournament.rounds[int(select.values[0][0])]
         self.match_selected = self.round_selected.matches[int(select.values[0][1])]
         await self.update(interaction)
                       
-    @disnake.ui.select(min_values = 1, max_values = 1, row = 3, placeholder="Select a first match",
+    @disnake.ui.select(min_values = 1, max_values = 1, row = 3, placeholder="Score de l'équipe 1",
                             options= [
                                 disnake.SelectOption(label="placeholder")
                             ])
@@ -127,7 +127,7 @@ class AdminView(disnake.ui.View):
         self.discard_button.disabled = False
         await self.update(interaction)
         
-    @disnake.ui.select(min_values = 1, max_values = 1, row = 4, placeholder="Select a first match",
+    @disnake.ui.select(min_values = 1, max_values = 1, row = 4, placeholder="Score de l'équipe 1",
                             options= [
                                 disnake.SelectOption(label="placeholder")
                             ])
