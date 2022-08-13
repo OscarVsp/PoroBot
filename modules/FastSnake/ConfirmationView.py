@@ -10,7 +10,7 @@ class ViewState(Enum):
     TIMEOUT = 2
     UNKOWN = 3
     
-Target = Union[disnake.Interaction,disnake.TextChannel,disnake.Message]
+Target = Union[disnake.Interaction,disnake.TextChannel,disnake.Message, disnake.ModalInteraction]
 
 class ConfirmationView(disnake.ui.View):
     
@@ -36,7 +36,7 @@ class ConfirmationView(disnake.ui.View):
         )
             
     async def send(self):
-        if isinstance(self.target, disnake.ApplicationCommandInteraction) or isinstance(self.target, disnake.MessageInteraction):
+        if isinstance(self.target, disnake.ApplicationCommandInteraction) or isinstance(self.target, disnake.MessageInteraction) or isinstance(self.target,disnake.ModalInteraction):
             if self.target.response.is_done():
                 self.original_embeds = (await self.target.original_message()).embeds
                 await self.target.edit_original_message(embeds=self.original_embeds+[self.embed], view=self)
