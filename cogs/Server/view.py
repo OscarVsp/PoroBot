@@ -1,10 +1,11 @@
 import disnake 
 from disnake.ext import commands
-from disnake.ext import commands
 import modules.FastSnake as FS
 import asyncio
 from typing import List
 import logging
+
+from modules.FastSnake.Views import confirmation
 
 class Locker(disnake.ui.View):
     
@@ -244,11 +245,9 @@ class Locker(disnake.ui.View):
         
     @disnake.ui.button(emoji = "🔓", label = "Déverrouiller le channel", style=disnake.ButtonStyle.danger)
     async def unlock_button(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
-        await interaction.response.defer()
-        if (await FS.confirmation(interaction, 
-                               title=f"🔓 __**Déverrouiller le channel *{self.channel.name}***__", 
-                               description=f"Es-tu sûr de vouloir déverrouiller le channel {self.channel.mention} ?\nCeci va automatiquement dé-mute tous les spectateurs, préviens les avant !")):
-            await self.unlock(interaction)
+        confirm = await confirmation(target=interaction,embeds=[self.embed])
+        if confirm:
+            await self.unlock()
         else:
             await self.update(interaction)
         

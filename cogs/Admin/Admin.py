@@ -6,7 +6,7 @@ import modules.FastSnake as FS
 import asyncio
 from asyncio.exceptions import TimeoutError
 
-from modules.FastSnake.Views import memberSelection
+from modules.FastSnake.Views import confirmation, memberSelection
 
 
 async def is_owner(ctx):
@@ -63,8 +63,7 @@ class Admin(commands.Cog):
             embeds.append(FS.Embed(
                 title=f"❌ Restart failed due to *FileNotFoundError*",
                 description=f"Couldn't find file ***{cmd_split[0]}***"))
-            await inter.edit_original_message(embeds=embeds)        
-        
+            await inter.edit_original_message(embeds=embeds) 
 
     @commands.slash_command(
         name="admin",

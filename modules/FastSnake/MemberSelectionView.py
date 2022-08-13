@@ -7,8 +7,8 @@ from .Assets import Emotes
 
 class MemberSelectionView(ConfirmationView):
     
-    def __init__(self, target : Target, title : str, description : str, timeout : int, pre_selection : List[disnake.Member] = None, check = None,  size : Union[List[int],int] = None, color : disnake.Colour = disnake.Colour.default()):
-        super().__init__(target, title, description, timeout, color)
+    def __init__(self, target : Target, embeds : List[disnake.Embed], title : str, description : str, timeout : int, pre_selection : List[disnake.Member] = None, check = None,  size : Union[List[int],int] = None, color : disnake.Colour = disnake.Colour.default()):
+        super().__init__(target, embeds, title, description, timeout, color)
         
         self.size : Union[List[int],int] = size
 

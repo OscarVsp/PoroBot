@@ -296,7 +296,7 @@ class Team:
         text = ""
         for i in range(len(self._scores)):
             if self._scores[i]:
-                text += f"{self._scores[i]} {self._scoreSet.names[i]}, "
+                text += f"{self._scores[i]} {self._scoreSet.names[i]}{'s' if self._scores[i] > 1 else ''}, "
         if text == "":
             return "Rien"
         return text[:len(text)-2]
@@ -1075,7 +1075,7 @@ class TournamentData(Container):
     async def update(self) -> None:
         pass
     
-    async def delete(self, interaction : disnake.MessageInteraction) -> None:
+    async def delete(self, interaction : disnake.MessageInteraction = None) -> None:
         pass
     
     def getRanking(self) -> List[Player]:

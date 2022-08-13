@@ -26,8 +26,8 @@ class ButtonChoice:
 
 class QCMView(ConfirmationView):
     
-    def __init__(self,  target : Target, title : str, description : str, timeout : int, color : disnake.Colour, choices : List[ButtonChoice], pre_selection : ButtonChoice):
-        super().__init__(target,title,description,timeout,color)
+    def __init__(self,  target : Target, embeds : List[disnake.Embed], title : str, description : str, timeout : int, color : disnake.Colour, choices : List[ButtonChoice], pre_selection : ButtonChoice):
+        super().__init__(target,embeds,title,description,timeout,color)
         
         
         if len(choices) > 20:
@@ -85,8 +85,8 @@ class QCMReturnData(ConfirmationReturnData):
         
 class QRMView(ConfirmationView):
     
-    def __init__(self, target : Target, title : str, description : str, timeout : int, color : disnake.Colour, choices : List[ButtonChoice], pre_selection : List[ButtonChoice], min : int, max : Optional[int]):
-        super().__init__(target,title,description,timeout,color)
+    def __init__(self, target : Target, embeds : List[disnake.Embed],title : str, description : str, timeout : int, color : disnake.Colour, choices : List[ButtonChoice], pre_selection : List[ButtonChoice], min : int, max : Optional[int]):
+        super().__init__(target,embeds,title,description,timeout,color)
         if len(choices) > 20:
             raise ValueError("Size of choices should be at max 20")
         

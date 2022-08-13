@@ -10,18 +10,20 @@ class ViewState(Enum):
     TIMEOUT = 2
     UNKOWN = 3
     
-Target = Union[disnake.Interaction,disnake.TextChannel,disnake.Message, disnake.ModalInteraction]
+Target = Union[disnake.ApplicationCommandInteraction ,disnake.TextChannel, disnake.Message, disnake.MessageInteraction, disnake.ModalInteraction]
 
 class ConfirmationView(disnake.ui.View):
     
-    def __init__(self, target : Target, title : str, description : str, timeout : int, color : disnake.Colour = disnake.Colour.default(), thumbnail : str = None):
+    def __init__(self, target : Target, embeds : List[disnake.Embed], title : str, description : str, timeout : int, color : disnake.Colour = disnake.Colour.default(), thumbnail : str = None):
         super().__init__(timeout=timeout)
         self.target : Target = target
         self.message_to_delete : disnake.Message = None
+        self.embeds : List[disnake.Embed] = embeds
         self.title : str = title
         self.description : str = description
         self.thumbnail : str = thumbnail if thumbnail else disnake.Embed.Empty
         self.color : disnake.Colour = color
+        self.interaction : disnake.MessageInteraction = None
         
         self.state : ViewState = ViewState.UNKOWN
         self.original_embeds : List[disnake.Embed] = []
@@ -36,10 +38,19 @@ class ConfirmationView(disnake.ui.View):
         )
             
     async def send(self):
-        if isinstance(self.target, disnake.ApplicationCommandInteraction) or isinstance(self.target, disnake.MessageInteraction) or isinstance(self.target,disnake.ModalInteraction):
+        if isinstance(self.target, disnake.ApplicationCommandInteraction):
             if self.target.response.is_done():
-                self.original_embeds = (await self.target.original_message()).embeds
-                await self.target.edit_original_message(embeds=self.original_embeds+[self.embed], view=self)
+                await self.target.edit_original_message(embeds=self.embeds+[self.embed], view=self)
+            else:
+                await self.target.response.send_message(embed=self.embed, view=self, ephemeral=True)
+        elif isinstance(self.target, disnake.MessageInteraction):
+            if self.target.response.is_done():
+                await self.target.edit_original_message(embeds=self.embeds+[self.embed],view=self)
+            else:
+                await self.target.response.edit_message(embeds=self.embeds+[self.embed], view=self)
+        elif isinstance(self.target, disnake.ModalInteraction):
+            if self.target.response.is_done():
+                await self.target.edit_original_message(embed=self.embed, view=self)
             else:
                 await self.target.response.send_message(embed=self.embed, view=self, ephemeral=True)
         elif isinstance(self.target, disnake.TextChannel):
@@ -47,10 +58,7 @@ class ConfirmationView(disnake.ui.View):
         elif isinstance(self.target, disnake.Message):
             self.message_to_delete = await self.target.channel.send(embed=self.embed,view=self)
         else:
-            if self.target.response.is_done():
-                await self.target.edit_original_message(embed=self.embed, view=self)
-            else:
-                await self.target.response.send_message(embed=self.embed, view=self, ephemeral=True)
+            raise TypeError(f"Type {type(self.target)} is not supported.")
             
     async def update(self, inter : disnake.MessageInteraction):
         if inter.response.is_done():
@@ -73,12 +81,14 @@ class ConfirmationView(disnake.ui.View):
     async def confirm(self, button : disnake.ui.Button, interaction : disnake.MessageInteraction):
         await interaction.response.defer()
         self.state = ViewState.CONFIRMED
+        self.interaction = interaction
         await self.end()
         
     @disnake.ui.button(label = "Annuler", emoji="❌", style=disnake.ButtonStyle.danger)
     async def cancel(self, button : disnake.ui.Button, interaction : disnake.MessageInteraction):
         await interaction.response.defer()
         self.state = ViewState.CANCELLED
+        self.interaction = interaction
         await self.end()
         
     async def on_timeout(self) -> None:
@@ -91,6 +101,11 @@ class ConfirmationReturnData:
     
     def __init__(self, confirmationView : ConfirmationView):
         self._state = confirmationView.state
+        self._interaction : disnake.MessageInteraction = confirmationView.interaction
+        
+    @property
+    def interaction(self) -> disnake.MessageInteraction:
+        return self._interaction
         
     @property
     def is_ended(self) -> bool:

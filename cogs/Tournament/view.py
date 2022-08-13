@@ -1,3 +1,4 @@
+from lib2to3.pgen2.token import TILDE
 from typing import List
 import disnake 
 from disnake import ApplicationCommandInteraction
@@ -11,7 +12,7 @@ from .classes import Round,Match, State,Team, TournamentData
 class PlayerSelectionView(MemberSelectionView):
       
     def __init__(self, tournament : TournamentData):
-        super().__init__(target=tournament.admin_channel, title=tournament._admin_title, description="Sélectionne les participants.", timeout=None, size = tournament.size)
+        super().__init__(target=tournament.admin_channel, embeds=[], title=tournament._admin_title, description="Sélectionne les participants.", timeout=None, size = tournament.size)
         self.tournament : TournamentData = tournament
         
     async def end(self) -> None:
@@ -30,38 +31,36 @@ class AdminView(disnake.ui.View):
         self.match_selected : Match = None
         self.team_selected : Team = None    
         self.blank_score : List[int] = [0 for _ in range(self.tournament._scoreSet.size)]
-        self.make_options()   
         
-    def make_options(self):
-        self.match_selection.options = [disnake.SelectOption(label=f"Round {j+1} Match {chr(ord('A') + i)}",value=f"{j}{i}",emoji=FS.Emotes.Num(j+1)) for j in range(self.tournament.nb_rounds) for i in range(self.tournament.nb_matches_per_round)]
-        if len(self.match_selection.options) > 25:
-            self.match_selection.options = self.match_selection.options[:25]
         self.set_team_1_score.options = self.tournament._scoreSet.options
         self.set_team_1_score.max_values = self.tournament.nb_point_to_win_match
-        self.set_team_1_score.disabled = True
         self.set_team_2_score.options = self.tournament._scoreSet.options
         self.set_team_2_score.max_values = self.tournament.nb_point_to_win_match
-        self.set_team_2_score.disabled = True
         self.discard_button.disabled = True
-        self.update_button.disabled = True
-               
-    async def update(self, interaction : disnake.MessageInteraction) -> None:
+        self.update_button.disabled = True  
+        
+        self.refresh_options()
+        
+    def refresh_options(self) -> None:
         if self.match_selected and self.round_selected:
-            self.match_selection.placeholder = f"Round {self.round_selected.round_idx+1} Match {chr(ord('A') + self.match_selected.match_idx)}"
+            self.match_selection.placeholder = f"{self.round_selected.round_idx+1}{chr(ord('A') + self.match_selected.match_idx)} : {self.match_selected.teams[0].display_name} VS {self.match_selected.teams[1].display_name}"
             self.set_team_1_score.disabled = False
             self.set_team_1_score.placeholder = f"{self.match_selected.teams[0].display_name} : {self.match_selected.teams[0].scores_description}"
             self.set_team_2_score.disabled = False
             self.set_team_2_score.placeholder = f"{self.match_selected.teams[1].display_name} : {self.match_selected.teams[1].scores_description}"
         else:
             self.match_selection.placeholder = f"Sélectionner un match"
-            self.match_selection.options = [disnake.SelectOption(label=f"{j+1}{chr(ord('A') + i)} : {self.tournament.rounds[j].matches[i].teams[0].display_name} vs {self.tournament.rounds[j].matches[i].teams[1].display_name}",value=f"{j}{i}",emoji="🆕") for j in range(self.tournament.nb_rounds) for i in range(self.tournament.nb_matches_per_round) if not self.tournament.rounds[j].matches[i].state >= State.ENDED]
-            self.match_selection.options += [disnake.SelectOption(label=f"{j+1}{chr(ord('A') + i)} : {self.tournament.rounds[j].matches[i].teams[0].display_name} vs {self.tournament.rounds[j].matches[i].teams[1].display_name}",value=f"{j}{i}",emoji="↩️") for j in range(self.tournament.nb_rounds) for i in range(self.tournament.nb_matches_per_round) if self.tournament.rounds[j].matches[i].state >= State.ENDED]
+            self.match_selection.options = [disnake.SelectOption(label=f"{j+1}{chr(ord('A') + i)} : {self.tournament.rounds[j].matches[i].teams[0].display_name} VS {self.tournament.rounds[j].matches[i].teams[1].display_name}",value=f"{j}{i}",emoji="🆕") for j in range(self.tournament.nb_rounds) for i in range(self.tournament.nb_matches_per_round) if not self.tournament.rounds[j].matches[i].state >= State.ENDED]
+            self.match_selection.options += [disnake.SelectOption(label=f"{j+1}{chr(ord('A') + i)} : {self.tournament.rounds[j].matches[i].teams[0].display_name} VS {self.tournament.rounds[j].matches[i].teams[1].display_name}",value=f"{j}{i}",emoji="↩️") for j in range(self.tournament.nb_rounds) for i in range(self.tournament.nb_matches_per_round) if self.tournament.rounds[j].matches[i].state >= State.ENDED]
             if len(self.match_selection.options) > 25:
                 self.match_selection.options = self.match_selection.options[:25]
             self.set_team_1_score.disabled = True
             self.set_team_1_score.placeholder = f"Score de l'équipe 1"
             self.set_team_2_score.disabled = True
             self.set_team_2_score.placeholder = f"Score de l'équipe 2"
+               
+    async def update(self, interaction : disnake.MessageInteraction) -> None:
+        self.refresh_options()
         if interaction.response.is_done():
             await interaction.edit_original_message(embeds=self.tournament.admin_embeds, view=self)
         else:
@@ -93,15 +92,16 @@ class AdminView(disnake.ui.View):
         
     @disnake.ui.button(emoji = "⚠️", label = "Stop", style=disnake.ButtonStyle.danger, row = 1)
     async def arret(self, button: disnake.ui.Button, interaction : disnake.MessageInteraction):
-        await interaction.response.defer()
         confirmation = await FS.confirmation(
-            interaction.channel,
+            interaction,
+            embeds=self.tournament.admin_embeds,
             title=f"⚠️ __**ARRÊTER LE TOURNOI**__ ",
             description=f"Es-tu sûr de vouloir arrêter le tournoi ?\nCela va supprimer tout les channels de la catégorie et t'envoyer les résultats en privé.",
             color=disnake.Colour.red()
         )
         if confirmation:
             self.stop()
+            await interaction.edit_original_message(embed=FS.Embed(title=self.tournament._admin_title,description="Suppression du tournoi..."),view=None)
             await self.tournament.delete(interaction)
         else:
             await self.update(interaction)

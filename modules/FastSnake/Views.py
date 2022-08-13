@@ -13,6 +13,7 @@ async def process(confirmationvView : ConfirmationView) -> ConfirmationView:
 
 async def confirmation(
     target : Target,
+    embeds : List[disnake.Embed] = [],
     title : str = "Confirmation",
     description : str = "Confirmer l'action ?",
     thumbnail : str = disnake.Embed.Empty,
@@ -31,6 +32,8 @@ async def confirmation(
     ----------
         target (`Target`):
             The interaction for which the confirmation occurs.
+        embeds (`List[disnake.Embed]`)
+            The embed to send with the view.
         title (`str`, `optional`): 
             Title of the confirmation embed.
             Defaults to `"Confirmation"`.
@@ -48,11 +51,12 @@ async def confirmation(
     --------
         `ConfirmationReturnData`
     """
-    return ConfirmationReturnData((await process(ConfirmationView(target=target, title=title, description=description, thumbnail = thumbnail, timeout=timeout, color=color))))
+    return ConfirmationReturnData((await process(ConfirmationView(target=target, embeds=embeds, title=title, description=description, thumbnail = thumbnail, timeout=timeout, color=color))))
 
 
 async def memberSelection(
     target : Target,
+    embeds : List[disnake.Embed] =[],
     title : str = "Sélection des membres",
     description : str = "",
     size : Union[int, List[int]] = None,
@@ -73,6 +77,8 @@ async def memberSelection(
     ----------
         target (`Target`):
             The interaction for which the confirmation occurs.
+        embeds (`List[disnake.Embed]`)
+            The embed to send with the view.
         title (`str`, `optional`): 
             Title of the confirmation embed.
             Defaults to `"Confirmation"`.
@@ -112,13 +118,14 @@ async def memberSelection(
     --------
         `MemberSelectionReturnData`
     """
-    return MemberSelectionReturnData(await process(MemberSelectionView(target=target, title=title, description=description, timeout=timeout, size=size, pre_selection=pre_selection, check=check, color=color)))
+    return MemberSelectionReturnData(await process(MemberSelectionView(target=target, embeds=embeds, title=title, description=description, timeout=timeout, size=size, pre_selection=pre_selection, check=check, color=color)))
 
 
 async def QCM(
     target : Target,
     choices : List[ButtonChoice],
     pre_selection : Optional[str],
+    embeds : List[disnake.Embed] = [],
     title : str = "Choix",
     description : str = "Choisissez parmit les propositions ci-dessous",
     timeout : int = None,
@@ -136,6 +143,8 @@ async def QCM(
     ----------
         target (`Target`):
             The interaction for which the confirmation occurs.
+        embeds (`List[disnake.Embed]`)
+            The embed to send with the view.
         choices (`List[ButtonChoice]`)
             The choices available. Either `str` for label only, or `Tuple[str,str]` for `(label,emoji)`.
         pre_selection (`Optional[str]`):
@@ -157,12 +166,13 @@ async def QCM(
     --------
         `QCMReturnData`
     """
-    return QCMReturnData(await process(QCMView(target, title, description, timeout, color, choices, pre_selection)))
+    return QCMReturnData(await process(QCMView(target, embeds, title, description, timeout, color, choices, pre_selection)))
 
 
 async def QRM(
     target : Target,
     choices : List[ButtonChoice],
+    embeds : List[disnake.Embed] = [],
     pre_selection : list[ButtonChoice] = None,
     min : int = 0,
     max : int = None,
@@ -183,6 +193,8 @@ async def QRM(
     ----------
         target (`Target`):
             The interaction for which the confirmation occurs.
+        embeds (`List[disnake.Embed]`)
+            The embed to send with the view.
         choices (`List[ButtonChoice]`):
             The choices available.
         pre_selection (`List[ButtonChoice]`):
@@ -211,4 +223,4 @@ async def QRM(
     --------
         `QRMReturnData`
     """
-    return QRMReturnData(await process(QRMView(target, title, description, timeout, color, choices, pre_selection, min, max)))
+    return QRMReturnData(await process(QRMView(target, embeds, title, description, timeout, color, choices, pre_selection, min, max)))
