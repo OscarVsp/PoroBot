@@ -102,7 +102,7 @@ class AdminView(disnake.ui.View):
         )
         if confirmation:
             self.stop()
-            await self.tournament.delete()
+            await self.tournament.delete(interaction)
         else:
             await self.update(interaction)
 

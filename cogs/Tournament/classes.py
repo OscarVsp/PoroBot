@@ -1079,7 +1079,7 @@ class TournamentData(Container):
     async def update(self) -> None:
         pass
     
-    async def delete(self) -> None:
+    async def delete(self, interaction : disnake.MessageInteraction) -> None:
         pass
     
     def getRanking(self) -> List[Player]:

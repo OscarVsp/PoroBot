@@ -101,7 +101,8 @@ class Tournament(TournamentData):
             color=disnake.Colour.blue()
         )))
 
-    async def delete(self) -> None:
+    async def delete(self,interaction : disnake.MessageInteraction) -> None:
+        await interaction.author.send(embeds=self.admin_embeds)
         await self.notif_channel.delete()
         await self.classement_channel.delete()
         await self.rounds_channel.delete()
