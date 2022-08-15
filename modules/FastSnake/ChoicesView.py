@@ -214,8 +214,6 @@ class SelectionView(ConfirmationView):
                 break
         self.confirm.disabled == valid
                 
-            
-        
     @property
     def embed(self) -> disnake.Embed:
         embed = super().embed
@@ -227,3 +225,16 @@ class SelectionView(ConfirmationView):
     async def call_back(self, interaction : disnake.MessageInteraction):
         self.check_validity()
         await self.update(interaction)
+        
+class QRMReturnData(ConfirmationReturnData):
+    
+    def __init__(self, selectionView : SelectionView):
+        super().__init__(selectionView)
+        if self.is_confirmed:
+            self._responses = [selection.values for selection in selectionView.selection_rows]
+        else:
+            self._responses = []
+            
+    @property
+    def responses(self) -> List[ButtonChoice]:
+        return self._responses
