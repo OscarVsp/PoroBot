@@ -48,7 +48,7 @@ class Tournament(commands.Cog):
                     taille: int = commands.Param(description="Nombre de phases", gt=0)):
         await inter.response.defer(ephemeral=True)
         cancel_embed: disnake.Embed = FS.Embed(
-            description="Création du tournoi annulé.", footer_text="Tu peux rejeter cemessage pour le faire disparaître.")
+            description="Création du tournoi annulé.", footer_text="Tu peux rejeter ce message pour le faire disparaître.")
 
         phases: List[Tuple[int, int]] = []
 

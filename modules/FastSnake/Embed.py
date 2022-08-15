@@ -1,5 +1,6 @@
 import disnake
 from typing import List, Union
+from .Assets import *
 
 class Embed(disnake.Embed):
     """Represents a Discord embed.
@@ -150,3 +151,9 @@ class Embed(disnake.Embed):
 
 
         
+        
+def warning(message : str) -> disnake.Embed:
+    return Embed(title="⚠",description=message,color=disnake.Colour.orange(),thumbnail=Images.Poros.Sweat)
+
+def error(message : str) -> disnake.Embed:
+    return Embed(title=":x:",description=message,color=disnake.Colour.orange(),thumbnail=Images.Poros.Shock)

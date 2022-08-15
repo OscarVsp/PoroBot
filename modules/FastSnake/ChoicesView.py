@@ -1,3 +1,4 @@
+import enum
 from typing import List, Optional, Tuple, Union
 import disnake
 from modules.FastSnake.ConfirmationView import ConfirmationReturnData, ConfirmationView, Target
@@ -165,3 +166,64 @@ class QRMReturnData(ConfirmationReturnData):
     @property
     def emojis(self) -> List[Optional[disnake.PartialEmoji]]:
         return [r.emoji for r in self._responses]
+    
+class SelectionRow:
+    
+    def __init__(self, label : str, options : List[Union[str,Tuple[str,str]]], min_values : int = 1, max_values : int = None, defaults : Union[str,List[str]] = None):
+        self.label : str = label
+        self.options : List[Union[str,Tuple[str,str]]] = options
+        self.min_values : int = min_values
+        self.max_values : int = max_values if max_values else len(self.options)
+        self.defaults : List[str] = ([defaults] if isinstance(defaults, str) else defaults) if defaults else []
+                 
+    def to_components(self, row : int) -> disnake.ui.Select:
+        return disnake.ui.select(placeholder=self.label, min_values=self.min_values, max_values=self.max_values,row=row,options = [
+            (disnake.SelectOption(label = option, default = (option in self.defaults))) if isinstance(option, str) else disnake.SelectOption(label = option[0], emoji = option[1], default = (option[0] in self.defaults)) for option in self.options
+        ])             
+    
+class SelectionView(ConfirmationView):
+    
+    def __init__(self, target: Target, embeds: List[disnake.Embed], title: str, description: str, timeout: int, options : Union[List[SelectionRow], SelectionRow], color: disnake.Colour = disnake.Colour.default(), thumbnail: str = None):
+        super().__init__(target, embeds, title, description, timeout, color, thumbnail)
+        if isinstance(options, SelectionRow):
+            self.options : List[SelectionRow] = [options]
+        else:
+            self.options : List[SelectionRow] = options
+            
+        if len(self.options) > 4:
+            raise ValueError("Number of selection row should be lower or equal to 4.")
+        
+        for selection_row in self.options:
+            if len(selection_row.options) > 25:
+                raise ValueError("Number of options in one row should be lower or equal to 25")
+            
+        self.selection_rows : List[disnake.ui.Select] = []
+            
+        for i,selection_row in enumerate(self.options):
+            new_selection_row = selection_row.to_components(i+1)
+            new_selection_row.callback = self.call_back
+            self.selection_rows.append(new_selection_row)
+            self.add_item(new_selection_row)
+        self.check_validity()
+            
+    def check_validity(self) -> None:
+        valid : bool = True
+        for row in self.selection_rows:
+            if len(row.values) < row.min_values or len(row.values) > row.max_values:
+                valid = False
+                break
+        self.confirm.disabled == valid
+                
+            
+        
+    @property
+    def embed(self) -> disnake.Embed:
+        embed = super().embed
+        if self.selection_rows != []:
+            for row in self.selection_rows:
+                embed.add_field(name=f"__**{row.placeholder}**__",value="\n".join(f"> **{value}**" for value in row.values))
+        return embed
+    
+    async def call_back(self, interaction : disnake.MessageInteraction):
+        self.check_validity()
+        await self.update(interaction)

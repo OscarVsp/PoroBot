@@ -4,7 +4,6 @@ from disnake import ApplicationCommandInteraction
 import modules.FastSnake as FS
 from .view import *
 
-
 class Basic(commands.Cog):
     
     
@@ -12,7 +11,7 @@ class Basic(commands.Cog):
         """Initialize the cog
         """
         self.bot : commands.InteractionBot = bot
-
+        
     @commands.slash_command(
         description = "Commander un bière (test le ping du bot)"
     )
@@ -65,9 +64,13 @@ class Basic(commands.Cog):
         default_member_permissions=disnake.Permissions.all()
     )
     async def addlore(self, inter : disnake.UserCommandInteraction):
-        await inter.response.send_modal(
-            modal = loreModal(self.bot,inter.target)
-        )               
+        if inter.author.id == 187886815666110465 or inter.author == self.bot.owner:
+            await inter.response.send_modal(
+                modal = loreModal(self.bot,inter.target)
+            )
+        else:
+            await inter.response.send_message(embed=FS.warning("Seul Hyksos peut utiliser cette commande !"),ephemeral=True)
+                          
         
     
 

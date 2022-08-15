@@ -6,12 +6,6 @@ import modules.FastSnake as FS
 import asyncio
 from asyncio.exceptions import TimeoutError
 
-from modules.FastSnake.Views import confirmation, memberSelection
-
-
-async def is_owner(ctx):
-    return ctx.author.id == 281401408597655552
-
 
 class Admin(commands.Cog):
 
@@ -19,7 +13,7 @@ class Admin(commands.Cog):
         """Initialize the cog
         """
         self.bot: commands.InteractionBot = bot
-
+    
     async def update_proc(self, inter: disnake.ApplicationCommandInteraction, branch: str, restart: bool):
         cmd_split = ("git", "pull", "origin", branch)
         try:
@@ -67,7 +61,8 @@ class Admin(commands.Cog):
 
     @commands.slash_command(
         name="admin",
-        default_member_permissions=disnake.Permissions.all()
+        default_member_permissions=disnake.Permissions.all(),
+        guild_ids=[281403075506339840,533360564878180382]
     )
     async def admin(self, inter):
         pass
@@ -76,7 +71,6 @@ class Admin(commands.Cog):
         name="update",
         description="Update the bot"
     )
-    @commands.check(is_owner)
     async def update(self, inter: disnake.ApplicationCommandInteraction,
                      branch: str = commands.Param(description="The branch to pull", choices=[
                                                   "master", "test"], default="master"),
@@ -93,7 +87,6 @@ class Admin(commands.Cog):
         name="restart",
         description="Restart the bot"
     )
-    @commands.check(is_owner)
     async def restart(self, inter: disnake.ApplicationCommandInteraction):
         await inter.response.defer(ephemeral=True)
         if self.bot.test_mode:
@@ -107,7 +100,6 @@ class Admin(commands.Cog):
         name="command",
         description="Send a command to the Rpi through the bot"
     )
-    @commands.check(is_owner)
     async def send_command(self, inter: disnake.ApplicationCommandInteraction,
                            command: str = commands.Param(
                                description="Command to send"),
@@ -142,11 +134,9 @@ class Admin(commands.Cog):
                 description=f"Couldn't find file ****{cmd_split[0]}****"
             ))
 
-    @commands.slash_command(
+    @admin.sub_command(
         description="Voir les logs du bot",
-        default_member_permissions=disnake.Permissions.all()
     )
-    @commands.check(is_owner)
     async def logs(self, inter: disnake.UserCommandInteraction,
                    level: str = commands.Param(
                        description="Le level des logs à obtenir.",

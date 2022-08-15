@@ -114,6 +114,7 @@ class Server(commands.Cog):
           
     @commands.slash_command(
         name="export",default_member_permissions=disnake.Permissions.all(),
+        guild_ids=[281403075506339840,533360564878180382],
         dm_permission=False,
     )    
     async def export(self, inter):
@@ -124,9 +125,7 @@ class Server(commands.Cog):
     )
     async def export_role(self, inter):
         pass
-    
-    
-            
+           
     @export_role.sub_command(
         name="from_event",
         description="Créer un role à partir des participants d'un évennement."
@@ -391,12 +390,6 @@ class Server(commands.Cog):
             embeds = embeds,
         )
     
-                
-                
-        
-    
-                
-                
-            
-def setup(bot):
+                 
+def setup(bot : commands.InteractionBot):
     bot.add_cog(Server(bot))

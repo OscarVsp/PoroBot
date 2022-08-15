@@ -93,10 +93,10 @@ class Beer(disnake.ui.View):
 class loreModal(disnake.ui.Modal):
     def __init__(self,bot,member) -> None:
         self.bot = bot
-        self.member = member
+        self.member : disnake.Member = member
         data = loredb.get(self.member.name)
         if data == False: 
-            logging.debug(f"loreModalView#{self.id} : Member {self.member.name} don't have lore yet.")
+            logging.debug(f"loreModalView : Member {self.member.name} don't have lore yet.")
             components = [
                 disnake.ui.TextInput(
                     label="alias",
@@ -166,7 +166,7 @@ class loreModal(disnake.ui.Modal):
             inter.text_values
         )
         loredb.dump()
-        logging.debug(f"loreModalView#{self.id} : Member {self.member.name} lore is set to\n{inter.text_values}")
+        logging.debug(f"loreModalView# : Member {self.member.name} lore is set to\n{inter.text_values}")
         await inter.response.send_message(
             embed = get_lore_embed(self.member.name),
             ephemeral = True
