@@ -38,7 +38,7 @@ class Lol(commands.Cog):
             if team:
                 await inter.edit_original_message(
                     embed=(await team.embed()),
-                    components=disnake.ui.Button(label="OPGG", emoji=FS.Emotes.OPGG, style=disnake.ButtonStyle.link, url=(await team.opgg()))
+                    components=disnake.ui.Button(label="OPGG", emoji=FS.Emotes.Lol.OPGG, style=disnake.ButtonStyle.link, url=(await team.opgg()))
                 )
 
             else:
