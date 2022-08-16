@@ -71,15 +71,14 @@ class Lol(commands.Cog):
             await inter.edit_original_message(embed=FS.Embed(title="Invocateur inconnu", description=f"Le nom d'invocateur ***{invocateur}*** ne correspond à aucun invocateur...", footer_text="Tu peux rejeter ce message pour le faire disparaitre"), view=None)
             return
 
-        await inter.edit_original_message(embed=(await summoner.embed(force_update=True)))
-        confirm = await confirmation(inter, title="Valider l'invocateur", description=f"Est-ce bien ton compte ?")
+        confirm = await confirmation(inter, embeds = [await summoner.embed(force_update=True)], title="Valider l'invocateur", description=f"Est-ce bien ton compte ?")
 
         if not confirm:
             await inter.edit_original_message(embed=FS.Embed(title="Invocateur refusé.", description="Nom d'invocateur non changé.", footer_text="Tu peux rejeter ce message pour le faire disparaitre"), view=None)
             return
 
         if str(target.id) in self.summoners.getall():
-            confirm = await confirmation(inter, title="Invocateur déjà existant", description=("Tu as" if target == inter.author else f"{target.mention} a")+f" déjà le nom d'invocateur suivant enregistré : ***{self.summoners.get(str(target.id))}***\n Veux-tu le remplacer ?", timeout=120)
+            confirm = await confirmation(inter, embeds = [await summoner.embed(force_update=True)], title="Invocateur déjà existant", description=("Tu as" if target == inter.author else f"{target.mention} a")+f" déjà le nom d'invocateur suivant enregistré : ***{self.summoners.get(str(target.id))}***\n Veux-tu le remplacer ?", timeout=120)
             if not confirm:
                 await inter.edit_original_message(embed=FS.Embed(title="Invocteur inchangé", description="Nom d'invocateur non changé", footer_text="Tu peux rejeter ce message pour le faire disparaitre"), view=None)
                 return
