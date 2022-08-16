@@ -6,9 +6,10 @@ from disnake.ext import commands
 from disnake import ApplicationCommandInteraction, NotFound
 from typing import List, Union
 import modules.FastSnake as FS
+from modules.FastSnake.ChoicesView import SelectionRow, SelectionView
 from modules.FastSnake.ConfirmationView import ConfirmationReturnData
 from modules.FastSnake.ShadowMember import MISSING
-from modules.FastSnake.Views import confirmation, memberSelection
+from modules.FastSnake.Views import Selection, confirmation, memberSelection
 from .view import Locker
 from deep_translator import GoogleTranslator
 
@@ -110,7 +111,7 @@ class Server(commands.Cog):
                     pass
         else:
             await inter.edit_original_message(embed=FS.Embed(description = f":o: Suppression de la catégorie {categorie.mention} annulée !", color=disnake.Colour.green()), view = None)
-          
+         
           
     @commands.slash_command(
         name="export",default_member_permissions=disnake.Permissions.all(),
@@ -297,7 +298,6 @@ class Server(commands.Cog):
         else:
             await inter.edit_original_message(embed=FS.Embed(description="Impossible d'envoyer un embed vide"))
     
-
     
     @commands.slash_command(
         name="lock",

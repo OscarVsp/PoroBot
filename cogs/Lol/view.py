@@ -1,4 +1,7 @@
-import disnake 
+from typing import List
+import disnake
+from cogs.Lol.exceptions import SummonerNotFound
+from cogs.Lol.watcher import CurrentGame, Summoner 
 import modules.FastSnake as FS
 from modules.LolPatchNoteScraper import PatchNote
 
@@ -74,4 +77,65 @@ class PatchNoteView(disnake.ui.View):
         
     async def on_timeout(self) -> None:
         await self.inter.delete_original_message()
+        
+        
+        
+class CurrentGameView(disnake.ui.View):
+    
+    def __init__(self, summoner_name : str):
+        super().__init__(timeout=None)
+        self.summoner_name : str = summoner_name
+                
+    async def start(self, inter : disnake.ApplicationCommandInteraction):
+        try:
+            self.current_summoner = await Summoner.by_name(self.summoner_name)
+        except SummonerNotFound:
+            await inter.edit_original_message(embed=FS.Embed(title="Invocateur inconnu", description=f"Le nom d'invocateur ***{self.summoner_name}*** ne correspond à aucun invocateur...", footer_text="Tu peux rejeter ce message pour le faire disparaitre"), view=None)
+            await inter.delete_original_message(delay = 3)
+            return
+        
+        await inter.edit_original_message(embeds=[await self.current_summoner.embed(force_update=True),FS.Embed(description="*Recherche de game en cours...*")])
+
+        self.live_game = await self.current_summoner.currentGame()
+        self.buttons : List[disnake.ui.Button] = []
+        if self.live_game:
+            for i,team in enumerate(self.live_game.teams):
+                for j,player in enumerate(team.participants):
+                    name = player.summonerName
+                    if len(name) > 10:
+                        name = name[:10]
+                    button = disnake.ui.Button(label=name,custom_id=f'{i}:{j}')
+                    button.callback = self.call_back
+                    self.add_item(button)
+                    self.buttons.append(button)
+            await self.update(inter)
+            for participant in self.live_game.participants:
+                await (await participant.summoner()).masteries()
+        else:
+            await inter.edit_original_message(embeds=[(await self.current_summoner.embed()),FS.Embed(description="*Pas de partie en cours*")])
+            await inter.delete_original_message(delay=30)
+
+        
+        
+                
+    async def embeds(self) -> List[disnake.Embed]:
+        return [await self.current_summoner.embed(), await self.live_game.embed()]
+    
+    async def update(self, inter : disnake.MessageInteraction):
+        for button in self.buttons:
+            button.disabled = (self.current_summoner.name.startswith(button.label))
+        if inter.response.is_done():
+            await inter.edit_original_message(embeds=await self.embeds(), view = self)
+        else:
+            await inter.response.edit_message(embeds=await self.embeds(), view = self)
+                
+                
+    async def call_back(self, inter : disnake.MessageInteraction):
+        await inter.response.defer()
+        indexes = inter.component.custom_id.split(':')
+        self.current_summoner = await self.live_game.teams[int(indexes[0])].participants[int(indexes[1])].summoner()
+        await self.update(inter)
+
+    
+    
         

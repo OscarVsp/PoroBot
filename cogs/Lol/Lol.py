@@ -204,22 +204,8 @@ class Lol(commands.Cog):
                          invocateur: str = commands.Param(description="Le nom de l'invocateur.")):
         await inter.response.defer(ephemeral=False)
         
-        try:
-            summoner = await Summoner.by_name(invocateur)
-        except SummonerNotFound:
-            await inter.edit_original_message(embed=FS.Embed(title="Invocateur inconnu", description=f"Le nom d'invocateur ***{invocateur}*** ne correspond à aucun invocateur...", footer_text="Tu peux rejeter ce message pour le faire disparaitre"), view=None)
-            await inter.delete_original_message(delay = 3)
-            return
-        
-        await inter.edit_original_message(embeds=[await summoner.embed(force_update=True),FS.Embed(description="*Recherche de game en cours...*")])
-
-        live_game = await summoner.currentGame()
-        if live_game:
-            await inter.edit_original_message(embeds=[await summoner.embed(),(await live_game.embed())])
-        
-        else:
-            await inter.edit_original_message(embeds=[(await summoner.embed()),FS.Embed(description="*Pas de partie en cours*")])
-            await inter.delete_original_message(delay=30)
+        view = CurrentGameView(invocateur)
+        await view.start(inter)
             
     @lol.sub_command(
         name="invocateur",
@@ -286,13 +272,21 @@ class Lol(commands.Cog):
                             "inline": True
                         }
                     ] + [
-                        {'name':f"**Groupe {FS.Emotes.Alpha[i]}**",'value':'\n'.join([f"> {member[0].mention}" for member in members])}
-                        for i,members in enumerate(groupes)
+                        {'name':f"**Groupe {FS.Emotes.Alpha[i]}**",'value':'\n'.join([f"> {member[0].mention}" for member in group])}
+                        for i,group in enumerate(groupes)
                     ]
                 ),
                 view=None
-            )  
-            await inter.edit_original_message(embed=FS.Embed(description="Groupes crées !",footer_text="Tu peux rejeter ce message pour le faire disparaitre"),view=None)
+            )
+            role = await confirmation(inter, title="Groupes crées",description="Veux-tu créer des roles à partir de ces groupes ?")
+            if role:
+                for i,group in enumerate(groupes):
+                    role = await inter.guild.create_role(name=f"Groupe {chr(ord('A') +i)}")
+                    for member in group:
+                        await member[0].add_roles(role)
+                await inter.edit_original_message(embed=FS.Embed(description="Roles crées !",footer_text="Tu peux rejeter ce message pour le faire disparaitre"),view=None)
+            else:          
+                await inter.edit_original_message(embed=FS.Embed(description="Groupes crées !",footer_text="Tu peux rejeter ce message pour le faire disparaitre"),view=None)
         else:
             await inter.edit_original_message(embed=FS.Embed(description=":x Annulé",footer_text="Tu peux rejeter ce message pour le faire disparaitre"),view=None) 
 

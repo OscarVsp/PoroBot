@@ -214,7 +214,7 @@ class CurrentGame(Watcher):
             self.profileIconId: int = participantInfo.get('profileIconId')
             self.bot: bool = participantInfo.get('bot')
             self.teamId: int = participantInfo.get('teamId')
-            self.summonerName: int = participantInfo.get('summonerName')
+            self.summonerName: str = participantInfo.get('summonerName')
             self.summonerId: str = participantInfo.get('summonerId')
             self.spell1Id: int = participantInfo.get('spell1Id')
             self.spell2Id: int = participantInfo.get('spell2Id')
