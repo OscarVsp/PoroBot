@@ -805,7 +805,7 @@ class Round(Container):
     
     @property
     def title(self) -> str:
-        return f"⚔️ __**ROUND **__{FS.Emotes.Num(self._round_idx+1)}"
+        return f"{FS.Emotes.crossing_sword} __**ROUND **__{FS.Emotes.Num(self._round_idx+1)}"
 
     @property
     def embed(self) -> disnake.Embed:

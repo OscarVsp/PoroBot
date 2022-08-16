@@ -79,7 +79,7 @@ class AdminView(disnake.ui.View):
         await self.tournament.update()
         await self.update(interaction)
         
-    @disnake.ui.button(emoji = "🔁", label = "Annuler", style=disnake.ButtonStyle.primary, row = 1)
+    @disnake.ui.button(emoji = FS.Assets.Emotes.restart, label = "Annuler", style=disnake.ButtonStyle.primary, row = 1)
     async def discard_button(self, button: disnake.ui.Button, interaction : disnake.MessageInteraction):
         self.reset_selection()
         self.tournament.restore_from_last_state()

@@ -83,7 +83,7 @@ class ConfirmationView(disnake.ui.View):
         self.interaction = interaction
         await self.end()
         
-    @disnake.ui.button(label = "Annuler", emoji="❌", style=disnake.ButtonStyle.danger)
+    @disnake.ui.button(label = "Annuler", emoji="<:restart:1009104340524478534>", style=disnake.ButtonStyle.danger)
     async def cancel(self, button : disnake.ui.Button, interaction : disnake.MessageInteraction):
         await interaction.response.defer()
         self.state = ViewState.CANCELLED
