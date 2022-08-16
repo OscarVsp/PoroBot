@@ -246,14 +246,14 @@ class Tournament2v2Roll(Tournament):
                     'inline':True
                 },
                 {
-                    'name': "💎",
+                    'name': FS.Emotes.gemme_animed,
                     'value': "\n".join([f" **{round(p.points)}**" for p in self.getRanking()]),
                     'inline':True
                 },
                 {
                     'name': "➖➖➖➖➖➖➖➖➖➖➖➖➖",
                     'value': f"""> **Calcul des points**
-                    > 💎 Points **=** ⚔️ Kill  **+**  🧱 Tour  **+**  🧙‍♂️ 100cs
+                    > {FS.Emotes.gemme_animed} Points **=** ⚔️ Kill  **+**  🧱 Tour  **+**  🧙‍♂️ 100cs
                     > **En cas d'égalité**
                     > ⚔️ Kill  **>**  🧱 Tour  **>**  🧙‍♂️ 100cs
                     """,
