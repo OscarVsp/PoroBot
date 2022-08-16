@@ -60,8 +60,8 @@ class MemberSelectionView(ConfirmationView):
                 if len(self.add.options) < 25:
                     self.add.options.append(disnake.SelectOption(label=member.display_name, value=str(member.id)))
                 else:
-                    self.options_limited = True
-                
+                    self.options_limited = True  
+            
         if self.remove.options == []:
             self.remove.options = [disnake.SelectOption(label="Placeholder",value="0")]
             self.remove.disabled=True           
@@ -71,6 +71,11 @@ class MemberSelectionView(ConfirmationView):
             self.add.options = [disnake.SelectOption(label="Placeholder",value="0")]
             self.add.disabled=True
         self.add.max_values = len(self.add.options)
+        
+        self.role.options = [disnake.SelectOption(label=role.name,value=str(role.id)) for role in self.target.guild.roles]
+        if len(self.role.options) > 25:
+            self.role.options = self.role.options[:25]
+        self.remove.max_values = len(self.remove.options)  
         
         if self.size:
             self.confirm.disabled = (not len(self.selected_members) in self.size if isinstance(self.size, list) else len(self.selected_members) != self.size)
@@ -99,6 +104,19 @@ class MemberSelectionView(ConfirmationView):
             if str(member.id) in select.values and member not in self.selected_members:
                 self.selected_members.append(member)
                 self.remove.disabled=False
+        self.refresh_selection()
+        await self.update(interaction)
+        
+    @disnake.ui.select(min_values = 1, max_values = 1, row = 4, placeholder="🆕 Ajouter des roles",options= [
+                                disnake.SelectOption(label = "placeholder",value="1")
+                            ])
+    async def role(self, select : disnake.ui.Select, interaction : disnake.MessageInteraction):
+        for role_id in select.values:
+            role = interaction.guild.get_role(int(role_id))
+            for member in role.members:
+                if member not in self.selected_members and self.check(member=member, selected_members=self.selected_members, original_interaction=self.target, size=self.size):
+                    self.selected_members.append(member)
+                    self.remove.disabled=False
         self.refresh_selection()
         await self.update(interaction)
 
