@@ -37,7 +37,7 @@ class MemberSelectionView(ConfirmationView):
             )
         embed.add_field(
             name=f"{Emotes.Num(len(self.selected_members))} __Membre(s) sélectionné(s) :__",
-            value="\n".join(f"> {member.mention}" for member in self.selected_members) if len(self.selected_members) else "> *Aucun membre sélectionné...*",
+            value="\n".join(f"> **{member.display_name}**" for member in self.selected_members) if len(self.selected_members) else "> *Aucun membre sélectionné...*",
                 inline=False
         )
         if self.options_limited:

@@ -50,8 +50,8 @@ class AdminView(disnake.ui.View):
             self.set_team_2_score.placeholder = f"{self.match_selected.teams[1].display_name} : {self.match_selected.teams[1].scores_description}"
         else:
             self.match_selection.placeholder = f"Sélectionner un match"
-            self.match_selection.options = [disnake.SelectOption(label=f"{j+1}{chr(ord('A') + i)} : {self.tournament.rounds[j].matches[i].teams[0].display_name} VS {self.tournament.rounds[j].matches[i].teams[1].display_name}",value=f"{j}{i}",emoji="🆕") for j in range(self.tournament.nb_rounds) for i in range(self.tournament.nb_matches_per_round) if not self.tournament.rounds[j].matches[i].state >= State.ENDED]
-            self.match_selection.options += [disnake.SelectOption(label=f"{j+1}{chr(ord('A') + i)} : {self.tournament.rounds[j].matches[i].teams[0].display_name} VS {self.tournament.rounds[j].matches[i].teams[1].display_name}",value=f"{j}{i}",emoji="↩️") for j in range(self.tournament.nb_rounds) for i in range(self.tournament.nb_matches_per_round) if self.tournament.rounds[j].matches[i].state >= State.ENDED]
+            self.match_selection.options = [disnake.SelectOption(label=f"Round {j+1} - Match{chr(ord('A') + i)}",description=f"{self.tournament.rounds[j].matches[i].teams[0].display_name} VS {self.tournament.rounds[j].matches[i].teams[1].display_name}",value=f"{j}{i}",emoji="🆕") for j in range(self.tournament.nb_rounds) for i in range(self.tournament.nb_matches_per_round) if not self.tournament.rounds[j].matches[i].state >= State.ENDED]
+            self.match_selection.options += [disnake.SelectOption(label=f"Round {j+1} - Match{chr(ord('A') + i)}",description=f"{self.tournament.rounds[j].matches[i].teams[0].display_name} VS {self.tournament.rounds[j].matches[i].teams[1].display_name}",value=f"{j}{i}",emoji="↩️") for j in range(self.tournament.nb_rounds) for i in range(self.tournament.nb_matches_per_round) if self.tournament.rounds[j].matches[i].state >= State.ENDED]
             if len(self.match_selection.options) > 25:
                 self.match_selection.options = self.match_selection.options[:25]
             self.set_team_1_score.disabled = True

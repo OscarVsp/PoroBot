@@ -1,6 +1,6 @@
 from typing import List, Optional, Tuple, Union
 
-from modules.FastSnake.ChoicesView import ButtonChoice, QCMReturnData, QCMView, QRMReturnData, QRMView
+from modules.FastSnake.ChoicesView import ButtonChoice, QCMReturnData, QCMView, QRMReturnData, QRMView, SelectionRow, SelectionView, SelectionViewReturnData
 from .ConfirmationView import ConfirmationReturnData, ConfirmationView, Target
 from .MemberSelectionView import MemberSelectionReturnData, MemberSelectionView
 
@@ -224,3 +224,58 @@ async def QRM(
         `QRMReturnData`
     """
     return QRMReturnData(await process(QRMView(target, embeds, title, description, timeout, color, choices, pre_selection, min, max)))
+
+
+async def Selection(
+    target : Target,
+    options : List[SelectionRow],
+    embeds : List[disnake.Embed] = [],
+    title : str = "Choix",
+    description : str = "Choisissez parmit les propositions ci-dessous",
+    timeout : int = None,
+    color : disnake.Colour = disnake.Colour.purple(),
+    thumbnail : str = disnake.Embed.Empty) -> SelectionViewReturnData:
+    """|coro|\n
+    Send a QCM view linked to the interaction.
+    The interaction can be either an `ApplicationCommandInteraction` or a `MessageInteraction`.
+    
+    If the interaction of a `ApplicationCommandInteraction` has not been answered yet, the confirmation view is send using `ephemeral=True`.
+    If the interaction has already been answered, or in the case of a `MessageInteraction`, the embeds of the original_message are kept and the confirmation view embed is simply added at the end of the list.
+    
+    At the end of the confirmation, the interaction is defer, but the embeds and views are not removed yet and should be explicitly dealt with during a following `"edit_original_message"` (e.g. `"view=None"` to remove the confirmation view).
+
+    Parameters
+    ----------
+        target (`Target`):
+            The interaction for which the confirmation occurs.
+        embeds (`List[disnake.Embed]`)
+            The embed to send with the view.
+        choices (`List[ButtonChoice]`):
+            The choices available.
+        pre_selection (`List[ButtonChoice]`):
+            The preselected choices.
+            Defaults to `None`
+        min (`int`):
+            The minimum choice that someone can choose.
+            Defaults to `0`.
+        max (`int`):
+            The maximum choice that someone can choose. `None` for no limit
+            Defaults to `0`.
+        title (`str`, `optional`): 
+            Title of the confirmation embed.
+            Defaults to `"Choix"`.
+        description (`str`, `optional`): 
+            Message of the confirmation embed.
+            Defaults to `"Choisissez parmit les propositions ci-dessous"`.
+        timeout (`int`, `optional`): 
+            The timeout for the user to answer to confirmation.
+            Defaults to `None`.
+        color (`disnake.Colour`, `optional`): 
+            The color to use for the embed.
+            Defaults to `disnake.Colour.red()`.
+
+    Returns
+    --------
+        `QRMReturnData`
+    """
+    return SelectionViewReturnData(await process(SelectionView(target, embeds, title, description, timeout, options, color, thumbnail)))

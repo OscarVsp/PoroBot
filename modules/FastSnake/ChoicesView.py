@@ -174,30 +174,30 @@ class SelectionRow:
         self.options : List[Union[str,Tuple[str,str]]] = options
         self.min_values : int = min_values
         self.max_values : int = max_values if max_values else len(self.options)
-        self.defaults : List[str] = ([defaults] if isinstance(defaults, str) else defaults) if defaults else []
                  
     def to_components(self, row : int) -> disnake.ui.Select:
-        return disnake.ui.select(placeholder=self.label, min_values=self.min_values, max_values=self.max_values,row=row,options = [
-            (disnake.SelectOption(label = option, default = (option in self.defaults))) if isinstance(option, str) else disnake.SelectOption(label = option[0], emoji = option[1], default = (option[0] in self.defaults)) for option in self.options
+        return disnake.ui.Select(placeholder=self.label, min_values=self.min_values, max_values=self.max_values,row=row,options = [
+            (disnake.SelectOption(label = option)) if isinstance(option, str) else disnake.SelectOption(label = option[0], emoji = option[1]) for option in self.options
         ])             
     
 class SelectionView(ConfirmationView):
     
-    def __init__(self, target: Target, embeds: List[disnake.Embed], title: str, description: str, timeout: int, options : Union[List[SelectionRow], SelectionRow], color: disnake.Colour = disnake.Colour.default(), thumbnail: str = None):
+    def __init__(self, target: Target, embeds: List[disnake.Embed], title: str, description: str, timeout: int, options : List[SelectionRow], color: disnake.Colour = disnake.Colour.default(), thumbnail: str = disnake.Embed.Empty):
         super().__init__(target, embeds, title, description, timeout, color, thumbnail)
         if isinstance(options, SelectionRow):
             self.options : List[SelectionRow] = [options]
         else:
             self.options : List[SelectionRow] = options
             
-        if len(self.options) > 4:
-            raise ValueError("Number of selection row should be lower or equal to 4.")
+        if len(self.options) > 3:
+            raise ValueError("Number of selection row should be lower or equal to 3.")
         
         for selection_row in self.options:
             if len(selection_row.options) > 25:
                 raise ValueError("Number of options in one row should be lower or equal to 25")
             
         self.selection_rows : List[disnake.ui.Select] = []
+        self.labels = [option.label for option in options]
             
         for i,selection_row in enumerate(self.options):
             new_selection_row = selection_row.to_components(i+1)
@@ -207,33 +207,34 @@ class SelectionView(ConfirmationView):
         self.check_validity()
             
     def check_validity(self) -> None:
-        valid : bool = True
+        disabled : bool = False
         for row in self.selection_rows:
+            row.placeholder = ", ".join([value for value in row.values])
             if len(row.values) < row.min_values or len(row.values) > row.max_values:
-                valid = False
+                disabled = True
                 break
-        self.confirm.disabled == valid
+        self.confirm.disabled = disabled
                 
     @property
     def embed(self) -> disnake.Embed:
         embed = super().embed
         if self.selection_rows != []:
-            for row in self.selection_rows:
-                embed.add_field(name=f"__**{row.placeholder}**__",value="\n".join(f"> **{value}**" for value in row.values))
+            for j,row in enumerate(self.selection_rows):
+                embed.add_field(name=f"__**{self.labels[j]}**__",value=("\n".join(f"> **{value}**" for value in row.values) if row.values != [] else "*N/A*"),inline=False)
         return embed
     
     async def call_back(self, interaction : disnake.MessageInteraction):
         self.check_validity()
         await self.update(interaction)
         
-class QRMReturnData(ConfirmationReturnData):
+class SelectionViewReturnData(ConfirmationReturnData):
     
     def __init__(self, selectionView : SelectionView):
         super().__init__(selectionView)
         if self.is_confirmed:
             self._responses = [selection.values for selection in selectionView.selection_rows]
         else:
-            self._responses = []
+            self._responses = []            
             
     @property
     def responses(self) -> List[ButtonChoice]:

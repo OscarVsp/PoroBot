@@ -59,7 +59,7 @@ class PatchNoteView(disnake.ui.View):
             description = self.patch.description,
             url = self.patch.link,
             image = self.patch.overview_image,
-            thumbnail = FS.Images.Lol_icon,
+            thumbnail = FS.Images.Lol.Logo,
             color = disnake.Colour.dark_blue()      
         )
         self.add_item(

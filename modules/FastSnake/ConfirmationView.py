@@ -18,7 +18,7 @@ class ConfirmationView(disnake.ui.View):
         super().__init__(timeout=timeout)
         self.target : Target = target
         self.message_to_delete : disnake.Message = None
-        self.embeds : List[disnake.Embed] = embeds
+        self.embeds : List[disnake.Embed] = embeds if embeds else []
         self.title : str = title
         self.description : str = description
         self.thumbnail : str = thumbnail if thumbnail else disnake.Embed.Empty
@@ -26,7 +26,6 @@ class ConfirmationView(disnake.ui.View):
         self.interaction : disnake.MessageInteraction = None
         
         self.state : ViewState = ViewState.UNKOWN
-        self.original_embeds : List[disnake.Embed] = []
         
     @property
     def embed(self) -> disnake.Embed:
@@ -42,7 +41,7 @@ class ConfirmationView(disnake.ui.View):
             if self.target.response.is_done():
                 await self.target.edit_original_message(embeds=self.embeds+[self.embed], view=self)
             else:
-                await self.target.response.send_message(embed=self.embed, view=self, ephemeral=True)
+                await self.target.response.send_message(embeds=self.embeds+[self.embed], view=self, ephemeral=True)
         elif isinstance(self.target, disnake.MessageInteraction):
             if self.target.response.is_done():
                 await self.target.edit_original_message(embeds=self.embeds+[self.embed],view=self)
@@ -50,25 +49,25 @@ class ConfirmationView(disnake.ui.View):
                 await self.target.response.edit_message(embeds=self.embeds+[self.embed], view=self)
         elif isinstance(self.target, disnake.ModalInteraction):
             if self.target.response.is_done():
-                await self.target.edit_original_message(embed=self.embed, view=self)
+                await self.target.edit_original_message(embeds=self.embeds+[self.embed], view=self)
             else:
-                await self.target.response.send_message(embed=self.embed, view=self, ephemeral=True)
+                await self.target.response.send_message(embeds=self.embeds+[self.embed], view=self, ephemeral=True)
         elif isinstance(self.target, disnake.TextChannel):
-            self.message_to_delete = await self.target.send(embed=self.embed, view=self)
+            self.message_to_delete = await self.target.send(embeds=self.embeds+[self.embed], view=self)
         elif isinstance(self.target, disnake.Message):
-            self.message_to_delete = await self.target.channel.send(embed=self.embed,view=self)
+            self.message_to_delete = await self.target.channel.send(embeds=self.embeds+[self.embed],view=self)
         else:
             raise TypeError(f"Type {type(self.target)} is not supported.")
             
     async def update(self, inter : disnake.MessageInteraction):
         if inter.response.is_done():
             await inter.edit_original_message(
-                embeds=self.original_embeds+[self.embed],
+                embeds=self.embeds+[self.embed],
                 view=self
             )
         else:
             await inter.response.edit_message(
-                embeds=self.original_embeds+[self.embed],
+                embeds=self.embeds+[self.embed],
                 view=self
             )
             

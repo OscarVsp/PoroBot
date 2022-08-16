@@ -310,7 +310,7 @@ class CurrentGame(Watcher):
         for i,team in enumerate(self.teams):
             embed.add_field(
                 name=f"**__TEAM {FS.Assets.Emotes.Num(i+1)}__**",
-                value=f"{(await team.participants_block())}\n**__BANS__**\n{team.bans_block}\n\n[opgg]({team.opgg})"
+                value=f"{(await team.participants_block())}"+(f"\n**__BANS__**\n{team.bans_block}" if team.bans_block != "" else "")+f"\n\n[opgg]({team.opgg})"
             )
         return embed
 

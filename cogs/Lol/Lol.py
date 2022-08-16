@@ -161,7 +161,7 @@ class Lol(commands.Cog):
 
         for i in range(len(sorted_members)):
             ranks += f"{(await sorted_summoners[i].leagues()).first.tier_emote} **{(await sorted_summoners[i].leagues()).first.rank}**\n"
-            players += f"**{sorted_members[i].mention}** (`{sorted_summoners[i].name}`)\n"
+            players += f"**{sorted_members[i].display_name}** (`{sorted_summoners[i].name}`)\n"
 
         await inter.edit_original_message(
             embed=FS.Embed(

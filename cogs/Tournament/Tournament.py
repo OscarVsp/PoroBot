@@ -1,12 +1,13 @@
-from typing import List, Tuple
+from typing import List
 import disnake
 from disnake.ext import commands
 from disnake import ApplicationCommandInteraction
 from disnake.ext.commands import InteractionBot
+from .classes import TournamentData
 
-from modules.FastSnake import ButtonChoice
-
-from modules.FastSnake import QCM, confirmation
+from modules.FastSnake import confirmation
+from modules.FastSnake.ChoicesView import SelectionRow
+from modules.FastSnake.Views import Selection
 from .TournamentManager import Tournament2v2Roll
 import modules.FastSnake as FS
 
@@ -50,47 +51,47 @@ class Tournament(commands.Cog):
         cancel_embed: disnake.Embed = FS.Embed(
             description="Création du tournoi annulé.", footer_text="Tu peux rejeter ce message pour le faire disparaître.")
 
-        phases: List[Tuple[int, int]] = []
-
-        groupe_choice = [ButtonChoice(label=str(i+1)) for i in range(4)]
-        size_choice = [ButtonChoice(label=str(i)) for i in [4, 5, 8]]
-
+        phases: List[List[TournamentData]] = []
+        
+        def embeds(phases):
+            return [
+                FS.Embed(
+                    title="🏆 __**TOURNOI CRÉATION**__ 🏆",
+                    description="\n\n".join([f"{FS.Assets.Emotes.bracket} __**Phases {i+1}**___\nNombre de groupe : {len(phase)}\nTaille des groupe : {phase[0].size}" for i, phase in enumerate(phases)])
+                )
+            ]
+            
+        
+       
+        
         for phase_idx in range(taille):
-            title = f"Phase {FS.Emotes.Num(phase_idx+1)}"
-            groups = await QCM(target=inter, choices=groupe_choice, pre_selection=groupe_choice[0], title=title, description="Nombre de groupe ?")
-            if groups:
-                size = await QCM(target=inter, choices=size_choice, pre_selection=size_choice[0], title=title, description="Taille des groupes ?")
-                if size:
-                    phases.append((int(groups.label), int(size.label)))
-                else:
-                    await inter.edit_original_message(embed=cancel_embed, view=None)
-                    return
+            title = f"{FS.Assets.Emotes.bracket} Phase {FS.Emotes.Num(phase_idx+1)}"
+            
+            phaseSelection = await Selection(inter,[SelectionRow("Nombre de groupe",[str(i+1) for i in range(20)],max_values=1),SelectionRow("Type de phase",["2V2 Roll"],max_values=1)],title=title,embeds=embeds(phases))
+            if phaseSelection:
+                if phaseSelection.responses[1] == ["2V2 Roll"]:
+                    sizeSelection = await Selection(inter,[SelectionRow("Taille des groupes",["4","5","8"],max_values=1)],title=title,embeds=embeds(phases))
+                    if sizeSelection:
+                        phases.append([Tournament2v2Roll(inter.guild,int(sizeSelection.responses[0][0]),name=f"PHASE {phase_idx+1} - GROUPE {chr(ord('A') +j)}") for j in range(int(phaseSelection.responses[0][0]))])
+                    else:
+                        await inter.edit_original_message(embed=cancel_embed, view=None)
+                        return
             else:
                 await inter.edit_original_message(embed=cancel_embed, view=None)
                 return
-        title = "Création du tournoi"
+        
+        
+        title = "Validation"
         confirm = await confirmation(
             target=inter, 
-            embeds=[
-                FS.Embed(
-                    title=title,
-                    description="\n".join([f"__**Phases {i+1}**___\nNombre de groupe : {phase[0]}\nTaille des groupe : {phase[1]}" for i, phase in enumerate(phases)])
-                )
-            ], 
+            embeds=embeds(phases), 
             title=title,
             description="Confirmer la configuration ?")
         if confirm:
             await inter.edit_original_message(embed=FS.Embed(title=title, description="Création des phases en cours..."), view=None)
-            for i, phase in enumerate(phases):
-                if phase[0] == 1:
-                    new_tournoi = Tournament2v2Roll(
-                        inter.guild, size=phase[1], name=f"PHASE {i+1}")
-                    await new_tournoi.build()
-                else:
-                    for j in range(phase[0]):
-                        new_tournoi = Tournament2v2Roll(
-                            inter.guild, size=phase[1], name=f"PHASE {i+1} - GROUPE {chr(ord('A') +j)}")
-                        await new_tournoi.build()
+            for phase in phases:
+                for group in phase:
+                    await group.build()
             await inter.edit_original_message(embed=FS.Embed(title=title, description="Phases créées !", footer_text="Tu peux rejeter ce message pour le faire disparaitre."))
 
         else:

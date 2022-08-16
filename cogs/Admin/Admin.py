@@ -6,6 +6,10 @@ import modules.FastSnake as FS
 import asyncio
 from asyncio.exceptions import TimeoutError
 
+from modules.FastSnake.ChoicesView import SelectionRow
+
+from modules.FastSnake.Views import Selection
+
 
 class Admin(commands.Cog):
 
@@ -58,7 +62,7 @@ class Admin(commands.Cog):
                 title=f"❌ Restart failed due to *FileNotFoundError*",
                 description=f"Couldn't find file ***{cmd_split[0]}***"))
             await inter.edit_original_message(embeds=embeds) 
-
+            
     @commands.slash_command(
         name="admin",
         default_member_permissions=disnake.Permissions.all(),

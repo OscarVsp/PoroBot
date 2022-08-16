@@ -243,7 +243,7 @@ class Locker(disnake.ui.View):
             
       
         
-    @disnake.ui.button(emoji = "🔓", label = "Déverrouiller le channel", style=disnake.ButtonStyle.danger)
+    @disnake.ui.button(emoji = "🔓", label = "Déverrouiller", style=disnake.ButtonStyle.danger)
     async def unlock_button(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
         confirm = await confirmation(target=interaction,embeds=[self.embed])
         if confirm:
