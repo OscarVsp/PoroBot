@@ -97,8 +97,8 @@ class CurrentGameView(disnake.ui.View):
         await inter.edit_original_message(embeds=[await self.current_summoner.embed(force_update=True),FS.Embed(description="*Recherche de game en cours...*")])
 
         self.live_game = await self.current_summoner.currentGame()
-        self.buttons : List[disnake.ui.Button] = []
-        if self.live_game:
+        if self.live_game:  
+            self.buttons : List[disnake.ui.Button] = []
             for i,team in enumerate(self.live_game.teams):
                 for j,player in enumerate(team.participants):
                     name = player.summonerName

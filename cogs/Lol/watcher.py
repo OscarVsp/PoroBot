@@ -197,7 +197,7 @@ class CurrentGame(Watcher):
             return "\n".join([f"> `{b.name}`" for b in self.bannedChampions])
         
         async def participants_block(self) -> str:
-            return "\n".join([f"> {(await (await p.summoner()).leagues()).first.tier_emote} **{p._summoner._leagues.first.rank}** **{p.summonerId if len(p.summonerName) < 15 else p.summonerId[:]}** - `{p.championName}`" for p in self.participants])
+            return "\n".join([f"> {(await (await p.summoner()).leagues()).first.tier_emote} **{p.summonerName if len(p.summonerName) < 15 else p.summonerName[:15]}** - `{p.championName}`" for p in self.participants])
             
         @property
         def opgg(self) -> str:
@@ -310,7 +310,7 @@ class CurrentGame(Watcher):
         for i,team in enumerate(self.teams):
             embed.add_field(
                 name=f"**__TEAM {FS.Assets.Emotes.Num(i+1)}__**",
-                value=f"{(await team.participants_block())}"+(f"\n**__BANS__**\n{team.bans_block}" if team.bans_block != "" else "")+f"\n\n[opgg]({team.opgg})"
+                value=f"{(await team.participants_block())}"+(f"\n**__BANS__**\n{team.bans_block}" if team.bans_block != "" else "")+f"\n[opgg]({team.opgg})"
             )
         return embed
 
