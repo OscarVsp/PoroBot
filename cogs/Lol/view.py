@@ -94,7 +94,7 @@ class CurrentGameView(disnake.ui.View):
             await inter.delete_original_message(delay = 3)
             return
         
-        await inter.edit_original_message(embeds=[await self.current_summoner.embed(force_update=True),FS.Embed(description="*Recherche de game en cours...*")])
+        await inter.edit_original_message(embeds=[await self.current_summoner.embed(force_update=True),FS.Embed(description=f"{FS.Assets.Emotes.loading_animed} *Recherche de game en cours...*")])
 
         self.live_game = await self.current_summoner.currentGame()
         if self.live_game:  

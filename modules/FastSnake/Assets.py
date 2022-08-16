@@ -50,18 +50,36 @@ class Emotes:
    
     PoroSnack : str = '<:porosnack:908477364135161877>'
     BoudhaPog : str = '<:BoudhaPog:854084071055032340>'
+    restart : str = '<:restart:1009104340524478534'
     
     bracket : str = "<:bracketicon:1007206320908271726>"
+    crossing_sword : str = "<:Role_Moderator:1009104341732433930>"
+    roles : str = "<:roles:1009104343057842398>"
+    utility_wheel : str = "<:utility:1009104344286761050>"
+    gemme_animed : str = "<a:utility_boosting:1009104346534924309>"
+    gemme : str = "<:utilityboost:1009104353375830088>"
+    arrows_down : str = "<a:utility_bottompage:1009104348296519690>"
+    arrows_up : str = "<a:utility_toppage:1009104349798084759>"
+    loading_animed : str = "<a:utility6:1009104352239161404>"
+    book_purple : str = "<:AcePurpleRoles:1009104397147582515>"
+    twitch : str = "<:twitch:1009104398091292735>"
+    critic : str = "<:critic:1009110690298077184>"
+    TARGET_BLUE : str = "<:targetblue:1009110751404892211>"
+    TARGERT_GOLD : str = "<:target:1009110752721899540>"
     
     class Lol:
         
         Logo : str = '<:lol:1007993779984277606>'
+        RIOTFIST : str ="<:rp:1009110720559984661>"
         OPGG : str = '<:opgg:1007995866092671006>'
         Captain : str = "<:captain:1007206303992643624>"
         Champion : str = "<:champion:1007206305326452806>"
         Chest : str = "<:chest:1007206306693795930>"
         ChestAcquired : str = "<:chestacquired:1007206299664125952>"
         Trophy : str = "<:trophy:1007206322669879326>"
+        NASHOR : str = "<:nashor:1009110717967904798>"
+        HERALD : str = "<:herald:1009110739665043457>"
+        TURRET : str = "<:turret:1009110754915520546>"
         
         Rift : str = "<:rift:1007278042923671623>"
         Aram : str = "<:aram:1007278045402517604>"
@@ -76,6 +94,20 @@ class Emotes:
             "<:mastery6:1007216019942690816>",
             "<:mastery7:1007216021356167189>"
             ]
+        
+        Token : List[str] = [
+            "<:tokennone:1009110731142221947>",
+            "<:tokeniron:1009110728713707531>",
+            "<:tokenbronze:1009110721415622758>",
+            "<:tokensilver:1009110734170509422>",
+            "<:tokengold:1009110726222286898>",
+            "<:tokenplatinum:1009110732887048272>",
+            "<:tokendiamond:1009110724313890897>",
+            "<:tokenmaster:1009110730345304205>",
+            "<:tokengrandmaster:1009110727358939248>",
+            "<:tokenchallenger:1009110722657132615>"
+        ]
+            
             
         class Rune:
             Generic : str = "<:rune:1007206351019180042>"
@@ -95,6 +127,8 @@ class Emotes:
             UTILITY : str = '<:support:1007994494744002631>'
             FILL : str = "<:fill:1007994493250850897>"
             
+
+            
             @classmethod
             def get(cls, key : str) -> Optional[str]:
                 if key == "UNSELECTED":
@@ -113,6 +147,35 @@ class Emotes:
                     return cls.FILL
                 else:
                     return None
+                
+        class Role:
+            ADC : str = "<:adc:1009110682639290380>"
+            ASSASSIN : str = "<:assassin:1009110684023410698>"
+            FIGTHER : str = "<:figher:1009110714327257098>"
+            MAGE : str = "<:mage:1009110736691282061>"
+            SUPPORT : str = "<:support:1009110748523413556>"
+            TANK : str = "<:tank:1009110749727162401>"
+            
+        class Drake:
+            CHEMTECH : str = "<:chemtechdrake:1009110685256515705>"
+            CLOUD : str = "<:clouddrake:1009110688876212314>"
+            ELDER : str = "<:elderdrake:1009110711957471392>"
+            HEXTECH : str = "<:hextechdrake:1009110719196844082>"
+            OCEAN : str = "<:oceandrake:1009110741393088604>"
+            INFERNAL : str = "<:infernaldrake:1009110735462342656>"
+            MOUNTAIN : str = "<:mountainedrake:1009110738335436810>"
+            
+        class SummonerSpell:
+            NONE : str = "<:summonerSpell:1009110747214774402>"
+            CLARITY : str = "<:clarity:1009110686573539389>"
+            CLEANSE : str = "<:cleanse:1009110687836012704>"
+            EXHAUSTE : str = "<:exhaust:1009110713157025832>"
+            GHOST : str = "<:ghost:1009110715434545233>"
+            HEALT : str = "<:healt:1009110716688633916>"
+            SMITE : str = "<:smite:1009110743217618974>"
+            SMITE_BLUE : str = "<:smiteblue:1009110744647860394>"
+            SMITE_RED : str ="<:smitered:1009110745893576835>"
+            TELEPORTATION : str = "<:teleportation:1009110754051493898>"
 
         class Rank:
             Generic : str = "<:rankedemblem:1007206349509242880>"
@@ -127,6 +190,7 @@ class Emotes:
             MASTER : str = "<:master:1007976691521564692> "
             GRANDMASTER : str = "<:grandmaster:1007976690078732348>"
             CHALLENGER : str = "<:challenger:1007976687948009544>"
+            
             
             @classmethod
             def get(cls, key : str) -> Optional[str]:

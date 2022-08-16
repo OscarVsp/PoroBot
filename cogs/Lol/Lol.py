@@ -167,7 +167,7 @@ class Lol(commands.Cog):
     )
     async def classement(self, inter: ApplicationCommandInteraction,
                          filtre: str = commands.Param(description="Filtrer les membres à afficher par un role ou un évenement.", default=None)):
-        await inter.response.defer(ephemeral=False)
+        await inter.response.send_message(embed=FS.Embed(title=f"{FS.Assets.Emotes.Lol.Logo} __**CLASSEMENT LOL**__",description=f"{FS.Assets.Emotes.loading_animed} Création du classement en cours..."),ephemeral=False)
 
         filtre_members: List[disnake.Member] = None
 

@@ -192,7 +192,7 @@ class Locker(disnake.ui.View):
         await inter.edit_original_message(
             embed = FS.Embed(
                 title = f"🔓 __**Channel** *#{self.channel_original_name}* **verrouillé**__",
-                description="Déverrouillage en cours... ⌛"
+                description=f"{FS.Assets.Emotes.loading_animed} Déverrouillage en cours... ⌛"
             ), view = None)
         self.stop()
         self.server.locked_channels.remove(self)

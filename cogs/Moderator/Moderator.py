@@ -44,7 +44,7 @@ class Moderator(commands.Cog):
         description="Obtenir la list de toutes les emotes du serveur, ainsi que leur id"
     )
     async def emotes(self, inter : disnake.ApplicationCommandInteraction):
-        await inter.response.send_message(embed = FS.Embed(title="__**EMOTES DU SERVEUR**__",description="\n".join([f"{e} `<:{e.name}:{e.id}>`" for e in inter.guild.emojis])))
+        await inter.response.send_message(embed = FS.Embed(title="__**EMOTES DU SERVEUR**__",description="\n".join([f"{e} `<{'a' if e.animated else ''}:{e.name}:{e.id}>`" for e in inter.guild.emojis])))
 
 
 

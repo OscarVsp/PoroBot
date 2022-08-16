@@ -101,7 +101,7 @@ class AdminView(disnake.ui.View):
         )
         if confirmation:
             self.stop()
-            await interaction.edit_original_message(embed=FS.Embed(title=self.tournament._admin_title,description="Suppression du tournoi..."),view=None)
+            await interaction.edit_original_message(embed=FS.Embed(title=self.tournament._admin_title,description=f"{FS.Assets.Emotes.loading_animed} Suppression du tournoi..."),view=None)
             await self.tournament.delete(interaction)
         else:
             await self.update(interaction)
