@@ -197,7 +197,7 @@ class CurrentGame(Watcher):
             return "\n".join([f"> `{b.name}`" for b in self.bannedChampions])
         
         async def participants_block(self) -> str:
-            return "\n".join([f"> {(await (await p.summoner()).leagues()).first.tier_emote} **{p._summoner._leagues.first.rank}** **{p.summonerName if len(p.summonerName) < 15 else p.summonerName[:15]}** - `{p.championName}`" for p in self.participants])
+            return "\n".join([f"> {(await (await p.summoner()).leagues()).first.tier_emote} **{p._summoner._leagues.first.rank}** **{p.summonerId if len(p.summonerName) < 15 else p.summonerId[:]}** - `{p.championName}`" for p in self.participants])
             
         @property
         def opgg(self) -> str:
@@ -480,6 +480,10 @@ class ClashPlayer(Summoner):
         if len(listPlayerDto) > 0:
             return ClashPlayer(listPlayerDto[0], summoner=summoner._summonerDto)
         return None
+    
+    @classmethod
+    async def by_summoner_id(cls, summoner_id : int):
+        return await cls.by_summoner(await super().by_id(summoner_id))
 
     @classmethod
     async def by_Dto(cls, playerDto: dict):
@@ -532,6 +536,20 @@ class ClashTeam(Watcher):
     @classmethod
     async def by_summoner_name(cls, summoner_name: str):
         player: ClashPlayer = await ClashPlayer.by_name(summoner_name)
+        if player:
+            return await cls.by_id(player.teamId)
+        return None
+    
+    @classmethod
+    async def by_summoner_id(cls, summoner_id: str):
+        player: ClashPlayer = await ClashPlayer.by_summoner_id(summoner_id)
+        if player:
+            return await cls.by_id(player.teamId)
+        return None
+    
+    @classmethod
+    async def by_summoner(cls, summoner: Summoner):
+        player: ClashPlayer = await ClashPlayer.by_summoner(summoner)
         if player:
             return await cls.by_id(player.teamId)
         return None

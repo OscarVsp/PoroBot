@@ -84,7 +84,7 @@ class PoroBot(InteractionBot):
         
         logging.info("-"*50)
         logging.info("-"*50)
-
+        
     def load_commands(self) -> None:
         for extension in os.listdir(f"./cogs"):
             try:
