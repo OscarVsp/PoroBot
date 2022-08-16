@@ -21,6 +21,7 @@ class Tournament(commands.Cog):
 
     @commands.slash_command(name="tournament",
                             default_member_permissions=disnake.Permissions.all(),
+                            guild_ids=[533360564878180382,1008343697097760800],
                             dm_permission=False
                             )
     async def tournament(self, inter):
@@ -61,9 +62,6 @@ class Tournament(commands.Cog):
                 )
             ]
             
-        
-       
-        
         for phase_idx in range(taille):
             title = f"{FS.Assets.Emotes.bracket} Phase {FS.Emotes.Num(phase_idx+1)}"
             
@@ -79,8 +77,7 @@ class Tournament(commands.Cog):
             else:
                 await inter.edit_original_message(embed=cancel_embed, view=None)
                 return
-        
-        
+   
         title = "Validation"
         confirm = await confirmation(
             target=inter, 

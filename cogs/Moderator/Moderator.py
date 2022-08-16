@@ -43,6 +43,7 @@ class Moderator(commands.Cog):
     @commands.slash_command(
         name="clear",
         default_member_permissions=disnake.Permissions.all(),
+        guild_ids=[281403075506339840,533360564878180382,1008343697097760800],
         dm_permission=False)
     async def clear(self, inter):
         pass
@@ -96,7 +97,7 @@ class Moderator(commands.Cog):
           
     @commands.slash_command(
         name="export",default_member_permissions=disnake.Permissions.all(),
-        guild_ids=[281403075506339840,533360564878180382],
+        guild_ids=[281403075506339840,533360564878180382,1008343697097760800],
         dm_permission=False,
     )    
     async def export(self, inter):
@@ -166,6 +167,7 @@ class Moderator(commands.Cog):
         name="embed",
         description="Envoyer un embed",
         dm_permission=False,
+        guild_ids=[281403075506339840,533360564878180382,1008343697097760800],
         default_member_permissions=disnake.Permissions.all()
     )
     async def embed(self, inter : disnake.ApplicationCommandInteraction):

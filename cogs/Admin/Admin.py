@@ -6,10 +6,6 @@ import modules.FastSnake as FS
 import asyncio
 from asyncio.exceptions import TimeoutError
 
-from modules.FastSnake.ChoicesView import SelectionRow
-
-from modules.FastSnake.Views import Selection
-
 
 class Admin(commands.Cog):
 
