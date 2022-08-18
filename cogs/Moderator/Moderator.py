@@ -3,6 +3,7 @@ from typing import Union
 import disnake
 from disnake.ext import commands
 import modules.FastSnake as FS
+from modules.FastSnake.Views import memberSelection
 
 class ColorEnum(disnake.Colour, Enum):
     Blue = disnake.Colour.blue().value,
@@ -40,11 +41,28 @@ class Moderator(commands.Cog):
         
         
     @commands.slash_command(
-        name="emote",
+        name="emotes",
         description="Obtenir la list de toutes les emotes du serveur, ainsi que leur id"
     )
     async def emotes(self, inter : disnake.ApplicationCommandInteraction):
+        pass
+    
+    @emotes.sub_command(
+        name="serveur"
+    )
+    async def emotes_guild(self, inter : disnake.ApplicationCommandInteraction):
         await inter.response.send_message(embed = FS.Embed(title="__**EMOTES DU SERVEUR**__",description="\n".join([f"{e} `<{'a' if e.animated else ''}:{e.name}:{e.id}>`" for e in inter.guild.emojis])))
+
+    @emotes.sub_command(
+        name="all"
+    )
+    async def emotes_guild(self, inter : disnake.ApplicationCommandInteraction):
+        await inter.response.defer()
+        embeds = FS.Embed.flex(title="__**EMOTES DU BOT**__",description="\n".join([f"{e} `<{'a' if e.animated else ''}:{e.name}:{e.id}>`" for e in self.bot.emojis]))
+        await inter.edit_original_message(embed = embeds[0])
+        if len(embeds) > 1:
+            for embed in embeds[1:]:
+                await inter.channel.send(embed=embed)
 
 
 
@@ -104,7 +122,7 @@ class Moderator(commands.Cog):
          
           
     @commands.slash_command(
-        name="export",default_member_permissions=disnake.Permissions.all(),
+        name="create",default_member_permissions=disnake.Permissions.all(),
         guild_ids=[281403075506339840,533360564878180382,1008343697097760800],
         dm_permission=False,
     )    
@@ -116,7 +134,7 @@ class Moderator(commands.Cog):
     )
     async def export_role(self, inter):
         pass
-           
+    
     @export_role.sub_command(
         name="from_event",
         description="Créer un role à partir des participants d'un évennement."
@@ -135,12 +153,13 @@ class Moderator(commands.Cog):
         
         response = await FS.memberSelection(inter, title="Export role from event", description="Select members below", timeout=300, pre_selection=event_members)    
         if response:
+            await inter.edit_original_message(embed=FS.Embed(description=f"{FS.Emotes.loading_animed} Création du role en cours..."),view=None)
             new_role : disnake.Role = await inter.guild.create_role(name=name)
             for member in response.members:
                 await member.add_roles(new_role)
-            await inter.edit_original_message(embed=FS.Embed(description="\n".join(member.display_name for member in response.members) if (response.members and len(response.members) > 0 )else "*Aucun membre sélectionné*"), view = None)
+            await inter.edit_original_message(embed=FS.Embed(description="\n".join(member.display_name for member in response.members) if (response.members and len(response.members) > 0 )else "*Aucun membre sélectionné*"))
         else:
-            inter.edit_original_message(embed=FS.Embed(description=":o: Annulé"))
+            inter.edit_original_message(embed=FS.Embed(description=":o: Annulé"),view=None)
         
     @export_role_from_event.autocomplete("event")
     async def autocomp_event(self, inter: disnake.ApplicationCommandInteraction, user_input: str):
@@ -163,12 +182,13 @@ class Moderator(commands.Cog):
 
         response = await FS.memberSelection(inter, title="Export role from role", description="Select members to export to the new role", timeout=300, pre_selection=role.members)    
         if response:
+            await inter.edit_original_message(embed=FS.Embed(description=f"{FS.Emotes.loading_animed} Création du role en cours..."),view=None)
             new_role : disnake.Role = await inter.guild.create_role(name=name)
             for member in response.members:
                 await member.add_roles(new_role)
-            await inter.edit_original_message(embed=FS.Embed(description="\n".join(member.display_name for member in response.members) if (response.members and len(response.members) > 0 )else "*Aucun membre sélectionné*"), view = None)
+            await inter.edit_original_message(embed=FS.Embed(description="\n".join(member.display_name for member in response.members) if (response.members and len(response.members) > 0 )else "*Aucun membre sélectionné*"))
         else:
-            inter.edit_original_message(embed=FS.Embed(description=":o: Annulé"))
+            inter.edit_original_message(embed=FS.Embed(description=":o: Annulé"),view=None)
             
             
     @commands.slash_command(
@@ -202,19 +222,13 @@ class Moderator(commands.Cog):
                     footer_icon_url : str = commands.Param(description="L'url de l'icon du footer", default = disnake.Embed.Empty)):
         await inter.response.defer(ephemeral=True)
         if (
-            titre != disnake.Embed.Empty 
-            or contenu != disnake.Embed.Empty 
-            or thumbnail_file != None 
-            or thumbnail_url != disnake.Embed.Empty 
-            or image_file != None 
-            or image_url != disnake.Embed.Empty
-            or author_name != disnake.Embed.Empty
-            or author_icon_url != disnake.Embed.Empty):
+            titre != disnake.Embed.Empty
+            or contenu != disnake.Embed.Empty):
             if not channel:
                 channel = inter.channel
             embed = FS.Embed(
                     title=titre,
-                    description= contenu,
+                    description=contenu,
                     color=disnake.Colour(color) if color else disnake.Colour.default(),
                     url=url,
                     thumbnail=await thumbnail_file.to_file() if thumbnail_file else thumbnail_url,
@@ -275,6 +289,7 @@ class Moderator(commands.Cog):
                     footer_text=footer_text,
                     footer_icon_url=footer_icon_url
                 ) 
+            
             if (await FS.confirmation(inter, embeds=[embed], description="Confirmer l'envoie du message ?",color=disnake.Colour.purple())):
                 if isinstance(target, disnake.Role):
                     for member in target.members:
