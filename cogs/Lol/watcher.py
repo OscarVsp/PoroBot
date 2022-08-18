@@ -118,7 +118,7 @@ class Leagues(Watcher):
 
         @property
         def tier_emote(self) -> str:
-            return FS.Emotes.Lol.Rank.get(self.tier)
+            return FS.Emotes.Lol.Ranks.get(self.tier)
 
     def __init__(self, listLeagueEntryDto: dict):
         self._listLeagueEntryDto: List[dict] = listLeagueEntryDto
@@ -172,11 +172,11 @@ class CurrentGame(Watcher):
         
         @property    
         def emote(self) -> str:
-            return FS.Emotes.Lol.Rune.GENERIC
+            return FS.Emotes.Lol.Rune.NONE
         
         @property    
         def subEmote(self) -> str:
-            return FS.Emotes.Lol.Rune.GENERIC
+            return FS.Emotes.Lol.Rune.NONE
 
     class CustomizationObject:
 
@@ -451,7 +451,7 @@ class Summoner(Watcher):
         if self._leagues or force_update:
             leagues = (await self.leagues())
             embed.add_field(
-                name=f'{FS.Emotes.Lol.Rank.GENERIC} **RANKED**',
+                name=f'{FS.Emotes.Lol.Ranks.NONE} **RANKED**',
                 value=f"> **Solo/Duo :** {leagues.solo.tier_emote} **{leagues.solo.rank}** *({leagues.solo.leaguePoints} LP)*\n> **Flex :** {leagues.flex.tier_emote} **{leagues.flex.rank}** *({leagues.flex.leaguePoints} LP)*",
                 inline=False
             )
@@ -467,7 +467,7 @@ class ClashPlayer(Summoner):
         self.teamId: str = playerDto.get('teamId')
         self.summonerId: str = playerDto.get('summonerId')
 
-        self.position_emote: str = FS.Emotes.Lol.Position.get(self.position)
+        self.position_emote: str = FS.Emotes.Lol.Positions.get(self.position)
 
     @classmethod
     async def by_name(cls, summoner_name: str):

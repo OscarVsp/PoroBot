@@ -65,7 +65,7 @@ class Locker(disnake.ui.View):
                     'value':"\n".join(participants) if len(participants) > 0 else "*Pas de participant*"
                 },
                 {
-                    'name':"👀 __**Spectateurs :**__",
+                    'name':f"{FS.Emotes.SPECTATOR} __**Spectateurs :**__",
                     'value':"\n".join(spectateurs) if len(spectateurs) > 0 else "*Pas de spectateur*"
                 }         
             ],

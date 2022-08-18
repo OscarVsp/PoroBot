@@ -67,6 +67,9 @@ class Emotes:
     TARGET_BLUE : str = "<:targetblue:1009110751404892211>"
     TARGERT_GOLD : str = "<:target:1009110752721899540>"
     ADD_FRIEND : str = "<:addfriend:1009757240397402133>"
+    SPECTATOR : str = "<:spectator:1009809802995712010>"
+    FLAME : str = "<:eternal:1009809808955809803>"
+    BAN : str = "<:ban:1009809814563594281>"
     
     class Lol:
         
@@ -109,7 +112,7 @@ class Emotes:
             "<:mastery7:1007216021356167189>"
             ]
         
-        TOKEN : List[str] = [
+        TOKENS : List[str] = [
             "<:tokennone:1009110731142221947>",
             "<:tokeniron:1009110728713707531>",
             "<:tokenbronze:1009110721415622758>",
@@ -123,16 +126,42 @@ class Emotes:
         ]
             
             
-        class Rune:
-            GENERIC : str = "<:rune:1007206351019180042>"
+        class Runes:
+            NONE : str = "<:rune:1007206351019180042>"
             DOMINATION : str = "<:runedomination:1007206360640925737>"
             PRECISION : str = "<:runeprecision:1007206358950621225>"
             RESOLVE : str = "<:runeresolve:1007206352252309614>"
             SORCERY : str = '<:runesorcery:1007206355867811921>'
             INSPIRATION : str = '<:runewhimsy:1007206353577721886>'
+            AERY : str = " <:summonaery:1009809715464777848>"
+            PHASERUSH : str = "<:phaserush:1009809718031696073>"
+            COMET : str = "<:arcanecomet:1009809720699273226>"
+            GRASP : str = "<:graspoftheundying:1009809724650311700>"
+            AFTERSHOCK : str = "<:veteranaftershock:1009809726743269387>"
+            GUARDIAN : str = "<:guardian:1009809730161610752>"
+            PRESSTHEATACK : str = "<:presstheattack:1009809735358357516>"
+            PRESENCEOFMIND : str = "<:presenceofmind:1009809738617335868>"
+            LETALTEMPO : str = "<:lethaltempotemp:1009809745688924160>"
+            FLEETFOOTWORK : str = "<:fleetfootwork:1009809752349491250>"
+            CONQUEROR : str = "<:conqueror:1009809758183755888>"
+            GLACIALAUGMENT : str = "<:glacialaugment:1009809763716042803>"
+            ELECTROCUTE : str = "<:electrocute:1009809766752735345>"
+            DARKHARVEST : str = "<:darkharvest:1009809771060269187>"
+            PREDATOR : str = "<:predator:1009809778920390677>"
+            
+        class Stats:
+            
+            MAGICRESIST : str = "<:magicresistance:1009809784586903552>"
+            HEALT : str = "<:healt:1009809788194013334>"
+            ABILITYHASTE : str = "<:abilityhaste:1009809789930446928>"
+            ATTACKSPEED : str = "<:attackspeed:1009809793369788427>"
+            ARMOR : str = "<:armor:1009809797614407690>"
+            ABILITYPOWER : str = "<:abilityPower:1009809800579780608>"
+            
+            
             
         
-        class Position:
+        class Positions:
             UNSELECTED : str = "<:unselected:1007994502318923896>"
             TOP : str = '<:top:1007994503858245672>'
             JUNGLE : str = '<:jungle:1007994500066574407>'
@@ -162,7 +191,7 @@ class Emotes:
                 else:
                     return None
                 
-        class Role:
+        class Roles:
             ADC : str = "<:adc:1009110682639290380>"
             ASSASSIN : str = "<:assassin:1009110684023410698>"
             FIGTHER : str = "<:figher:1009110714327257098>"
@@ -170,7 +199,7 @@ class Emotes:
             SUPPORT : str = "<:support:1009110748523413556>"
             TANK : str = "<:tank:1009110749727162401>"
             
-        class Drake:
+        class Drakes:
             CHEMTECH : str = "<:chemtechdrake:1009110685256515705>"
             CLOUD : str = "<:clouddrake:1009110688876212314>"
             ELDER : str = "<:elderdrake:1009110711957471392>"
@@ -179,7 +208,7 @@ class Emotes:
             INFERNAL : str = "<:infernaldrake:1009110735462342656>"
             MOUNTAIN : str = "<:mountainedrake:1009110738335436810>"
             
-        class SummonerSpell:
+        class SummonerSpells:
             NONE : str = "<:summonerSpell:1009110747214774402>"
             CLARITY : str = "<:clarity:1009110686573539389>"
             CLEANSE : str = "<:cleanse:1009110687836012704>"
@@ -191,8 +220,8 @@ class Emotes:
             SMITE_RED : str ="<:smitered:1009110745893576835>"
             TELEPORTATION : str = "<:teleportation:1009110754051493898>"
 
-        class Rank:
-            GENERIC : str = "<:rankedemblem:1007206349509242880>"
+        class Ranks:
+            NONE : str = "<:rankedemblem:1007206349509242880>"
             
             UNRANKED : str = "<:unranked:1007976696487608431>"
             IRON : str = "<:iron:1007976694646313032>"
@@ -208,8 +237,10 @@ class Emotes:
             
             @classmethod
             def get(cls, key : str) -> Optional[str]:
-                if key == "UNRANKED":
-                    return cls.UNRANKED
+                if key == "NONE":
+                    return cls.NONE
+                elif key == "UNRANKED":
+                    return cls.IRON
                 elif key == "IRON":
                     return cls.IRON
                 elif key == "BRONZE":
@@ -232,7 +263,7 @@ class Emotes:
                     return None
         @classmethod
         def get(cls, position : str, rank : str) -> Optional[tuple[str,str]]:
-            return (cls.Position.get(position),cls.Rank.get(rank))
+            return (cls.Positions.get(position),cls.Ranks.get(rank))
         
         BLUEESSENCE : str = "<:blueessence:1007206326742564895>"
         XP : str = "<:boost:1007206301144715284>"
@@ -253,7 +284,7 @@ class Emotes:
         return "".join([cls.__num[int(chiffre)] for chiffre in number_str])
     
     @classmethod
-    def Rank(cls, number : int, size : int = None) -> str:
+    def Ranks(cls, number : int, size : int = None) -> str:
         """
         Take a number and return a str of the emotes that correspond to the number.
         """

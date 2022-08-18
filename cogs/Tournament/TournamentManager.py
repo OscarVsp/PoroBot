@@ -292,10 +292,10 @@ class Tournament2v2Roll(Tournament):
                 },
                 {
                     'name': "__**Format d'un match**__",
-                    'value': """Les matchs sont en **BO1** se jouant en 2v2 selon le format suivant :
-                            > 🌍 __Map__ : Abime hurlante
-                            > 👓 __Mode__ : Blind
-                            > ❌ __Bans__ : 3 par équipe *(à faire via le chat dans le lobby **pré-game**)*"""
+                    'value': f"""Les matchs sont en **BO1** se jouant en 2v2 selon le format suivant :
+                            > {FS.Emotes.Lol.ARAM} __Map__ : Abime hurlante
+                            > Ⓜ️ __Mode__ : Blind
+                            > {FS.Emotes.BAN} __Bans__ : 3 par équipe *(à faire via le chat dans le lobby **pré-game**)*"""
                 },
                 {
                     'name': "__**Règles d'un match**__",
@@ -344,10 +344,10 @@ class Tournament2v2Roll(Tournament):
                 },
                 {
                     'name': "__**Format d'un match**__",
-                    'value': """Les matchs sont en **BO1** se jouant en 2v2 selon le format suivant :
-                            > 🌍 __Map__ : Abime hurlante
-                            > 👓 __Mode__ : Blind
-                            > ❌ __Bans__ : 3 par équipe *(à faire via le chat dans le lobby **pré-game**)*"""
+                    'value': f"""Les matchs sont en **BO1** se jouant en 2v2 selon le format suivant :
+                            > {FS.Emotes.Lol.ARAM} __Map__ : Abime hurlante
+                            > Ⓜ️ __Mode__ : Blind
+                            > {FS.Emotes.BAN} __Bans__ : 3 par équipe *(à faire via le chat dans le lobby **pré-game**)*"""
                 },
                 {
                     'name': "__**Règles d'un match**__",

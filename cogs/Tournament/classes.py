@@ -963,11 +963,11 @@ class TournamentData(Container):
         ranks = []
         for i in range(len(sorted_players)):
             if i == 0:
-                ranks.append(f"{FS.Emotes.Rank(i)}")
+                ranks.append(f"{FS.Emotes.Ranks(i)}")
             elif sorted_players[i].points == sorted_players[i-1].points:
                 ranks.append(ranks[-1])
             else:
-                ranks.append(f"{FS.Emotes.Rank(i)}")
+                ranks.append(f"{FS.Emotes.Ranks(i)}")
         return ranks
 
     @property
