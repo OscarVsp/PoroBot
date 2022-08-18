@@ -1,4 +1,3 @@
-from curses.ascii import EM
 import logging
 import disnake
 from typing import List, Union

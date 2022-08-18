@@ -104,7 +104,7 @@ class CurrentGameView(disnake.ui.View):
                     name = player.summonerName
                     if len(name) > 10:
                         name = name[:10]
-                    button = disnake.ui.Button(label=name,custom_id=f'{i}:{j}')
+                    button = disnake.ui.Button(label=name,custom_id=f'{i}:{j}',emoji=player.championIcon)
                     button.callback = self.call_back
                     self.add_item(button)
                     self.buttons.append(button)
@@ -119,7 +119,7 @@ class CurrentGameView(disnake.ui.View):
         
                 
     async def embeds(self) -> List[disnake.Embed]:
-        return [await self.current_summoner.embed(), await self.live_game.embed()]
+        return [await self.current_summoner.embed()] +  await self.live_game.embeds()
     
     async def update(self, inter : disnake.MessageInteraction):
         for button in self.buttons:
