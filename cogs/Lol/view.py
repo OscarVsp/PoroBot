@@ -83,7 +83,7 @@ class PatchNoteView(disnake.ui.View):
 class CurrentGameView(disnake.ui.View):
     
     def __init__(self, summoner_name : str):
-        super().__init__(timeout=None)
+        super().__init__(timeout=40*60)
         self.summoner_name : str = summoner_name
                 
     async def start(self, inter : disnake.ApplicationCommandInteraction):

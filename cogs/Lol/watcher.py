@@ -1,3 +1,4 @@
+import logging
 import time
 from typing import Dict, List, Optional
 from riotwatcher import LolWatcher, ApiError
@@ -167,16 +168,16 @@ class CurrentGame(Watcher):
         def __init__(self, perksInfo: dict):
             self._perksInfo: dict = perksInfo
             self.perkIds: List[int] = perksInfo.get('perkIds')
-            self.perkStyle: int = perksInfo.get('perkIds')
+            self.perkStyle: int = perksInfo.get('perkStyle')
             self.perkSubStyle: int = perksInfo.get('perkSubStyle')
         
         @property    
         def emote(self) -> str:
-            return FS.Emotes.Lol.Rune.NONE
+            return FS.Emotes.Lol.Runes.NONE
         
         @property    
         def subEmote(self) -> str:
-            return FS.Emotes.Lol.Rune.NONE
+            return FS.Emotes.Lol.Runes.NONE
 
     class CustomizationObject:
 
@@ -184,26 +185,7 @@ class CurrentGame(Watcher):
             self._customizationObjectInfo: dict = customizationObjectInfo
             self.category: str = customizationObjectInfo.get('category')
             self.content: str = customizationObjectInfo.get('content')
-            
-    class Team:
-        
-        def __init__(self, team_id : int) -> None:
-            self.bannedChampions : List[CurrentGame.BannedChampion] = []
-            self.participants : List[CurrentGame.Participant] = []
-            self.id : int = team_id
-            
-        @property
-        def bans_block(self) -> str:
-            return "\n".join([f"> `{b.name}`" for b in self.bannedChampions])
-        
-        async def participants_block(self) -> str:
-            return "\n".join([f"> {(await (await p.summoner()).leagues()).first.tier_emote} **{p.summonerName if len(p.summonerName) < 15 else p.summonerName[:15]}** - `{p.championName}`" for p in self.participants])
-            
-        @property
-        def opgg(self) -> str:
-            return f"https://euw.op.gg/multi/query={''.join([p.summonerName.replace(' ','%20')+'%2C' for p in self.participants])}"
-
-        
+  
     class Participant:
 
         def __init__(self, participantInfo: dict):
@@ -225,10 +207,45 @@ class CurrentGame(Watcher):
             
             self._summoner : Summoner = None
             
+        @property
+        def spell1Emote(self) -> str:
+            return FS.Emotes.Lol.SummonerSpells.get(self.spell1Id)
+        
+        @property
+        def spell2Emote(self) -> str:
+            return FS.Emotes.Lol.SummonerSpells.get(self.spell2Id)
+            
+        async def block(self) -> str:
+            return f"{(await (await self.summoner()).leagues()).first.tier_emote} **{self.summonerName if len(self.summonerName) < 15 else self.summonerName[:15]}**\n> {FS.Emotes.Lol.Champions.get(self.championId)} **-** {FS.Emotes.Lol.Runes.Style(self.perks.perkStyle)} **-** {self.spell1Emote}{self.spell2Emote}"
+            
+        async def field(self) -> dict:
+            return {'name':f"{(await (await self.summoner()).leagues()).first.tier_emote} **{self.summonerName}**",'value':f"{FS.Emotes.Lol.Champions.get(self.championId)}{(await ChampionMastery.by_summoner_and_champion(self.summonerId,self.championId)).emote} **-** {FS.Emotes.Lol.Runes.Style(self.perks.perkStyle)}{FS.Emotes.Lol.Runes.Style(self.perks.perkSubStyle)} **-** {self.spell1Emote}{self.spell2Emote}",'inline':True}
+            
         async def summoner(self, force_update : bool = False):
             if self._summoner == None or force_update:
                 self._summoner = await Summoner.by_id(self.summonerId)
             return self._summoner
+        
+    class Team:
+        
+        def __init__(self, team_id : int) -> None:
+            self.bannedChampions : List[CurrentGame.BannedChampion] = []
+            self.participants : List[CurrentGame.Participant] = []
+            self.id : int = team_id
+            
+        @property
+        def bans_block(self) -> str:
+            return "\n".join([f"> `{b.name}`" for b in self.bannedChampions])
+        
+        async def participants_block(self) -> str:
+            return "\n".join([f"{await p.block()}" for p in self.participants])
+        
+        async def fields(self) -> List[dict]:
+            return [await p.field() for p in self.participants]
+            
+        @property
+        def opgg(self) -> str:
+            return f"https://euw.op.gg/multi/query={''.join([p.summonerName.replace(' ','%20')+'%2C' for p in self.participants])}"
 
     class BannedChampion:
 
@@ -302,17 +319,38 @@ class CurrentGame(Watcher):
         
     
     async def embed(self) -> disnake.Embed:
+        fields= (await self.teams[0].fields()) + (await self.teams[1].fields())
+        blank_field = {'name':"◼️",'value':"◼️"}
         embed = FS.Embed(
             title=f"{FS.Emotes.Lol.LOGO} __**GAME EN COURS**__",
             description=f"**Map :** `{self.mapName}` {self.mapIcon}\n**Type :** `{self.gameName}`\n**Durée :** `{self.gameLengthFormatted}`",
-            color=disnake.Colour.blue()
+            color=disnake.Colour.blue(),
+            fields=[
+                {'name':"__**TEAM :one:**__",'value':f"[opgg]({self.teams[0].opgg})",'inline':True},{'name':"__**TEAM :two:**__",'value':f"[opgg]({self.teams[1].opgg})",'inline':True}
+            ] + [blank_field] + [fields[0]]+[fields[5]]+[blank_field]+[fields[1]]+[fields[6]]+[blank_field]+[fields[2]]+[fields[7]]+[blank_field]+[fields[3]]+[fields[8]]+[blank_field]+[fields[4]]+[fields[9]]
+            
         )
+
+        
+        return embed
+        
         for i,team in enumerate(self.teams):
             embed.add_field(
                 name=f"**__TEAM {FS.Emotes.Num(i+1)}__**",
-                value=f"{(await team.participants_block())}"+(f"\n**__BANS__**\n{team.bans_block}" if team.bans_block != "" else "")+f"\n[opgg]({team.opgg})"
+                value=f"{(await team.participants_block())}"
             )
+        if self.teams[0].bans_block != "":
+            embed.add_field(name="◼️",value="◼️",inline=False)
+            for team in self.teams:
+                embed.add_field(
+                    name=f"{FS.Emotes.BAN} **__BANS__**\n",
+                    value = f"{team.bans_block}"
+                )
+                
+        logging.info(len(embed.fields[1].value.strip()))
         return embed
+    
+
 
 class ChampionMastery(Watcher):
 
@@ -341,15 +379,19 @@ class ChampionMastery(Watcher):
     @classmethod
     async def by_summoner_and_champion(cls, encrypted_summoner_id: str, champion_id: str):
         if cls.WATCHER:
-            championMasteryDto = cls.WATCHER.champion_mastery.by_summoner_by_champion(
+            championMasteryDto = cls.WATCHER.champion_mastery.by_summoner_by_champion(region=cls.REGION,
                 encrypted_summoner_id=encrypted_summoner_id, champion_id=champion_id)
             await asyncio.sleep(0.1)
             return ChampionMastery(championMasteryDto)
         raise WatcherNotInit
 
     @property
+    def emote(self) -> str:
+        return FS.Emotes.Lol.MASTERIES[self.championLevel]
+
+    @property
     def line_description(self) -> str:
-        return f"{FS.Emotes.Lol.MASTERIES[self.championLevel]} **{self.name}** *({self.championPointsFormatted})*"
+        return f"{self.emote} **{self.name}** *({self.championPointsFormatted})*"
 
 
 class Masteries(Watcher):

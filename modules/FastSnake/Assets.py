@@ -77,7 +77,6 @@ class Emotes:
         CRIT : str = "<:crit:1009767528395972708>"
         RIOTFIST : str ="<:rp:1009110720559984661>"
         OPGG : str = '<:opgg:1007995866092671006>'
-        CHAMPION : str = "<:champion:1007206305326452806>"
         CHEST : str = "<:chest:1007206306693795930>"
         CHESTACQUIRED : str = "<:chestacquired:1007206299664125952>"
         CAPTAIN : str = "<:captain:1007206303992643624>"
@@ -149,7 +148,24 @@ class Emotes:
             DARKHARVEST : str = "<:darkharvest:1009809771060269187>"
             PREDATOR : str = "<:predator:1009809778920390677>"
             
+            @classmethod
+            def Style(cls, id : int) -> str:
+                if id == 8000:
+                    return cls.PRECISION
+                elif id == 8100:
+                    return cls.DOMINATION
+                elif id == 8200:
+                    return cls.SORCERY
+                elif id == 8300:
+                    return cls.INSPIRATION
+                elif id == 8400:
+                    return cls.RESOLVE
+                else:
+                    return cls.NONE
+                    
+            
         class Stats:
+        
             
             MAGICRESIST : str = "<:magicresistance:1009809784586903552>"
             HEALT : str = "<:healt:1009809788194013334>"
@@ -219,6 +235,32 @@ class Emotes:
             SMITE_BLUE : str = "<:smiteblue:1009110744647860394>"
             SMITE_RED : str ="<:smitered:1009110745893576835>"
             TELEPORTATION : str = "<:teleportation:1009110754051493898>"
+            FLASH : str = "<:flash:1009826796981735506>"
+            DASH : str = "<:dash:1009826795262054471>"
+            MARK : str = "<:mark:1009826793559179304>"
+            IGNITE : str = "<:ignite:1009826791856287795>"
+            BARRIER : str = "<:barrier:1009826789788487680>"
+            
+            @classmethod
+            def get(cls, id : int):
+                if id==1:
+                    return cls.CLEANSE
+                elif id == 3:
+                    return cls.EXHAUSTE
+                elif id == 4:
+                    return cls.FLASH
+                elif id == 6:
+                    return cls.GHOST
+                elif id == 7:
+                    return cls.HEALT
+                elif id == 11:
+                    return cls.SMITE
+                elif id == 12:
+                    return cls.TELEPORTATION
+                elif id == 14:
+                    return cls.IGNITE # ignite
+                else:
+                    return f"SumSpell:{id}"
 
         class Ranks:
             NONE : str = "<:rankedemblem:1007206349509242880>"
@@ -261,6 +303,342 @@ class Emotes:
                     return cls.CHALLENGER
                 else:
                     return None
+                
+        class Champions:
+            NONE : str = "<:None:1009838143974944852>"
+            
+            YASUO : str = "<:Yasuo:1009837006408396850>"
+            ZAC : str = "<:Zac:1009837008362934362>"
+            GNAR : str = "<:Gnar:1009837010036477982>"
+            SIVIR : str = "<:Sivir:1009837011869372498>"
+            SERAPHINE : str = "<:Seraphine:1009837013832306710>"
+            KAISA : str = "<:KaiSa:1009837015862349895>"
+            ZYRA : str = "<:Zyra:1009837017783357530>"
+            ZOE : str = "<:Zoe:1009837019683364884>"
+            KAYN : str = "<:Kayn:1009837021914730496>"
+            SION : str = "<:Sion:1009837023852515359>"
+            AURELIONSOL : str = "<:AurelionSol:1009837025710579722>"
+            SYNDRA : str = "<:Syndra:1009837027782578227>"
+            QUINN : str = "<:Quinn:1009837029783244800>"
+            DIANA : str = "<:Diana:1009837031762968706>"
+            RYZE : str = "<:Ryze:1009837033985941534>"
+            LISSANDRA : str = "<:Lissandra:1009837039522435132>"
+            JAYCE : str = "<:Jayce:1009837049727176718>"
+            DARIUS : str = "<:Darius:1009837057658585099>"
+            KHAZIX : str = "<:KahZix:1009837073190092801>"
+            HECARIM : str = "<:Hecarim:1009837080286867486>"
+            ALISTAR : str = "<:Alistar:1009837085542334546>"
+            IRELIA : str = "<:Irelia:1009837547448434829>"
+            KASSADIN : str = "<:Kassadin:1009837549218439339>"
+            SONA : str = "<:Sona:1009837550619349103>"
+            SAMIRA : str = "<:Samira:1009837552003465309>"
+            DRMUNDO : str = "<:DRMundo:1009837553442115625>"
+            YUUMI : str = "<:Yummi:1009837555556040734>"
+            SHACO : str = "<:Shaco:1009837557846122526>"
+            ANIVIA : str = "<:Anivia:1009837559741939773>"
+            RAMMUS : str = "<:Rammus:1009837561461616691>"
+            AMUMU : str = "<:Amumu:1009837565827887285>"
+            CHOGATH : str = "<:ChoGath:1009837567337836587>"
+            KARTHUS : str = "<:Karthus:1009837570122854444>"
+            GALIO : str = "<:Galio:1009837574711414784>"
+            TWITCH : str = "<:Twitch:1009837579157377025>"
+            EVELYNN : str = "<:Evelynn:1009837584396058704>"
+            SINGED : str = "<:Singed:1009837588485505024>"
+            AZIR : str = "<:Azir:1009837593237659761>"
+            NAMI : str = "<:Nami:1009837595909435515>"
+            AATROX : str = "<:Aatrox:1009837597574582282>"
+            ZILEAN : str = "<:Zilean:1009837599562682468>"
+            VI : str = "<:Vi:1009837603752779786>"
+            MORGANA : str = "<:Morgana:1009837606911094845>"
+            QIYANA : str = "<:Qiyana:1009837610287501342>"
+            EKKO : str = "<:Ekko:1009837612388864010>"
+            KLED : str = "<:Kled:1009837617933729792>"
+            JAX : str = "<:Jax:1009837623197585489>"
+            ZED : str = "<:Zed:1009837628826321016>"
+            LUCIAN : str = "<:Lucian:1009837632836075541>"
+            SENNA : str = "<:Senna:1009837638515179601>"
+            VIEGO : str = "<:Viego:1009837643510591519>"
+            TRYNDAMERE : str = "<:Tryndamere:1009837650569605130>"
+            TAHMKENCH : str = "<:ThamKench:1009837656412278865>"
+            JINX : str = "<:Jinx:1009837664196886628>"
+            ZERI : str = "<:Zeri:1009837671624998995>"
+            ASHE : str = "<:Ashe:1009837679875203113>"
+            MISSFORTUNE : str = "<:MissFortune:1009837682651824189>"
+            KINDRED : str = "<:Kindred:1009837688679055440>"
+            JHIN : str = "<:Jhin:1009837698581803118>"
+            BRAUM : str = "<:Braum:1009837706530017321>"
+            BELVETH : str = "<:BemVeth:1009837715224797285>"
+            NUNU : str = "<:Nunu:1009837721767911535>"
+            OLAF : str = "<:Olaf:1009837726931112016>"
+            WARWICK : str = "<:Warwick:1009837729053417482>"
+            TRISTANA : str = "<:Tristana:1009837740059283486>"
+            TEEMO : str = "<:Teemo:1009837744698179624>"
+            AKSHAN : str = "<:Ashkan:1009837748192030800>"
+            CAMILLE : str = "<:Camille:1009837753434898533>"
+            TALIYAH : str = "<:Talyah:1009837756383510700>"
+            VELKOZ : str = "<:VelKoz:1009837762792398899>"
+            SORAKA : str = "<:Soraka:1009837772166672569>"
+            JARVANIV : str = "<:Jarvan:1009838012030533782>"
+            RENEKTON : str = "<:Renekton:1009838013695672330>"
+            MAOKAI : str = "<:Maokai:1009838015146901596>"
+            NOCTURNE : str = "<:Nocturne:1009838017051107339>"
+            PYKE : str = "<:Pyke:1009838018389098536>"
+            KATARINA : str = "<:Katarina:1009838020066803806>"
+            MALPHITE : str = "<:malphite:1009838022096850944>"
+            BLITZCRANK : str = "<:Blitzcrank:1009838023409676389>"
+            RELL : str = "<:Rell:1009838024860913686>"
+            DRAVEN : str = "<:Draven:1009838026970628156>"
+            LULU : str = "<:Lulu:1009838028832911471>"
+            ZIGGS : str = "<:Ziggs:1009838031865397378>"
+            FIORA : str = "<:Fiora:1009838035690602508>"
+            SEJUANI : str = "<:Sejuani:1009838038865690774>"
+            VIKTOR : str = "<:Viktor:1009838042355347496>"
+            NAUTILUS : str = "<:Nautlus:1009838047237505187>"
+            VARUS : str = "<:Varus:1009838055143776276>"
+            MASTERYI : str = "<:MasterYi:1009838058172059699>"
+            RENGAR : str = "<:Rengar:1009838066279665764>"
+            VOLIBEAR : str = "<:Volibear:1009838073791652021>"
+            FIZZ : str = "<:Fizz:1009838080712261742>"
+            GRAVES : str = "<:Graves:1009838087595110481>"
+            AHRI : str = "<:Ahri:1009838095853699172>"
+            SHYVANA : str = "<:Shyvana:1009838103583793182>"
+            XERATH : str = "<:Xerath:1009838110957383680>"
+            KAYLE : str = "<:Kayle:1009838120822386749>"
+            ANNIE : str = "<:Annie:1009838133740834877>"
+            APHELIOS : str = "<:Aphelios:1009838156880826368>"
+            NEEKO : str = "<:Neeko:1009838166187970722>"
+            SYLAS : str = "<:Sylas:1009838174241050717>"
+            ORNN : str = "<:Ornn:1009838182004691024>"
+            CAITLYN : str = "<:Caitlyn:1009838190447825037>"
+            SWAIN : str = "<:Swain:1009838193551622315>"
+            KINZHAO : str = "<:KinZhao:1009838195824918538>"
+            XAYAH : str = "<:Xayah:1009838198383452231>"
+            RAKAN : str = "<:Rakan:1009838203332743248>"
+            TRUNDLE : str = "<:Trundle:1009838212379848774>"
+            VEIGAR : str = "<:Veigar:1009838217320738916>"
+            TARIC : str = "<:Taric:1009838226984403136>"
+            BARD : str = "<:Bard:1009838238501982309>"
+            KALISTA : str = "<:Kalista:1009838250237640754>"
+            KARMA : str = "<:Karma:1009838261243494511>"
+            IVERN : str = "<:Ivern:1009838272782028872>"
+            REKSAI : str = "<:RekSai:1009838287977984161>"
+            ILLAOI : str = "<:Illaoi:1009838299633950791>"
+            CORKI : str = "<:Corki:1009838308022566923>"
+            THRESH : str = "<:Tresh:1009838319703703664>"
+            GANGPLANK : str = "<:GankPlank:1009838331565199391>"
+            JANNA : str = "<:Janna:1009838346278817893>"
+            TWISTEDFATE : str = "<:TwistedFate:1009838806083580057>"
+            LUX : str = "<:Lux:1009838938527113377>"
+            SHEN : str = "<:Shen:1009838939911241769>"
+            KOGMAW : str = "<:KogMaw:1009838942847254628>"
+            RIVEN : str = "<:Riven:1009838946148176002>"
+            TALON : str = "<:Talon:1009838948027215904>"
+            MALZAHAR : str = "<:Malzahar:1009838951122612335>"
+            FIDDLESTICKS : str = "<:FiddleStick:1009838953249112084>"
+            NILAH : str = "<:Nilah:1009838956529078394>"
+            LEONA : str = "<:Leona:1009838962451431506>"
+            RENATA : str = "<:Renata:1009838968130515045>"
+            GWEN : str = "<:Gwen:1009838972383539271>"
+            LILLIA : str = "<:lillia:1009838976951140462>"
+            SETT : str = "<:Sett:1009838984148553729>"
+            GAREN : str = "<:Garen:1009838990326759536>"
+            KENNEN : str = "<:Kennen:1009838995322183751>"
+            AKALI : str = "<:Akali:1009838997679394927>"
+            YORICK : str = "<:Yorick:1009839006000873574>"
+            MORDEKAISER : str = "<:Mordekaiser:1009839019271651398>"
+            EZREAL : str = "<:Ezreal:1009839022123798678>"
+            PANTHEON : str = "<:Pantheon:1009839023344328754>"
+            VLADIMIR : str = "<:Vladimir:1009839025252741210>"
+            GRAGAS : str = "<:Gragas:1009839026771066900>"
+            POPPY : str = "<:Poppy:1009839029115695145>"
+            YONE : str = "<:Yone:1009839030877298728>"
+            UDYR : str = "<:Udyr:1009839032794087435>"
+            NIDALEE : str = "<:Nidalee:1009839035306479687>"
+            NASUS : str = "<:Nasus:1009839037131010169>"
+            HEIMERDINGER : str = "<:HeimerDinger:1009839039106523229>"
+            SKARNER : str = "<:Skarner:1009839040725536809>"
+            VEX : str = "<:Vex:1009839043024003132>"
+            LEBLANC : str = "<:LeBlanc:1009839045305712711>"
+            CASSIOPEIA : str = "<:Cassiopeia:1009839047549653012>"
+            RUMBLE : str = "<:Rumble:1009839050053660793>"
+            VAYNE : str = "<:Vayne:1009839051861397524>"
+            LEESIN : str = "<:LeeSin:1009839054910652446>"
+            BRAND : str = "<:Brand:1009839057091706961>"
+            WUKONG : str = "<:Wukong:1009839059276943441>"
+            ORIANNA : str = "<:orianna:1009839078755274802>"
+            ELISE : str = "<:Elise:1009839090016989194>"
+            URGOT : str = "<:Urgot:1009839101983330344>"
+            XINZHAO : str = "<:XinZhao:1009842143143149609>"
+            
+            @classmethod
+            def get(cls, id : str):
+                map = {
+                    '266':cls.AATROX,
+                    '103':cls.AHRI,
+                    '84':cls.AKALI,
+                    '166':cls.AKSHAN,
+                    '12':cls.ALISTAR,
+                    '32':cls.AMUMU,
+                    '34':cls.ANIVIA,
+                    '1':cls.ANNIE,
+                    '523':cls.APHELIOS,
+                    '22':cls.ASHE,
+                    '136':cls.AURELIONSOL,
+                    '268':cls.AZIR,
+                    '432':cls.BARD,
+                    '200':cls.BELVETH,
+                    '53':cls.BLITZCRANK,
+                    '63':cls.BRAND,
+                    '201':cls.BRAUM,
+                    '51':cls.CAITLYN,
+                    '164':cls.CAMILLE,
+                    '69':cls.CASSIOPEIA,
+                    '31':cls.CHOGATH,
+                    '42':cls.CORKI,
+                    '122':cls.DARIUS,
+                    '131':cls.DIANA,
+                    '119':cls.DRAVEN,
+                    '36':cls.DRMUNDO,
+                    '245':cls.EKKO,
+                    '60':cls.ELISE,
+                    '28':cls.EVELYNN,
+                    '81':cls.EZREAL,
+                    '9':cls.FIDDLESTICKS,
+                    '114':cls.FIORA,
+                    '105':cls.FIZZ,
+                    '3':cls.GALIO,
+                    '41':cls.GANGPLANK,
+                    '86':cls.GAREN,
+                    '150':cls.GNAR,
+                    '79':cls.GRAGAS,
+                    '104':cls.GRAVES,
+                    '887':cls.GWEN,
+                    '120':cls.HECARIM,
+                    '74':cls.HEIMERDINGER,
+                    '420':cls.ILLAOI,
+                    '39':cls.IRELIA,
+                    '427':cls.IVERN,
+                    '40':cls.JANNA,
+                    '59':cls.JARVANIV,
+                    '24':cls.JAX,
+                    '126':cls.JAYCE,
+                    '202':cls.JHIN,
+                    '222':cls.JINX,
+                    '145':cls.KAISA,
+                    '429':cls.KALISTA,
+                    '43':cls.KARMA,
+                    '30':cls.KARTHUS,
+                    '38':cls.KASSADIN,
+                    '55':cls.KATARINA,
+                    '10':cls.KAYLE,
+                    '141':cls.KAYN,
+                    '85':cls.KENNEN,
+                    '121':cls.KHAZIX,
+                    '203':cls.KINDRED,
+                    '240':cls.KLED,
+                    '96':cls.KOGMAW,
+                    '7':cls.LEBLANC,
+                    '64':cls.LEESIN,
+                    '89':cls.LEONA,
+                    '876':cls.LILLIA,
+                    '127':cls.LISSANDRA,
+                    '236':cls.LUCIAN,
+                    '117':cls.LULU,
+                    '99':cls.LUX,
+                    '54':cls.MALPHITE,
+                    '90':cls.MALZAHAR,
+                    '57':cls.MAOKAI,
+                    '11':cls.MASTERYI,
+                    '21':cls.MISSFORTUNE,
+                    '62':cls.WUKONG,
+                    '82':cls.MORDEKAISER,
+                    '25':cls.MORGANA,
+                    '267':cls.NAMI,
+                    '75':cls.NASUS,
+                    '111':cls.NAUTILUS,
+                    '518':cls.NEEKO,
+                    '76':cls.NIDALEE,
+                    '895':cls.NILAH,
+                    '56':cls.NOCTURNE,
+                    '20':cls.NUNU,
+                    '2':cls.OLAF,
+                    '61':cls.ORIANNA,
+                    '516':cls.ORNN,
+                    '80':cls.PANTHEON,
+                    '78':cls.POPPY,
+                    '555':cls.PYKE,
+                    '246':cls.QIYANA,
+                    '133':cls.QUINN,
+                    '497':cls.RAKAN,
+                    '33':cls.RAMMUS,
+                    '421':cls.REKSAI,
+                    '526':cls.RELL,
+                    '888':cls.RENATA,
+                    '58':cls.RENEKTON,
+                    '107':cls.RENGAR,
+                    '92':cls.RIVEN,
+                    '68':cls.RUMBLE,
+                    '13':cls.RYZE,
+                    '360':cls.SAMIRA,
+                    '113':cls.SEJUANI,
+                    '235':cls.SENNA,
+                    '147':cls.SERAPHINE,
+                    '875':cls.SETT,
+                    '35':cls.SHACO,
+                    '98':cls.SHEN,
+                    '102':cls.SHYVANA,
+                    '27':cls.SINGED,
+                    '14':cls.SION,
+                    '15':cls.SIVIR,
+                    '72':cls.SKARNER,
+                    '37':cls.SONA,
+                    '16':cls.SORAKA,
+                    '50':cls.SWAIN,
+                    '517':cls.SYLAS,
+                    '134':cls.SYNDRA,
+                    '223':cls.TAHMKENCH,
+                    '163':cls.TALIYAH,
+                    '91':cls.TALON,
+                    '44':cls.TARIC,
+                    '17':cls.TEEMO,
+                    '412':cls.THRESH,
+                    '18':cls.TRISTANA,
+                    '48':cls.TRUNDLE,
+                    '23':cls.TRYNDAMERE,
+                    '4':cls.TWISTEDFATE,
+                    '29':cls.TWITCH,
+                    '77':cls.UDYR,
+                    '6':cls.URGOT,
+                    '110':cls.VARUS,
+                    '67':cls.VAYNE,
+                    '45':cls.VEIGAR,
+                    '161':cls.VELKOZ,
+                    '711':cls.VEX,
+                    '254':cls.VI,
+                    '234':cls.VIEGO,
+                    '112':cls.VIKTOR,
+                    '8':cls.VLADIMIR,
+                    '106':cls.VOLIBEAR,
+                    '19':cls.WARWICK,
+                    '498':cls.XAYAH,
+                    '101':cls.XERATH,
+                    '5':cls.XINZHAO,
+                    '157':cls.YASUO,
+                    '777':cls.YONE,
+                    '83':cls.YORICK,
+                    '350':cls.YUUMI,
+                    '154':cls.ZAC,
+                    '238':cls.ZED,
+                    '221':cls.ZERI,
+                    '115':cls.ZIGGS,
+                    '26':cls.ZILEAN,
+                    '142':cls.ZOE,
+                    '143':cls.ZYRA,
+                }
+
+                return map.get(str(id), cls.NONE)
+                
+                
         @classmethod
         def get(cls, position : str, rank : str) -> Optional[tuple[str,str]]:
             return (cls.Positions.get(position),cls.Ranks.get(rank))
@@ -305,7 +683,7 @@ class Emotes:
         else :
             number_str = "0"*(size - len(str(number+1))) + str(number+1)
         return "".join([cls.__num[int(chiffre)] for chiffre in number_str])
-
+    
     
             
 

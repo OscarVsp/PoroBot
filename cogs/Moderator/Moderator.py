@@ -41,24 +41,25 @@ class Moderator(commands.Cog):
         
         
     @commands.slash_command(
-        name="emotes",
-        description="Obtenir la list de toutes les emotes du serveur, ainsi que leur id"
+        name="emotes"
     )
     async def emotes(self, inter : disnake.ApplicationCommandInteraction):
         pass
     
     @emotes.sub_command(
-        name="serveur"
+        name="serveur",
+        description="Obtenir la list de toutes les emotes du serveur"
     )
     async def emotes_guild(self, inter : disnake.ApplicationCommandInteraction):
-        await inter.response.send_message(embed = FS.Embed(title="__**EMOTES DU SERVEUR**__",description="\n".join([f"{e} `<{'a' if e.animated else ''}:{e.name}:{e.id}>`" for e in inter.guild.emojis])))
+        await inter.response.send_message(embed = FS.Embed(title="__**EMOTES DU SERVEUR**__",description="\n".join([f"""{e.name.upper()} : str = "`<{'a' if e.animated else ''}:{e.name}:{e.id}>`" """ for e in inter.guild.emojis])))
 
     @emotes.sub_command(
-        name="all"
+        name="all",
+        description="Obtenir la liste des toutes les émotes accéssible par le bot."
     )
     async def emotes_guild(self, inter : disnake.ApplicationCommandInteraction):
         await inter.response.defer()
-        embeds = FS.Embed.flex(title="__**EMOTES DU BOT**__",description="\n".join([f"{e} `<{'a' if e.animated else ''}:{e.name}:{e.id}>`" for e in self.bot.emojis]))
+        embeds = FS.Embed.flex(title="__**EMOTES DU BOT**__",description="\n".join([f"""{e.name.upper()} : str = "`<{'a' if e.animated else ''}:{e.name}:{e.id}>`" """ for e in self.bot.emojis]))
         await inter.edit_original_message(embed = embeds[0])
         if len(embeds) > 1:
             for embed in embeds[1:]:
