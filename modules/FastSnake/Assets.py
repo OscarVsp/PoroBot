@@ -257,8 +257,24 @@ class Emotes:
                     return cls.SMITE
                 elif id == 12:
                     return cls.TELEPORTATION
+                elif id == 12:
+                    return cls.CLARITY
                 elif id == 14:
-                    return cls.IGNITE # ignite
+                    return cls.IGNITE
+                elif id == 21:
+                    return cls.BARRIER
+                elif id == 3:
+                    return cls.NONE #PoroKingDash
+                elif id == 3:
+                    return cls.NONE #PoroMark
+                elif id == 32:
+                    return cls.MARK
+                elif id == 39:
+                    return cls.NONE #UrfMark
+                elif id == 54:
+                    return cls.NONE #UltBook
+                elif id == 55:
+                    return cls.NONE #UtlBookSmite
                 else:
                     return f"SumSpell:{id}"
 
