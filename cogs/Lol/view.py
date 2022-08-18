@@ -102,8 +102,8 @@ class CurrentGameView(disnake.ui.View):
             for i,team in enumerate(self.live_game.teams):
                 for j,player in enumerate(team.participants):
                     name = player.summonerName
-                    if len(name) > 10:
-                        name = name[:10]
+                    if len(name) > 8:
+                        name = name[:8]
                     button = disnake.ui.Button(label=name,custom_id=f'{i}:{j}',emoji=player.championIcon)
                     button.callback = self.call_back
                     self.add_item(button)

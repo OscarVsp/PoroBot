@@ -222,7 +222,7 @@ class CurrentGame(Watcher):
             return (
                 f"{league.tier_emote} **{self.summonerName}**",
                 f"{self.championIcon} {championMastery.emote} ({championMastery.championPointsFormatted})",
-                f"{FS.Emotes.Lol.Runes.Style(self.perks.perkStyle)}{FS.Emotes.Lol.Runes.Style(self.perks.perkSubStyle)} **-** {self.spell1Emote}{self.spell2Emote}"
+                f"{FS.Emotes.Lol.Runes.Perks.Get(self.perks.perkIds[0])}{FS.Emotes.Lol.Runes.Styles.Get(self.perks.perkSubStyle)} **-** {self.spell1Emote}{self.spell2Emote}"
                 )
             
         async def summoner(self, force_update : bool = False):

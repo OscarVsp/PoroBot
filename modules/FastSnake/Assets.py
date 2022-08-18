@@ -126,47 +126,91 @@ class Emotes:
             
             
         class Runes:
-            NONE : str = "<:rune:1007206351019180042>"
-            DOMINATION : str = "<:runedomination:1007206360640925737>"
-            PRECISION : str = "<:runeprecision:1007206358950621225>"
-            RESOLVE : str = "<:runeresolve:1007206352252309614>"
-            SORCERY : str = '<:runesorcery:1007206355867811921>'
-            INSPIRATION : str = '<:runewhimsy:1007206353577721886>'
-            AERY : str = " <:summonaery:1009809715464777848>"
-            PHASERUSH : str = "<:phaserush:1009809718031696073>"
-            COMET : str = "<:arcanecomet:1009809720699273226>"
-            GRASP : str = "<:graspoftheundying:1009809724650311700>"
-            AFTERSHOCK : str = "<:veteranaftershock:1009809726743269387>"
-            GUARDIAN : str = "<:guardian:1009809730161610752>"
-            PRESSTHEATACK : str = "<:presstheattack:1009809735358357516>"
-            PRESENCEOFMIND : str = "<:presenceofmind:1009809738617335868>"
-            LETALTEMPO : str = "<:lethaltempotemp:1009809745688924160>"
-            FLEETFOOTWORK : str = "<:fleetfootwork:1009809752349491250>"
-            CONQUEROR : str = "<:conqueror:1009809758183755888>"
-            GLACIALAUGMENT : str = "<:glacialaugment:1009809763716042803>"
-            ELECTROCUTE : str = "<:electrocute:1009809766752735345>"
-            DARKHARVEST : str = "<:darkharvest:1009809771060269187>"
-            PREDATOR : str = "<:predator:1009809778920390677>"
+            class Styles:
+                NONE : str = "<:rune:1007206351019180042>"
+                DOMINATION : str = "<:runedomination:1007206360640925737>"
+                PRECISION : str = "<:runeprecision:1007206358950621225>"
+                RESOLVE : str = "<:runeresolve:1007206352252309614>"
+                SORCERY : str = '<:runesorcery:1007206355867811921>'
+                INSPIRATION : str = '<:runewhimsy:1007206353577721886>'
+                
+                @classmethod
+                def Get(cls, id : int) -> str:
+                    if id == 8000:
+                        return cls.PRECISION
+                    elif id == 8100:
+                        return cls.DOMINATION
+                    elif id == 8200:
+                        return cls.SORCERY
+                    elif id == 8300:
+                        return cls.INSPIRATION
+                    elif id == 8400:
+                        return cls.RESOLVE
+                    else:
+                        return cls.NONE
+                
+            class Perks:
+                NONE : str = "<:rune:1007206351019180042>"
             
-            @classmethod
-            def Style(cls, id : int) -> str:
-                if id == 8000:
-                    return cls.PRECISION
-                elif id == 8100:
-                    return cls.DOMINATION
-                elif id == 8200:
-                    return cls.SORCERY
-                elif id == 8300:
-                    return cls.INSPIRATION
-                elif id == 8400:
-                    return cls.RESOLVE
-                else:
-                    return cls.NONE
-                    
+                AERY : str = " <:summonaery:1009809715464777848>"
+                PHASERUSH : str = "<:phaserush:1009809718031696073>"
+                COMET : str = "<:arcanecomet:1009809720699273226>"
+                GRASP : str = "<:graspoftheundying:1009809724650311700>"
+                AFTERSHOCK : str = "<:veteranaftershock:1009809726743269387>"
+                GUARDIAN : str = "<:guardian:1009809730161610752>"
+                PRESSTHEATACK : str = "<:presstheattack:1009809735358357516>"
+                LETALTEMPO : str = "<:lethaltempotemp:1009809745688924160>"
+                FLEETFOOTWORK : str = "<:fleetfootwork:1009809752349491250>"
+                CONQUEROR : str = "<:conqueror:1009809758183755888>"
+                ELECTROCUTE : str = "<:electrocute:1009809766752735345>"
+                DARKHARVEST : str = "<:darkharvest:1009809771060269187>"
+                PREDATOR : str = "<:predator:1009809778920390677>"
+                HAILOFBLADES : str = "<:hailofblades:1009889839891632209>"
+                FIRSSTRIKE : str = "<:firststrike:1009889837999984650>"
+                GLACIALAUGMENT : str = "<:glacialaugment:1009809763716042803>"
+                SPELLBOOK : str = "<:unsealedspellbook:1009889842114601030>"
+                
+                @classmethod
+                def Get(cls, id : int) -> str:
+                    if id == 8005:
+                        return cls.PRESSTHEATACK
+                    elif id == 8008:
+                        return cls.LETALTEMPO
+                    elif id == 8010:
+                        return cls.CONQUEROR
+                    elif id == 8021:
+                        return cls.FLEETFOOTWORK
+                    elif id == 8112:
+                        return cls.ELECTROCUTE
+                    elif id == 8124:
+                        return cls.PREDATOR
+                    elif id == 8128:
+                        return cls.DARKHARVEST
+                    elif id == 8214:
+                        return cls.AERY
+                    elif id == 8229:
+                        return cls.COMET
+                    elif id == 8230:
+                        return cls.PHASERUSH
+                    elif id == 8351:
+                        return cls.GLACIALAUGMENT
+                    elif id == 8369:
+                        return cls.FIRSSTRIKE
+                    elif id == 8437:
+                        return cls.GRASP
+                    elif id == 8437:
+                        return cls.AFTERSHOCK
+                    elif id == 8465:
+                        return cls.GUARDIAN
+                    elif id == 9923:
+                        return cls.HAILOFBLADES
+                    return f"Perks:{id}"
+                
+            class SubPerk:
+                PRESENCEOFMIND : str = "<:presenceofmind:1009809738617335868>"
+            
             
         class Stats:
-        
-            
             MAGICRESIST : str = "<:magicresistance:1009809784586903552>"
             HEALT : str = "<:healt:1009809788194013334>"
             ABILITYHASTE : str = "<:abilityhaste:1009809789930446928>"
@@ -174,9 +218,6 @@ class Emotes:
             ARMOR : str = "<:armor:1009809797614407690>"
             ABILITYPOWER : str = "<:abilityPower:1009809800579780608>"
             
-            
-            
-        
         class Positions:
             UNSELECTED : str = "<:unselected:1007994502318923896>"
             TOP : str = '<:top:1007994503858245672>'
