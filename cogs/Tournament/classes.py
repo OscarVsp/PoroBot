@@ -1086,7 +1086,7 @@ class TournamentData(Container):
         self._players = []
         for member in members:
             self._players.append(Player(member,self._scoreSet))
-        
+                
     async def update(self) -> None:
         pass
     

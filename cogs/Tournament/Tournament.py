@@ -45,7 +45,7 @@ class Tournament(commands.Cog):
         await inter.edit_original_message(embed=FS.Embed(description=f"Tournois [{tournament.name}]({tournament.admin_message.jump_url}) créé !"))
 
     @tournament.sub_command(
-        name="mulit",
+        name="multi",
         description="Créer un tournoi à plusieurs phases"
     )
     async def multi(self, inter: ApplicationCommandInteraction,
@@ -86,6 +86,17 @@ class Tournament(commands.Cog):
 
         else:
             await inter.edit_original_message(embed=cancel_embed, view=None)
+            
+    @tournament.sub_command(
+        name="regles",
+        description="Obtenir les règles d'un format"
+    )
+    async def tournament_rules(self, inter : disnake.ApplicationCommandInteraction,
+                               format : str = commands.Param(description="Le format dont tu veux obtenir les règles",choices=[Tournament2v2Roll.TYPE])):
+        if format == Tournament2v2Roll.TYPE:
+            await inter.response.send_message(embed=Tournament2v2Roll.generic_rules())
+        else:
+            await inter.response.send_message(embed=FS.warning(f"Aucun format correspondant à `{format}`"))
 
 
 def setup(bot: InteractionBot):

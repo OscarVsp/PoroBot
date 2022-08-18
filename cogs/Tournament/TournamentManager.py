@@ -340,8 +340,7 @@ class Tournament2v2Roll(Tournament):
                     'name': "__**Format du tournoi**__",
                     'value': f"""Le tournoi se joue individuellement mais les matchs se font par **équipe de 2**. Ces équipes changent à chaque match. Ceci est fait en s'assurant que chacun joue
                             > ✅ __avec__ chaque autres joueurs exactement :one: fois
-                            > ❌ __contre__ chaque autres joueurs exactement :two: fois.
-                            Il y aura donc ***3/4/7* rounds** avec ***1/1/2* matchs** en parallèles."""
+                            > ❌ __contre__ chaque autres joueurs exactement :two: fois."""
                 },
                 {
                     'name': "__**Format d'un match**__",
@@ -366,7 +365,7 @@ class Tournament2v2Roll(Tournament):
                 {
                     'name': "__**Score personnel**__",
                     'value': f"""Les points obtenus en équipe lors d'un match sont ajoutés au score personnel de chaque joueur *(indépendamment de qui a marqué le point)*.
-                            À la fin des *3/4/7* rounds, c'est les points personnels qui détermineront le classement."""
+                            À la fin des rounds, c'est les points personnels qui détermineront le classement."""
                 },
                 {
                     'name': "__**Égalité**__",
@@ -375,9 +374,9 @@ class Tournament2v2Roll(Tournament):
                 },
                 {
                     'name': "__**Tournament finale**__",
-                    'value': f"""À la fin des *3/4/7* rounds, un BO5 en **1v1** sera joué entre le **1er** et le **2ième** du classement pour derterminer le grand vainqueur. Pour chaque ***1/2/3* point(s)** d'écart, un match d'avance sera accordé au **1er** *(jusqu'à un maximum de 2 matchs d'avance)*.
-                    > __*Exemple d'un tournoi avec 8 joueurs (7 rounds):*__
-                    > **Lỳf** est 1er avec **14 points** mais **Gay Prime** est 2ième avec **13 points**
+                    'value': f"""À la fin des rounds, un BO5 en **1v1** sera joué entre le **1er** et le **2ième** du classement pour derterminer le grand vainqueur. Si le **1er** à beaucoup de points d'avance (relativement au nombre de joueur), des match d'avance lui seront accordés *(jusqu'à un maximum de 2 matchs d'avance)*.
+                    > __*Exemple d'un tournoi avec 8 joueurs (3 points d'écart = 1 match d'avance):*__
+                    > **Lỳf** est 1er avec **14 points** mais **Gay Prime** est 2ième avec **10 points**
                     > ⏭️ **BO5** commençant à **1-0** en faveur de **Lỳf**."""
                 }
             ]
