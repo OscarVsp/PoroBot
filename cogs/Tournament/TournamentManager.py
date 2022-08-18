@@ -1,6 +1,6 @@
 from typing import List
 from .classes import *
-from .view import PlayerSelectionView, AdminView
+from .TournamentView import PlayerSelectionView, AdminView
 
 
 class Tournament(TournamentData):
@@ -8,6 +8,7 @@ class Tournament(TournamentData):
     def __init__(self,
                  guild: disnake.Guild,
                  name: str,
+                 type_str : str,
                  size: int, 
                  banner: str = None, 
                  nb_round: int = None, 
@@ -17,7 +18,8 @@ class Tournament(TournamentData):
                  scoreSet : ScoreSet = ScoreSet.default(),
                  nb_point_to_win_match: int = 2):
         super().__init__(guild, 
-                         name, 
+                         name,
+                         type_str,
                          banner if banner else FS.Images.Tournament.CLASHBANNER, 
                          size, 
                          nb_round, 
@@ -117,6 +119,11 @@ class Tournament(TournamentData):
 
 
 class Tournament2v2Roll(Tournament):
+    
+    TYPE = "2v2 Roll"
+    KILL_EMOTE = FS.Emotes.CROSSING_SWORD_WHITE
+    TURRET_EMOTE = FS.Emotes.Lol.TURRET
+    CS_EMOTE = FS.Emotes.Lol.CS
 
     class Seeding:
         S4: List[List[List[List[int]]]] = [
@@ -183,15 +190,16 @@ class Tournament2v2Roll(Tournament):
         super().__init__(
             guild,
             name,
+            self.TYPE,
             size,
             nb_round=len(self._seeding),
             nb_matches_per_round=len(self._seeding[0]),
             nb_teams_per_match=len(self._seeding[0][0]),
             nb_players_per_team=len(self._seeding[0][0][0]),
             scoreSet=ScoreSet([
-                    Score(id=1,score_size=3,name="Kill",emoji=FS.Emotes.CROSSING_SWORD_WHITE,weigth=1.001,per_team=2),
-                    Score(id=2,score_size=3,name="Turret",emoji=FS.Emotes.Lol.TURRET,weigth=1.0,per_team=1),
-                    Score(id=3,score_size=3,name="CS",emoji=FS.Emotes.Lol.CS,weigth=0.989,per_team=1),
+                    Score(id=1,score_size=3,name="Kill",emoji=self.KILL_EMOTE,weigth=1.001,per_team=2),
+                    Score(id=2,score_size=3,name="Turret",emoji=self.TURRET_EMOTE,weigth=1.0,per_team=1),
+                    Score(id=3,score_size=3,name="CS",emoji=self.CS_EMOTE,weigth=0.989,per_team=1),
                 ]),
             nb_point_to_win_match=2
         )
@@ -253,9 +261,9 @@ class Tournament2v2Roll(Tournament):
                 {
                     'name': "➖➖➖➖➖➖➖➖➖➖➖➖➖",
                     'value': f"""> **Calcul des points**
-                    > {FS.Emotes.GEMME_ANIMED} Points **=** {FS.Emotes.CROSSING_SWORD_WHITE} Kill  **+**  {FS.Emotes.Lol.TURRET} Tour  **+**  🧙‍♂️ 100cs
+                    > {FS.Emotes.GEMME_ANIMED} Points **=** {self.KILL_EMOTE} Kill  **+**  {self.TURRET_EMOTE} Tour  **+** {self.CS_EMOTE} 100cs
                     > **En cas d'égalité**
-                    > {FS.Emotes.CROSSING_SWORD_WHITE} Kill  **>**  {FS.Emotes.Lol.TURRET} Tour  **>**  🧙‍♂️ 100cs
+                    > {self.KILL_EMOTE} Kill  **>**  {self.TURRET_EMOTE} Tour  **>** {self.CS_EMOTE} 100cs
                     """,
                     'inline': False
                 }
@@ -279,7 +287,7 @@ class Tournament2v2Roll(Tournament):
                     'name': "__**Format du tournoi**__",
                     'value': f"""Le tournoi se joue individuellement mais les matchs se font par **équipe de 2**. Ces équipes changent à chaque match. Ceci est fait en s'assurant que chacun joue
                             > ✅ __avec__ chaque autres joueurs exactement :one: fois
-                            > :x: __contre__ chaque autres joueurs exactement :two: fois.
+                            > ❌ __contre__ chaque autres joueurs exactement :two: fois.
                             Il y aura donc **{self._nb_rounds} rounds**"""+(f"avec **{self._nb_matches_per_round} matchs** en parallèles." if self._nb_matches_per_round > 1 else ".")
                 },
                 {
@@ -298,9 +306,9 @@ class Tournament2v2Roll(Tournament):
                 {
                     'name': "__**Score d'un match**__",
                     'value': f"""Le match se finit lorsque l'une des deux équipes a **2 points**. Une équipe gagne **1 point** pour :
-                            > {FS.Emotes.CROSSING_SWORD_WHITE}  __Chaque kills__
-                            > {FS.Emotes.Lol.TURRET} __1e tourelle de la game__
-                            > 🧙‍♂️ __1e joueur d'une équipe à 100cs__"""
+                            > {self.KILL_EMOTE}   __Chaque kills__
+                            > {self.TURRET_EMOTE}  __1e tourelle de la game__
+                            > {self.CS_EMOTE} __1e joueur d'une équipe à 100cs__"""
                 },
                 {
                     'name': "__**Score personnel**__",
@@ -309,7 +317,7 @@ class Tournament2v2Roll(Tournament):
                 },
                 {
                     'name': "__**Égalité**__",
-                    'value': f"""En cas d'égalité, on départage avec {FS.Emotes.CROSSING_SWORD_WHITE} **kills** > {FS.Emotes.Lol.TURRET} **Tourelles** > 🧙‍♂️ **100cs**.
+                    'value': f"""En cas d'égalité, on départage avec {self.KILL_EMOTE} **kills** > {self.TURRET_EMOTE} **Tourelles** > {self.CS_EMOTE} **100cs**.
                             En cas d'égalité parfaite pour la 2ième place, un **1v1** en BO1 est organisé *(même règles, mais **1 point** suffit pour gagner)*."""
                 },
                 {
@@ -317,6 +325,59 @@ class Tournament2v2Roll(Tournament):
                     'value': f"""À la fin des {self._nb_rounds} rounds, un BO5 en **1v1** sera joué entre le **1er** et le **2ième** du classement pour derterminer le grand vainqueur. Pour chaque **{round((self._nb_rounds*2)/5)} point(s)** d'écart, un match d'avance sera accordé au **1er** *(jusqu'à un maximum de 2 matchs d'avance)*.
                     > __*Exemple :*__
                     > **Lỳf** est 1er avec **{self._nb_rounds*2} points** mais **Gay Prime** est 2ième avec **{self._nb_rounds*2-round((self._nb_rounds*2)/5)} points**
+                    > ⏭️ **BO5** commençant à **1-0** en faveur de **Lỳf**."""
+                }
+            ]
+        )
+        
+    @classmethod
+    def generic_rules(cls) -> disnake.Embed:
+        return FS.Embed(
+            title=cls._rules_title,
+            color=disnake.Colour.purple(),
+            fields=[
+                {
+                    'name': "__**Format du tournoi**__",
+                    'value': f"""Le tournoi se joue individuellement mais les matchs se font par **équipe de 2**. Ces équipes changent à chaque match. Ceci est fait en s'assurant que chacun joue
+                            > ✅ __avec__ chaque autres joueurs exactement :one: fois
+                            > ❌ __contre__ chaque autres joueurs exactement :two: fois.
+                            Il y aura donc ***3/4/7* rounds** avec ***1/1/2* matchs** en parallèles."""
+                },
+                {
+                    'name': "__**Format d'un match**__",
+                    'value': """Les matchs sont en **BO1** se jouant en 2v2 selon le format suivant :
+                            > 🌍 __Map__ : Abime hurlante
+                            > 👓 __Mode__ : Blind
+                            > ❌ __Bans__ : 3 par équipe *(à faire via le chat dans le lobby **pré-game**)*"""
+                },
+                {
+                    'name': "__**Règles d'un match**__",
+                    'value': """> ⛔ __Interdiction__ de prendre les healts **extérieurs** *(ceux entre la **T1** et la **T2**)*.
+                            > ✅ __Le suicide__ est autorisé et ne compte pas comme un kill.
+                            > ✅ __L'achat d'objet__ lors d'une mort est autorisé."""
+                },
+                {
+                    'name': "__**Score d'un match**__",
+                    'value': f"""Le match se finit lorsque l'une des deux équipes a **2 points**. Une équipe gagne **1 point** pour :
+                            > {cls.KILL_EMOTE}   __Chaque kills__
+                            > {cls.TURRET_EMOTE}  __1e tourelle de la game__
+                            > {cls.CS_EMOTE} __1e joueur d'une équipe à 100cs__"""
+                },
+                {
+                    'name': "__**Score personnel**__",
+                    'value': f"""Les points obtenus en équipe lors d'un match sont ajoutés au score personnel de chaque joueur *(indépendamment de qui a marqué le point)*.
+                            À la fin des *3/4/7* rounds, c'est les points personnels qui détermineront le classement."""
+                },
+                {
+                    'name': "__**Égalité**__",
+                    'value': f"""En cas d'égalité, on départage avec {cls.KILL_EMOTE} **kills** > {cls.TURRET_EMOTE} **Tourelles** > {cls.CS_EMOTE} **100cs**.
+                            En cas d'égalité parfaite pour la 2ième place, un **1v1** en BO1 est organisé *(même règles, mais **1 point** suffit pour gagner)*."""
+                },
+                {
+                    'name': "__**Tournament finale**__",
+                    'value': f"""À la fin des *3/4/7* rounds, un BO5 en **1v1** sera joué entre le **1er** et le **2ième** du classement pour derterminer le grand vainqueur. Pour chaque ***1/2/3* point(s)** d'écart, un match d'avance sera accordé au **1er** *(jusqu'à un maximum de 2 matchs d'avance)*.
+                    > __*Exemple d'un tournoi avec 8 joueurs (7 rounds):*__
+                    > **Lỳf** est 1er avec **14 points** mais **Gay Prime** est 2ième avec **13 points**
                     > ⏭️ **BO5** commençant à **1-0** en faveur de **Lỳf**."""
                 }
             ]
@@ -340,7 +401,7 @@ class Tournament2v2Roll(Tournament):
                     'inline':True
                 },
                 {
-                    'name': "{FS.Emotes.GEMME_ANIMED} __**Points**__",
+                    'name': f"{FS.Emotes.GEMME_ANIMED} __**Points**__",
                     'value': "\n".join([f"**{round(p.points)}** *({' '.join([str(score) for score in p.scores])})*" for p in sorted_players]),
                     'inline':True
                 },

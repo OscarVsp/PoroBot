@@ -805,7 +805,7 @@ class Round(Container):
     
     @property
     def title(self) -> str:
-        return f"{FS.Emotes.CROSSING_SWORD_WHITE} __**ROUND **__{FS.Emotes.Num(self._round_idx+1)}"
+        return f"{FS.Emotes.CROSSING_SWORD_WHITE} __**ROUND**__ {FS.Emotes.Num(self._round_idx+1)}"
 
     @property
     def embed(self) -> disnake.Embed:
@@ -892,9 +892,16 @@ class Round(Container):
         yield 'entities', [dict(e) for e in self._matches]
         
 class TournamentData(Container):
+    
+    _classement_title : str = f"{FS.Emotes.Lol.TROPHIES[0]} __**CLASSEMENT**__ {FS.Emotes.Lol.TROPHIES[0]}"
+    _rounds_title : str = f"{FS.Emotes.BRACKET} __**ROUNDS**__ {FS.Emotes.BRACKET}"
+    _rules_title : str = f"{FS.Emotes.BOOK_PURPLE} __**RÈGLES**__ {FS.Emotes.BOOK_PURPLE}"
+    _admin_title : str = f"{FS.Emotes.UTILITY_WHEEL} __**ADMIN DASHBOARD**__ {FS.Emotes.UTILITY_WHEEL}"
+    
     def __init__(self,
                  guild : disnake.Guild,
                  name : str, 
+                 type_str : str,
                  banner : str,
                  size : int, 
                  nb_round : int, 
@@ -907,6 +914,7 @@ class TournamentData(Container):
         self.guild : disnake.Guild = guild
         self.banner : str = banner
         self._name : str = name
+        self._type_str : str = type_str
         self._size : int = size
         self._players : List[Player] = None
         self._rounds : List[Round] = None
@@ -917,10 +925,7 @@ class TournamentData(Container):
         self._nb_players_per_team : int = nb_players_per_team
         self._nb_point_to_win_match : int = nb_point_to_win_match
         self._last_state : dict = None
-        self._classement_title : str = "🏆 __**CLASSEMENT**__ 🏆"
-        self._rounds_title : str = "📅 __**ROUNDS**__ 📅"
-        self._rules_title : str = "📜 __**RÈGLES**__ 📜"
-        self._admin_title : str = "🛠️ __**ADMIN DASHBOARD**__ 🛠️"
+        
         
         self.everyone: disnake.Role = self.guild.default_role
         self.category: disnake.CategoryChannel = None
@@ -941,6 +946,12 @@ class TournamentData(Container):
     @property
     def name(self) -> str:
         return self._name
+    
+    
+    @property
+    def type_str(self) -> str:
+        return self._type_str
+    
         
     
     @property
@@ -1037,6 +1048,10 @@ class TournamentData(Container):
             )
         else:
             return None
+        
+    @classmethod
+    def generic_rules() -> disnake.Embed:
+        return FS.Embed(description="Not implemented yet...")
        
     @property
     def rounds_embeds(self) -> List[disnake.Embed]:

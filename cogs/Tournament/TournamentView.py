@@ -1,8 +1,6 @@
 from lib2to3.pgen2.token import TILDE
 from typing import List
 import disnake 
-from disnake import ApplicationCommandInteraction
-from disnake.ext.commands import InteractionBot
 from cogs.Tournament.modal import NotificationModal
 import modules.FastSnake as FS
 from modules.FastSnake import *
@@ -51,7 +49,7 @@ class AdminView(disnake.ui.View):
         else:
             self.match_selection.placeholder = f"Sélectionner un match"
             self.match_selection.options = [disnake.SelectOption(label=f"Round {j+1} - Match{chr(ord('A') + i)}",description=f"{self.tournament.rounds[j].matches[i].teams[0].display_name} VS {self.tournament.rounds[j].matches[i].teams[1].display_name}",value=f"{j}{i}",emoji="🆕") for j in range(self.tournament.nb_rounds) for i in range(self.tournament.nb_matches_per_round) if not self.tournament.rounds[j].matches[i].state >= State.ENDED]
-            self.match_selection.options += [disnake.SelectOption(label=f"Round {j+1} - Match{chr(ord('A') + i)}",description=f"{self.tournament.rounds[j].matches[i].teams[0].display_name} VS {self.tournament.rounds[j].matches[i].teams[1].display_name}",value=f"{j}{i}",emoji="↩️") for j in range(self.tournament.nb_rounds) for i in range(self.tournament.nb_matches_per_round) if self.tournament.rounds[j].matches[i].state >= State.ENDED]
+            self.match_selection.options += [disnake.SelectOption(label=f"Round {j+1} - Match{chr(ord('A') + i)}",description=f"{self.tournament.rounds[j].matches[i].teams[0].display_name} VS {self.tournament.rounds[j].matches[i].teams[1].display_name}",value=f"{j}{i}",emoji=FS.Emotes.RESTART) for j in range(self.tournament.nb_rounds) for i in range(self.tournament.nb_matches_per_round) if self.tournament.rounds[j].matches[i].state >= State.ENDED]
             if len(self.match_selection.options) > 25:
                 self.match_selection.options = self.match_selection.options[:25]
             self.set_team_1_score.disabled = True
@@ -141,6 +139,3 @@ class AdminView(disnake.ui.View):
         self.discard_button.disabled = False
         await self.update(interaction)
   
-
-
-

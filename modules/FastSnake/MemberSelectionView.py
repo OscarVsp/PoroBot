@@ -53,12 +53,12 @@ class MemberSelectionView(ConfirmationView):
         for member in self.target.guild.members:
             if member in self.selected_members:
                 if len(self.remove.options) < 25:
-                    self.remove.options.append(disnake.SelectOption(label=member.display_name, value=str(member.id)))
+                    self.remove.options.append(disnake.SelectOption(label=member.display_name, emoji="🗑️", value=str(member.id)))
                 else:
                     self.options_limited = True
             elif self.check(member=member, selected_members=self.selected_members, original_interaction=self.target, size=self.size):
                 if len(self.add.options) < 25:
-                    self.add.options.append(disnake.SelectOption(label=member.display_name, value=str(member.id)))
+                    self.add.options.append(disnake.SelectOption(label=member.display_name, emoji=Emotes.ADD_FRIEND, value=str(member.id)))
                 else:
                     self.options_limited = True  
             
@@ -72,7 +72,7 @@ class MemberSelectionView(ConfirmationView):
             self.add.disabled=True
         self.add.max_values = len(self.add.options)
         
-        self.role.options = [disnake.SelectOption(label=role.name,value=str(role.id)) for role in self.target.guild.roles]
+        self.role.options = [disnake.SelectOption(label=role.name, emoji=Emotes.ADD_FRIEND, value=str(role.id)) for role in self.target.guild.roles]
         if len(self.role.options) > 25:
             self.role.options = self.role.options[:25]
         self.remove.max_values = len(self.remove.options)  
@@ -96,7 +96,7 @@ class MemberSelectionView(ConfirmationView):
         self.refresh_selection()
         await self.update(interaction)
         
-    @disnake.ui.select(min_values = 1, max_values = 1, row = 3, placeholder=f"{Emotes.ADD_FRIEND} Ajouter des membres",options= [
+    @disnake.ui.select(min_values = 1, max_values = 1, row = 3, placeholder="🆕 Ajouter des membres",options= [
                                 disnake.SelectOption(label = "placeholder",value="1")
                             ])
     async def add(self, select : disnake.ui.Select, interaction : disnake.MessageInteraction):
@@ -107,7 +107,7 @@ class MemberSelectionView(ConfirmationView):
         self.refresh_selection()
         await self.update(interaction)
         
-    @disnake.ui.select(min_values = 1, max_values = 1, row = 4, placeholder=f"{Emotes.ADD_FRIEND} Ajouter des roles",options= [
+    @disnake.ui.select(min_values = 1, max_values = 1, row = 4, placeholder="🆕 Ajouter des roles",options= [
                                 disnake.SelectOption(label = "placeholder",value="1")
                             ])
     async def role(self, select : disnake.ui.Select, interaction : disnake.MessageInteraction):

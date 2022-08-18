@@ -3,6 +3,8 @@ import disnake
 from disnake.ext import commands
 from disnake import ApplicationCommandInteraction
 from disnake.ext.commands import InteractionBot
+
+from cogs.Tournament.TournamentMutliView import phaseCreation
 from .classes import TournamentData
 
 from modules.FastSnake import confirmation
@@ -54,29 +56,20 @@ class Tournament(commands.Cog):
 
         phases: List[List[TournamentData]] = []
         
-        def embeds(phases):
+        def embeds(phases : List[List[TournamentData]]) -> List[disnake.Embed]:
             return [
                 FS.Embed(
                     title="🏆 __**TOURNOI CRÉATION**__ 🏆",
-                    description="\n\n".join([f"{FS.Emotes.BRACKET} __**Phases {i+1}**___\nNombre de groupe : {len(phase)}\nTaille des groupe : {phase[0].size}" for i, phase in enumerate(phases)])
+                    description="\n\n".join([f"{FS.Emotes.BRACKET} __**Phases {i+1}**___\n**Format de la phase :** `{phase[0].type_str}`\n**Nombre de groupe : **`{len(phase)}`\n**Taille des groupes :** `{phase[0].size}`" for i, phase in enumerate(phases)])
                 )
             ]
             
         for phase_idx in range(taille):
-            title = f"{FS.Emotes.BRACKET} Phase {FS.Emotes.Num(phase_idx+1)}"
-            
-            phaseSelection = await Selection(inter,[SelectionRow("Nombre de groupe",[str(i+1) for i in range(20)],max_values=1),SelectionRow("Type de phase",["2V2 Roll"],max_values=1)],title=title,embeds=embeds(phases))
-            if phaseSelection:
-                if phaseSelection.responses[1] == ["2V2 Roll"]:
-                    sizeSelection = await Selection(inter,[SelectionRow("Taille des groupes",["4","5","8"],max_values=1)],title=title,embeds=embeds(phases))
-                    if sizeSelection:
-                        phases.append([Tournament2v2Roll(inter.guild,int(sizeSelection.responses[0][0]),name=f"PHASE {phase_idx+1} - GROUPE {chr(ord('A') +j)}") for j in range(int(phaseSelection.responses[0][0]))])
-                    else:
-                        await inter.edit_original_message(embed=cancel_embed, view=None)
-                        return
+            phase = await phaseCreation(inter,phase_idx,embeds(phases)) 
+            if phase:
+                phases.append(phase.tournaments)
             else:
-                await inter.edit_original_message(embed=cancel_embed, view=None)
-                return
+                await inter.edit_original_message(embed=cancel_embed,view = None)
    
         title = "Validation"
         confirm = await confirmation(
