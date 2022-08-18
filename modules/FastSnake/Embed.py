@@ -268,8 +268,8 @@ class Embed(disnake.Embed):
 
 
 def warning(message: str) -> disnake.Embed:
-    return Embed(title="⚠", description=message, color=disnake.Colour.orange(), thumbnail=Images.Poros.Sweat)
+    return Embed(title="⚠", description=message, color=disnake.Colour.orange(), thumbnail=Images.Poros.SWEAT)
 
 
 def error(message: str) -> disnake.Embed:
-    return Embed(title=":x:", description=message, color=disnake.Colour.orange(), thumbnail=Images.Poros.Shock)
+    return Embed(title=":x:", description=message, color=disnake.Colour.orange(), thumbnail=Images.Poros.SHOCKED)

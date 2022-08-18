@@ -23,7 +23,7 @@ class BangMenu(disnake.ui.View):
         embed = FS.Embed(
                 title = "__**BANG - MENU**__",
                 footer_text= f"Au moins {self.number_players_min} joueurs pour démarrer une partie.",
-                thumbnail = FS.Images.Bang_6
+                thumbnail = FS.Images.BANG
         )
         if len(self.players) != 0:
             embed.add_field(
@@ -94,9 +94,9 @@ class BangGame(disnake.ui.View):
                 line = ":black_medium_small_square:"
             line += f"**{player.display_name}** : {player.points}"
             if player.isCarreau:
-                line += FS.Emotes.CardColor.Carreau
+                line += FS.Emotes.CardColor.CARREAU
             if player.isDoubleCarreau:
-                line += FS.Emotes.CardColor.Carreau
+                line += FS.Emotes.CardColor.CARREAU
             player_lines.append(line)
         return "/n".join(player_lines)
     
@@ -114,7 +114,7 @@ class BangGame(disnake.ui.View):
                 value = "*Les cartes jouées s'afficheront ici*",
                 inline = False
             )
-            embed.set_thumbnail(url = FS.Images.Cards.Back)
+            embed.set_thumbnail(url = FS.Images.Cards.BACK)
         else:
             embed.add_field(
                 name = '__Dernière carte jouée :__',

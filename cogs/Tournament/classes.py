@@ -676,7 +676,7 @@ class Match(Container):
     
     @property
     def title(self) -> str:
-        return f"__MATCH __{FS.Emotes.Alpha[self._match_idx]}"
+        return f"__MATCH __{FS.Emotes.ALPHA[self._match_idx]}"
 
     @property
     def field(self) -> dict:
@@ -805,7 +805,7 @@ class Round(Container):
     
     @property
     def title(self) -> str:
-        return f"{FS.Emotes.crossing_sword} __**ROUND **__{FS.Emotes.Num(self._round_idx+1)}"
+        return f"{FS.Emotes.CROSSING_SWORD_WHITE} __**ROUND **__{FS.Emotes.Num(self._round_idx+1)}"
 
     @property
     def embed(self) -> disnake.Embed:

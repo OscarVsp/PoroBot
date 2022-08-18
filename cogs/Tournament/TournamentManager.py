@@ -18,7 +18,7 @@ class Tournament(TournamentData):
                  nb_point_to_win_match: int = 2):
         super().__init__(guild, 
                          name, 
-                         banner if banner else FS.Images.Tournament.ClashBanner, 
+                         banner if banner else FS.Images.Tournament.CLASHBANNER, 
                          size, 
                          nb_round, 
                          nb_matches_per_round,
@@ -95,7 +95,7 @@ class Tournament(TournamentData):
     async def send_notif(self, title: str, description: str) -> None:
         self.notif_messages.append(await self.notif_channel.send(FS.Embed(
             author_name=f"{self.name.upper()}",
-            author_icon_url=FS.Assets.Images.Tournament.Trophy,
+            author_icon_url=FS.Images.Tournament.TROPHY,
             title=title,
             description=description,
             color=disnake.Colour.blue()
@@ -189,9 +189,9 @@ class Tournament2v2Roll(Tournament):
             nb_teams_per_match=len(self._seeding[0][0]),
             nb_players_per_team=len(self._seeding[0][0][0]),
             scoreSet=ScoreSet([
-                    Score(id=1,score_size=3,name="Kill",emoji=FS.Emotes.crossing_sword,weigth=1.001,per_team=2),
+                    Score(id=1,score_size=3,name="Kill",emoji=FS.Emotes.CROSSING_SWORD_WHITE,weigth=1.001,per_team=2),
                     Score(id=2,score_size=3,name="Turret",emoji=FS.Emotes.Lol.TURRET,weigth=1.0,per_team=1),
-                    Score(id=3,score_size=3,name="CS",emoji="🧙‍♂️",weigth=0.989,per_team=1),
+                    Score(id=3,score_size=3,name="CS",emoji=FS.Emotes.Lol.CS,weigth=0.989,per_team=1),
                 ]),
             nb_point_to_win_match=2
         )
@@ -246,16 +246,16 @@ class Tournament2v2Roll(Tournament):
                     'inline':True
                 },
                 {
-                    'name': FS.Emotes.gemme_animed,
+                    'name': FS.Emotes.GEMME_ANIMED,
                     'value': "\n".join([f" **{round(p.points)}**" for p in self.getRanking()]),
                     'inline':True
                 },
                 {
                     'name': "➖➖➖➖➖➖➖➖➖➖➖➖➖",
                     'value': f"""> **Calcul des points**
-                    > {FS.Emotes.gemme_animed} Points **=** {FS.Emotes.crossing_sword} Kill  **+**  {FS.Emotes.Lol.TURRET} Tour  **+**  🧙‍♂️ 100cs
+                    > {FS.Emotes.GEMME_ANIMED} Points **=** {FS.Emotes.CROSSING_SWORD_WHITE} Kill  **+**  {FS.Emotes.Lol.TURRET} Tour  **+**  🧙‍♂️ 100cs
                     > **En cas d'égalité**
-                    > {FS.Emotes.crossing_sword} Kill  **>**  {FS.Emotes.Lol.TURRET} Tour  **>**  🧙‍♂️ 100cs
+                    > {FS.Emotes.CROSSING_SWORD_WHITE} Kill  **>**  {FS.Emotes.Lol.TURRET} Tour  **>**  🧙‍♂️ 100cs
                     """,
                     'inline': False
                 }
@@ -298,7 +298,7 @@ class Tournament2v2Roll(Tournament):
                 {
                     'name': "__**Score d'un match**__",
                     'value': f"""Le match se finit lorsque l'une des deux équipes a **2 points**. Une équipe gagne **1 point** pour :
-                            > {FS.Emotes.crossing_sword}  __Chaque kills__
+                            > {FS.Emotes.CROSSING_SWORD_WHITE}  __Chaque kills__
                             > {FS.Emotes.Lol.TURRET} __1e tourelle de la game__
                             > 🧙‍♂️ __1e joueur d'une équipe à 100cs__"""
                 },
@@ -309,7 +309,7 @@ class Tournament2v2Roll(Tournament):
                 },
                 {
                     'name': "__**Égalité**__",
-                    'value': f"""En cas d'égalité, on départage avec {FS.Emotes.crossing_sword} **kills** > {FS.Emotes.Lol.TURRET} **Tourelles** > 🧙‍♂️ **100cs**.
+                    'value': f"""En cas d'égalité, on départage avec {FS.Emotes.CROSSING_SWORD_WHITE} **kills** > {FS.Emotes.Lol.TURRET} **Tourelles** > 🧙‍♂️ **100cs**.
                             En cas d'égalité parfaite pour la 2ième place, un **1v1** en BO1 est organisé *(même règles, mais **1 point** suffit pour gagner)*."""
                 },
                 {
@@ -340,7 +340,7 @@ class Tournament2v2Roll(Tournament):
                     'inline':True
                 },
                 {
-                    'name': "{FS.Emotes.gemme_animed} __**Points**__",
+                    'name': "{FS.Emotes.GEMME_ANIMED} __**Points**__",
                     'value': "\n".join([f"**{round(p.points)}** *({' '.join([str(score) for score in p.scores])})*" for p in sorted_players]),
                     'inline':True
                 },

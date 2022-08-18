@@ -79,7 +79,7 @@ class AdminView(disnake.ui.View):
         await self.tournament.update()
         await self.update(interaction)
         
-    @disnake.ui.button(emoji = FS.Assets.Emotes.restart, label = "Annuler", style=disnake.ButtonStyle.primary, row = 1)
+    @disnake.ui.button(emoji = FS.Emotes.RESTART, label = "Annuler", style=disnake.ButtonStyle.primary, row = 1)
     async def discard_button(self, button: disnake.ui.Button, interaction : disnake.MessageInteraction):
         self.reset_selection()
         self.tournament.restore_from_last_state()
@@ -101,7 +101,7 @@ class AdminView(disnake.ui.View):
         )
         if confirmation:
             self.stop()
-            await interaction.edit_original_message(embed=FS.Embed(title=self.tournament._admin_title,description=f"{FS.Assets.Emotes.loading_animed} Suppression du tournoi..."),view=None)
+            await interaction.edit_original_message(embed=FS.Embed(title=self.tournament._admin_title,description=f"{FS.Emotes.LOADING} Suppression du tournoi..."),view=None)
             await self.tournament.delete(interaction)
         else:
             await self.update(interaction)

@@ -36,7 +36,7 @@ class Dofus(commands.Cog):
             embed = FS.Embed(
                 title = "Consultation du Krosmoz en cours...",
                 description = "À chaque fois que l'almanax d'un jour est demandé pour la première fois, cela peut prendre un peu de temps.\nL'almanax te sera envoyé en privé dès qu'il sera prêt.",
-                thumbnail = FS.Images.Sablier
+                thumbnail = FS.Images.SABLIER
             ),
             delete_after = 10
         )

@@ -34,7 +34,7 @@ class PoroFeed(disnake.ui.View):
             await interaction.response.edit_message(
                 embed = FS.Embed(
                     description="Continue à nourrir le poro !", 
-                    image=FS.Images.Poros.Growings[self.counter], 
+                    image=FS.Images.Poros.POROGROWINGS[self.counter], 
                     footer_text = f"{self.counter}/10"),
                 view=self)
         else:
@@ -43,7 +43,7 @@ class PoroFeed(disnake.ui.View):
             await interaction.response.edit_message(
                 embed = FS.Embed(
                     description="*#Explosion de poros*", 
-                    image=FS.Images.Poros.Growings[self.counter]),
+                    image=FS.Images.Poros.POROGROWINGS[self.counter]),
                 view=self)
 
     async def on_timeout(self) -> None:

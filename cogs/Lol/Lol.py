@@ -80,7 +80,7 @@ class Lol(commands.Cog):
                     embed=FS.Embed(
                         title=f"__**Clash**__",
                         description=f"**{summoner}** ne fait pas parti d'une équipe clash actuellement...",
-                        thumbnail=FS.Images.Poros.Question
+                        thumbnail=FS.Images.Poros.QUESTION
                     )
                 )
         except (SummonerNotFound):
@@ -88,7 +88,7 @@ class Lol(commands.Cog):
                 embed=FS.Embed(
                     title=f"__**Clash**__",
                     description=f"**{summoner}** n'a pas pu être trouvé...\nVérifiez que le nom d'invocateur soit correct.",
-                    thumbnail=FS.Images.Poros.Question
+                    thumbnail=FS.Images.Poros.QUESTION
                 )
             )
 
@@ -167,7 +167,7 @@ class Lol(commands.Cog):
     )
     async def classement(self, inter: ApplicationCommandInteraction,
                          filtre: str = commands.Param(description="Filtrer les membres à afficher par un role ou un évenement.", default=None)):
-        await inter.response.send_message(embed=FS.Embed(title=f"{FS.Assets.Emotes.Lol.Logo} __**CLASSEMENT LOL**__",description=f"{FS.Assets.Emotes.loading_animed} Création du classement en cours..."),ephemeral=False)
+        await inter.response.send_message(embed=FS.Embed(title=f"{FS.Emotes.Lol.LOGO} __**CLASSEMENT LOL**__",description=f"{FS.Emotes.LOADING} Création du classement en cours..."),ephemeral=False)
 
         filtre_members: List[disnake.Member] = None
 
@@ -198,7 +198,7 @@ class Lol(commands.Cog):
 
         await inter.edit_original_message(
             embed=FS.Embed(
-                title=f"{FS.Assets.Emotes.Lol.Logo} __**CLASSEMENT LOL**__",
+                title=f"{FS.Emotes.Lol.LOGO} __**CLASSEMENT LOL**__",
                 description=(f"> *Filtre : {filtre}*" if filtre else ""),
                 fields=[
                     {
@@ -292,7 +292,7 @@ class Lol(commands.Cog):
 
             await inter.channel.send(
                 embed=FS.Embed(
-                    title=f"{FS.Assets.Emotes.Lol.Logo} __**CLASSEMENT LOL**__",
+                    title=f"{FS.Emotes.Lol.LOGO} __**CLASSEMENT LOL**__",
                     fields=[
                         {
                             'name': "◾",
@@ -305,7 +305,7 @@ class Lol(commands.Cog):
                             "inline": True
                         }
                     ] + [
-                        {'name':f"**Groupe {FS.Emotes.Alpha[i]}**",'value':'\n'.join([f"> {member[0].mention}" for member in group])}
+                        {'name':f"**Groupe {FS.Emotes.ALPHA[i]}**",'value':'\n'.join([f"> {member[0].mention}" for member in group])}
                         for i,group in enumerate(groupes)
                     ]
                 ),
@@ -331,7 +331,7 @@ class Lol(commands.Cog):
             embed=FS.Embed(
                 title="__**Wasted on Lol**__",
                 description="Utilise les liens ci-dessous pour découvrir combien de temps et/ou d'argent tu as dépensés dans League of Legends",
-                thumbnail=FS.Images.Poros.Neutral
+                thumbnail=FS.Images.Poros.NEUTRAL
 
             ),
             components=[

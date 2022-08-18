@@ -192,7 +192,7 @@ class Locker(disnake.ui.View):
         await inter.edit_original_message(
             embed = FS.Embed(
                 title = f"🔓 __**Channel** *#{self.channel_original_name}* **verrouillé**__",
-                description=f"{FS.Assets.Emotes.loading_animed} Déverrouillage en cours... ⌛"
+                description=f"{FS.Emotes.LOADING} Déverrouillage en cours... ⌛"
             ), view = None)
         self.stop()
         self.server.locked_channels.remove(self)
@@ -264,7 +264,7 @@ class Locker(disnake.ui.View):
         self.refresh_presence()
         await self.update(interaction)
         
-    @disnake.ui.select(min_values = 1, max_values = 1, row = 3, placeholder="✅ Autoriser des spectateurs",options= [
+    @disnake.ui.select(min_values = 1, max_values = 1, row = 3, placeholder=f"{FS.Emotes.ADD_FRIEND} Ajouter des participants",options= [
                                 disnake.SelectOption(label = "placeholder",value="1")
                             ])
     async def authorize(self, select : disnake.ui.Select, interaction : disnake.MessageInteraction):

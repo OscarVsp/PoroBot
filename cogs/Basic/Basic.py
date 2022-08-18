@@ -33,7 +33,7 @@ class Basic(commands.Cog):
         await inter.response.send_message(
             embed = FS.Embed(
                 description="Nourris le poro !",
-                image=FS.Images.Poros.Growings[0],
+                image=FS.Images.Poros.POROGROWINGS[0],
                 footer_text="0/10"
             ),
             view=PoroFeed(inter)
@@ -49,7 +49,7 @@ class Basic(commands.Cog):
             await inter.response.send_message(
                 embed = FS.Embed(
                     description = f"{inter.target.name} n'a pas encore de lore...\nDemande à Hyksos de l'écrire !",
-                    thumbnail = FS.Images.Poros.Sweat
+                    thumbnail = FS.Images.Poros.SWEAT
                     ),
                 ephemeral = True
             )

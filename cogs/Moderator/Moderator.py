@@ -153,7 +153,7 @@ class Moderator(commands.Cog):
         
         response = await FS.memberSelection(inter, title="Export role from event", description="Select members below", timeout=300, pre_selection=event_members)    
         if response:
-            await inter.edit_original_message(embed=FS.Embed(description=f"{FS.Emotes.loading_animed} Création du role en cours..."),view=None)
+            await inter.edit_original_message(embed=FS.Embed(description=f"{FS.Emotes.LOADING} Création du role en cours..."),view=None)
             new_role : disnake.Role = await inter.guild.create_role(name=name)
             for member in response.members:
                 await member.add_roles(new_role)
@@ -182,7 +182,7 @@ class Moderator(commands.Cog):
 
         response = await FS.memberSelection(inter, title="Export role from role", description="Select members to export to the new role", timeout=300, pre_selection=role.members)    
         if response:
-            await inter.edit_original_message(embed=FS.Embed(description=f"{FS.Emotes.loading_animed} Création du role en cours..."),view=None)
+            await inter.edit_original_message(embed=FS.Embed(description=f"{FS.Emotes.LOADING} Création du role en cours..."),view=None)
             new_role : disnake.Role = await inter.guild.create_role(name=name)
             for member in response.members:
                 await member.add_roles(new_role)

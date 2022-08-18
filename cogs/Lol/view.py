@@ -38,7 +38,7 @@ drink_embed = FS.Embed(
                 
             }
         ],
-        thumbnail = FS.Images.Poros.Gragas
+        thumbnail = FS.Images.Poros.GRAGAS
     )
 
 
@@ -62,7 +62,7 @@ class PatchNoteView(disnake.ui.View):
             description = self.patch.description,
             url = self.patch.link,
             image = self.patch.overview_image,
-            thumbnail = FS.Images.Lol.Logo,
+            thumbnail = FS.Images.Lol.LOGO,
             color = disnake.Colour.dark_blue()      
         )
         self.add_item(
@@ -94,7 +94,7 @@ class CurrentGameView(disnake.ui.View):
             await inter.delete_original_message(delay = 3)
             return
         
-        await inter.edit_original_message(embeds=[await self.current_summoner.embed(force_update=True),FS.Embed(description=f"{FS.Assets.Emotes.loading_animed} *Recherche de game en cours...*")])
+        await inter.edit_original_message(embeds=[await self.current_summoner.embed(force_update=True),FS.Embed(description=f"{FS.Emotes.LOADING} *Recherche de game en cours...*")])
 
         self.live_game = await self.current_summoner.currentGame()
         if self.live_game:  

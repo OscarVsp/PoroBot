@@ -103,7 +103,7 @@ class PoroBot(InteractionBot):
             embed= FS.Embed(
                 title=":x: __**ERROR**__ :x:",
                 description=f"Une erreur s'est produite lors de la commande **/{interaction.application_command.name}**\n{self.owner.mention} a été prévenu et corrigera ce bug au plus vite !\nUtilise `/beer` pour un bière de consolation :beer:",
-                thumbnail = FS.Images.Poros.Shock,
+                thumbnail = FS.Images.Poros.SHOCKED,
                 color=disnake.Colour.red()),
             delete_after=10)
         await self.log_channel.send(

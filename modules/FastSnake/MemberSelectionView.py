@@ -96,7 +96,7 @@ class MemberSelectionView(ConfirmationView):
         self.refresh_selection()
         await self.update(interaction)
         
-    @disnake.ui.select(min_values = 1, max_values = 1, row = 3, placeholder="🆕 Ajouter des membres",options= [
+    @disnake.ui.select(min_values = 1, max_values = 1, row = 3, placeholder=f"{Emotes.ADD_FRIEND} Ajouter des membres",options= [
                                 disnake.SelectOption(label = "placeholder",value="1")
                             ])
     async def add(self, select : disnake.ui.Select, interaction : disnake.MessageInteraction):
@@ -107,7 +107,7 @@ class MemberSelectionView(ConfirmationView):
         self.refresh_selection()
         await self.update(interaction)
         
-    @disnake.ui.select(min_values = 1, max_values = 1, row = 4, placeholder="🆕 Ajouter des roles",options= [
+    @disnake.ui.select(min_values = 1, max_values = 1, row = 4, placeholder=f"{Emotes.ADD_FRIEND} Ajouter des roles",options= [
                                 disnake.SelectOption(label = "placeholder",value="1")
                             ])
     async def role(self, select : disnake.ui.Select, interaction : disnake.MessageInteraction):

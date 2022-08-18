@@ -37,7 +37,7 @@ class Tournament(commands.Cog):
                           description="Nombre de participants", choices=[4, 5, 8])
                       ):
 
-        await inter.response.send_message(embed=FS.Embed(description=f"{FS.Assets.Emotes.loading_animed} Création du tournoi..."),ephemeral=True)
+        await inter.response.send_message(embed=FS.Embed(description=f"{FS.Emotes.LOADING} Création du tournoi..."),ephemeral=True)
         tournament = Tournament2v2Roll(inter.guild, taille, name=nom)
         await tournament.build()
         await inter.edit_original_message(embed=FS.Embed(description=f"Tournois [{tournament.name}]({tournament.admin_message.jump_url}) créé !"))
@@ -58,12 +58,12 @@ class Tournament(commands.Cog):
             return [
                 FS.Embed(
                     title="🏆 __**TOURNOI CRÉATION**__ 🏆",
-                    description="\n\n".join([f"{FS.Assets.Emotes.bracket} __**Phases {i+1}**___\nNombre de groupe : {len(phase)}\nTaille des groupe : {phase[0].size}" for i, phase in enumerate(phases)])
+                    description="\n\n".join([f"{FS.Emotes.BRACKET} __**Phases {i+1}**___\nNombre de groupe : {len(phase)}\nTaille des groupe : {phase[0].size}" for i, phase in enumerate(phases)])
                 )
             ]
             
         for phase_idx in range(taille):
-            title = f"{FS.Assets.Emotes.bracket} Phase {FS.Emotes.Num(phase_idx+1)}"
+            title = f"{FS.Emotes.BRACKET} Phase {FS.Emotes.Num(phase_idx+1)}"
             
             phaseSelection = await Selection(inter,[SelectionRow("Nombre de groupe",[str(i+1) for i in range(20)],max_values=1),SelectionRow("Type de phase",["2V2 Roll"],max_values=1)],title=title,embeds=embeds(phases))
             if phaseSelection:
@@ -85,7 +85,7 @@ class Tournament(commands.Cog):
             title=title,
             description="Confirmer la configuration ?")
         if confirm:
-            await inter.edit_original_message(embed=FS.Embed(title=title, description=f"{FS.Assets.Emotes.loading_animed} Création des phases en cours..."), view=None)
+            await inter.edit_original_message(embed=FS.Embed(title=title, description=f"{FS.Emotes.LOADING} Création des phases en cours..."), view=None)
             for phase in phases:
                 for group in phase:
                     await group.build()

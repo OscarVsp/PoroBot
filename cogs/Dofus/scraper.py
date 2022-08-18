@@ -55,7 +55,7 @@ class Almanax_scraper:
             if mid_container.img != None:
                 pic = mid_container.img['src']
             else:
-                pic = FS.Images.Placeholder
+                pic = FS.Images.PLACEHOLDER
 
             bonus = str(mid_container)
             bonus = bonus[len('<div class="more">'):bonus.index('<div class="more-infos">')].strip()

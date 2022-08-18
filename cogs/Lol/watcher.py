@@ -172,11 +172,11 @@ class CurrentGame(Watcher):
         
         @property    
         def emote(self) -> str:
-            return FS.Assets.Emotes.Lol.Rune.Generic
+            return FS.Emotes.Lol.Rune.GENERIC
         
         @property    
         def subEmote(self) -> str:
-            return FS.Assets.Emotes.Lol.Rune.Generic
+            return FS.Emotes.Lol.Rune.GENERIC
 
     class CustomizationObject:
 
@@ -280,11 +280,11 @@ class CurrentGame(Watcher):
         self.gameName : str = queue.get('description')[4:]
         
         if self.mapName == "Summoner's Rift":
-            self.mapImage : str = FS.Images.Lol.Rift
-            self.mapIcon : str = FS.Emotes.Lol.Rift
+            self.mapImage : str = FS.Images.Lol.RIFT
+            self.mapIcon : str = FS.Emotes.Lol.RIFT
         elif self.mapName == "Howling Abyss":
-            self.mapImage : str = FS.Images.Lol.Aram
-            self.mapIcon : str = FS.Emotes.Lol.Aram
+            self.mapImage : str = FS.Images.Lol.ARAM
+            self.mapIcon : str = FS.Emotes.Lol.ARAM
         else:
             self.mapImage : str = None
             
@@ -303,13 +303,13 @@ class CurrentGame(Watcher):
     
     async def embed(self) -> disnake.Embed:
         embed = FS.Embed(
-            title=f"{FS.Emotes.Lol.Logo} __**GAME EN COURS**__",
+            title=f"{FS.Emotes.Lol.LOGO} __**GAME EN COURS**__",
             description=f"**Map :** `{self.mapName}` {self.mapIcon}\n**Type :** `{self.gameName}`\n**Durée :** `{self.gameLengthFormatted}`",
             color=disnake.Colour.blue()
         )
         for i,team in enumerate(self.teams):
             embed.add_field(
-                name=f"**__TEAM {FS.Assets.Emotes.Num(i+1)}__**",
+                name=f"**__TEAM {FS.Emotes.Num(i+1)}__**",
                 value=f"{(await team.participants_block())}"+(f"\n**__BANS__**\n{team.bans_block}" if team.bans_block != "" else "")+f"\n[opgg]({team.opgg})"
             )
         return embed
@@ -349,7 +349,7 @@ class ChampionMastery(Watcher):
 
     @property
     def line_description(self) -> str:
-        return f"{FS.Assets.Emotes.Lol.Mastery[self.championLevel]} **{self.name}** *({self.championPointsFormatted})*"
+        return f"{FS.Emotes.Lol.MASTERIES[self.championLevel]} **{self.name}** *({self.championPointsFormatted})*"
 
 
 class Masteries(Watcher):
@@ -432,8 +432,8 @@ class Summoner(Watcher):
 
     async def embed(self, force_update : bool = False) -> disnake.Embed:
         embed = FS.Embed(
-            description=f"{FS.Assets.Emotes.Lol.Xp} **LEVEL**\n> **{self.summonerLevel}**",
-            author_icon_url=FS.Assets.Images.Lol.Logo,
+            description=f"{FS.Emotes.Lol.XP} **LEVEL**\n> **{self.summonerLevel}**",
+            author_icon_url=FS.Images.Lol.LOGO,
             author_url=self.opgg,
             author_name=self.name,
             color=disnake.Colour.blue(),
@@ -444,14 +444,14 @@ class Summoner(Watcher):
             await self.masteries(force_update=True)
         if self._masteries:
             embed.add_field(
-                name=f'{FS.Assets.Emotes.Lol.Mastery[0]} **MASTERIES**',
-                value=("\n".join([f"> {self._masteries.champions[i].line_description}" for i in range(min(3,len(self._masteries.champions)))]) if len(self._masteries.champions) > 0 else f"{FS.Assets.Emotes.Lol.Mastery[0]} *Aucune maitrise*"),
+                name=f'{FS.Emotes.Lol.MASTERIES[0]} **MASTERIES**',
+                value=("\n".join([f"> {self._masteries.champions[i].line_description}" for i in range(min(3,len(self._masteries.champions)))]) if len(self._masteries.champions) > 0 else f"{FS.Emotes.Lol.MASTERIES[0]} *Aucune maitrise*"),
                 inline=False
             )
         if self._leagues or force_update:
             leagues = (await self.leagues())
             embed.add_field(
-                name=f'{FS.Assets.Emotes.Lol.Rank.Generic} **RANKED**',
+                name=f'{FS.Emotes.Lol.Rank.GENERIC} **RANKED**',
                 value=f"> **Solo/Duo :** {leagues.solo.tier_emote} **{leagues.solo.rank}** *({leagues.solo.leaguePoints} LP)*\n> **Flex :** {leagues.flex.tier_emote} **{leagues.flex.rank}** *({leagues.flex.leaguePoints} LP)*",
                 inline=False
             )
@@ -557,7 +557,7 @@ class ClashTeam(Watcher):
     async def embed(self) -> disnake.Embed:
         return FS.Embed(
             title=f"__**{self.name} ({self.abbreviation})**__",
-            description=f"\n".join([f"{p.position_emote}{(await p.leagues()).first.tier_emote} {p.name}" for p in (await self.players())]),
+            description=f"\n".join([f"{p.position_emote}{(await p.leagues()).first.tier_emote} {p.name}"+(" "+FS.Emotes.Lol.CAPTAIN if p.summonerId == self.captain else "") for p in (await self.players())]),
             thumbnail=self.icon,
             color=disnake.Colour.blue()
         )
