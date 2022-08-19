@@ -204,7 +204,7 @@ class ChampionMastery(Watcher):
 
     @property
     def line_description(self) -> str:
-        return f"{self.emote} **{self.icon}** *({self.championPointsFormatted})*"
+        return f"{self.emote} **{self.icon}** *{self.championPointsFormatted}*"
 
 
 class Masteries(Watcher):
@@ -272,6 +272,8 @@ class CurrentGame(Watcher):
             self.summonerId: str = participantInfo.get('summonerId')
             self.spell1Id: int = participantInfo.get('spell1Id')
             self.spell2Id: int = participantInfo.get('spell2Id')
+            if self.spell2Id == 4:
+                self.spell1Id,self.spell2Id = self.spell2Id,self.spell1Id
             self.gameCustomizationObjects: List[CurrentGame.CustomizationObject] = [CurrentGame.CustomizationObject(
                 customizationObjectInfo) for customizationObjectInfo in participantInfo.get('gameCustomizationObjects')]
             
