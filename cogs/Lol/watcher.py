@@ -758,7 +758,7 @@ class Champion(Watcher):
             return FS.Embed(
                 author_name=f"{self.indicator} - {self.name}",
                 author_icon_url=self.image.full,
-                description=f"{FS.Emotes.Lol.Stats.ABILITYHASTE} **{self.cooldownBurn}** ➖ {FS.Emotes.Lol.Stats.MANA} **{self.costBrun}** ➖ {FS.Emotes.TARGET_CIRCLE} **{self.rangeBrun}**\n\n> {self.description}"
+                description=f"{FS.Emotes.Lol.Stats.ABILITYHASTE} **{self.cooldownBurn}** ➖ {FS.Emotes.Lol.Stats.MANA} **{self.costBrun}** ➖ {FS.Emotes.TARGET_BLUE} **{self.rangeBrun}**\n\n> {self.description}"
             )
  
     def __init__(self, championData : dict):

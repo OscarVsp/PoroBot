@@ -66,7 +66,6 @@ class Emotes:
     TWITCH : str = "<:twitch:1009104398091292735>"
     TARGET_BLUE : str = "<:targetblue:1009110751404892211>"
     TARGERT_GOLD : str = "<:target:1009110752721899540>"
-    TARGET_CIRCLE : str = "<:target_circle:1010145818138902629>"
     ADD_FRIEND : str = "<:addfriend:1009757240397402133>"
     SPECTATOR : str = "<:spectator:1009809802995712010>"
     FLAME : str = "<:eternal:1009809808955809803>"
