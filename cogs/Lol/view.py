@@ -85,6 +85,9 @@ class CurrentGameView(disnake.ui.View):
     def __init__(self, summoner_name : str):
         super().__init__(timeout=60*60)
         self.summoner_name : str = summoner_name
+        self.current_summoner : Summoner = None
+        self.current_player : CurrentGame.Participant = None
+        self.live_game : CurrentGame = None
                 
     async def start(self, inter : disnake.ApplicationCommandInteraction):
         try:
@@ -108,22 +111,24 @@ class CurrentGameView(disnake.ui.View):
                     button.callback = self.call_back
                     self.add_item(button)
                     self.buttons.append(button)
+            self.current_player = next((p for p in self.live_game.participants if p.summonerName.lower() == self.summoner_name.lower() ), None)
             await self.update(inter)
             for participant in self.live_game.participants:
                 await (await participant.summoner()).masteries()
         else:
             await inter.edit_original_message(embeds=[(await self.current_summoner.embed()),FS.Embed(description="*Pas de partie en cours*")])
-            await inter.delete_original_message(delay=30)
+            await inter.delete_original_message(delay=10)
 
         
         
                 
     async def embeds(self) -> List[disnake.Embed]:
-        return [await self.current_summoner.embed()] +  await self.live_game.embeds()
+        game_embed = await self.live_game.embeds()
+        return [game_embed[0],await self.current_player.embed()] +  game_embed[1:]
     
     async def update(self, inter : disnake.MessageInteraction):
         for button in self.buttons:
-            button.disabled = (self.current_summoner.name.startswith(button.label))
+            button.disabled = (self.current_player.summonerName.lower().startswith(button.label.lower()))
         if inter.response.is_done():
             await inter.edit_original_message(embeds=await self.embeds(), view = self)
         else:
@@ -132,8 +137,7 @@ class CurrentGameView(disnake.ui.View):
                 
     async def call_back(self, inter : disnake.MessageInteraction):
         await inter.response.defer()
-        indexes = inter.component.custom_id.split(':')
-        self.current_summoner = await self.live_game.teams[int(indexes[0])].participants[int(indexes[1])].summoner()
+        self.current_player = next((p for p in self.live_game.participants if p.summonerName.lower().startswith(inter.component.label.lower()) ), None)
         await self.update(inter)
 
     

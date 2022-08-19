@@ -170,38 +170,200 @@ class Emotes:
                 GLACIALAUGMENT : str = "<:glacialaugment:1009809763716042803>"
                 SPELLBOOK : str = "<:unsealedspellbook:1009889842114601030>"
                 
+                RELENTLESSHUNTER : str = "<:relentlesshunter:1009981249873526835>"
+                INGENIOUSHUNTER : str = "<:ingenioushunter:1009981251450568775>"
+                GHOSTPORO : str = "<:ghostporo:1009981255011540992>"
+                EYEBALLCOLLECTION : str = "<:eyeballcollection:1009981256420839484>"
+                CHEAPSHOT : str = "<:cheapshot:1009981257947545620>"
+                BISCUITDELIVERY : str = "<:biscuitdelivery:1009981361475567707>"
+                COSMICINSIGHT : str = "<:cosmicinsight:1009981364214431865>"
+                FUTURESMARKET : str = "<:futuresmarket:1009981365363691610>"
+                HEXTECHFLASH : str = "<:hextechflashtraption:1009981366500347934>"
+                MAGICALFOOTWEAR : str = "<:magicalfootwear:1009981367431467070>"
+                MINIONDEMATERIALIZER : str = "<:miniondematerializer:1009981369000140852>"
+                PERFECTTIMING : str = "<:perfecttiming:1009981370128404541>"
+                TIMEWARPTONIC : str = "<:timewarptonic:1009981371554484304>"
+                COUPDEGRACE : str = "<:coupdegrace:1009981372640796772>"
+                CUTDOWN : str = "<:cutdown:1009981373773250670>"
+                LEGENDALACRITY : str = "<:legendalacrity:1009981374863781938>"
+                LEGENDBLOODLINE : str = "<:legendbloodline:1009981375920734319>"
+                LEGENDTENACITE : str = "<:legendtenacity:1009986745393221682>"
+                PRESENCEOFMIND : str = "<:presenceofmind:1009981376881238067>"
+                APPROACHVELOCITY : str = "<:approachvelocity:1009981378374414377>"
+                WATERWALKING : str = "<:waterwalking:1009981379171324015>"
+                UNFLINCHING : str = "<:unflinching:1009981380479942686>"
+                TRANSCENDENCE : str = "<:transcendence:1009981381583048824>"
+                SCORCH : str = "<:scorch:1009981383004934184>"
+                POKESHIELD : str = "<:pokeshield:1009981384502288424>"
+                NIMBUSCLOAK : str = "<:nimbuscloack:1009981385668304896>"
+                MANAFLOWBAND : str = "<:manaflowband:1009981387090178149>"
+                LASTSTAND : str = "<:laststand:1009981388180705372>"
+                GATHERINGSTORM : str = "<:gatheringstorm:1009981389267021824>"
+                CELERITYTEMP : str = "<:celeritytemp:1009981390357540925>"
+                ABSOLUTEFOCUS : str = "<:absolutefocus:1009981391741661284>"
+                SECONDWIND : str = "<:secondwind:1009981392916054026>"
+                REVITALIZE : str = "<:revitalize:1009981394342137977>"
+                OVERGROWTH : str = "<:overgrowth:1009981395914989689>"
+                SHIELDBASH : str = "<:mirrorshell:1009981397529800754>"
+                FONTOFLIFE : str = "<:fontoflife:1009981400432267304>"
+                DEMOLISH : str = "<:demolish:1009981401942216824>"
+                CONDITIONING : str = "<:conditioning:1009981403015954583>"
+                BONEPLATING : str = "<:boneplating:1009981405452828738>"
+                ZOMBIEWARD : str = "<:zombieward:1009981407373824030>"
+                ULTIMATEHUNTER : str = "<:ultimatehunter:1009981408216887367>"
+                TREASUREHUNTER : str = "<:treasurehunter:1009981409638744095>"
+                TASTEOFBLOOD : str = "<:tasteofblood:1009981411127742484>"
+                SUDDENIMPACT : str = "<:suddenimpact:1009981412432171038>"
+                TRIUMPHE : str = "<:triumph:1009985534732554341>"
+                OVERHEALT : str = "<:overheal:1009985535709810729>"
+                
+
+                MAGICRESIST : str = "<:magicresistance:1009809784586903552>"
+                HEALT : str = "<:healt:1009809788194013334>"
+                ABILITYHASTE : str = "<:abilityhaste:1009809789930446928>"
+                ATTACKSPEED : str = "<:attackspeed:1009809793369788427>"
+                ARMOR : str = "<:armor:1009809797614407690>"
+                ABILITYPOWER : str = "<:abilityPower:1009809800579780608>"
+                
                 @classmethod
                 def Get(cls, id : int) -> str:
-                    if id == 8005:
+                    if id == 5002:
+                        return cls.ARMOR
+                    elif id == 5003:
+                        return cls.MAGICRESIST
+                    elif id == 5005:
+                        return cls.ATTACKSPEED
+                    elif id == 5007:
+                        return cls.ABILITYHASTE
+                    elif id == 5008:
+                        return cls.ABILITYPOWER
+                    elif id == 5008:
+                        return cls.ABILITYPOWER
+                    
+                    elif id == 8005:
                         return cls.PRESSTHEATACK
                     elif id == 8008:
                         return cls.LETALTEMPO
+                    elif id == 8009:
+                        return cls.PRESENCEOFMIND
                     elif id == 8010:
                         return cls.CONQUEROR
+                    elif id == 8014:
+                        return cls.COUPDEGRACE
+                    elif id == 8017:
+                        return cls.CUTDOWN
                     elif id == 8021:
                         return cls.FLEETFOOTWORK
+                    elif id == 8105:
+                        return cls.RELENTLESSHUNTER
+                    elif id == 8106:
+                        return cls.ULTIMATEHUNTER
                     elif id == 8112:
                         return cls.ELECTROCUTE
+                    elif id == 8120:
+                        return cls.GHOSTPORO
                     elif id == 8124:
                         return cls.PREDATOR
+                    elif id == 8126:
+                        return cls.CHEAPSHOT
                     elif id == 8128:
                         return cls.DARKHARVEST
+                    elif id == 8134:
+                        return cls.INGENIOUSHUNTER
+                    elif id == 8135:
+                        return cls.TREASUREHUNTER
+                    elif id == 8136:
+                        return cls.ZOMBIEWARD
+                    elif id == 8138:
+                        return cls.EYEBALLCOLLECTION
+                    elif id == 8139:
+                        return cls.TASTEOFBLOOD
+                    elif id == 8143:
+                        return cls.SUDDENIMPACT
+                    elif id == 8210:
+                        return cls.TRANSCENDENCE
                     elif id == 8214:
                         return cls.AERY
+                    elif id == 8224:
+                        return cls.POKESHIELD
+                    elif id == 8226:
+                        return cls.MANAFLOWBAND
                     elif id == 8229:
                         return cls.COMET
                     elif id == 8230:
                         return cls.PHASERUSH
+                    elif id == 8232:
+                        return cls.WATERWALKING
+                    elif id == 8233:
+                        return cls.ABSOLUTEFOCUS
+                    elif id == 8234:
+                        return cls.CELERITYTEMP
+                    elif id == 8236:
+                        return cls.GATHERINGSTORM
+                    elif id == 8237:
+                        return cls.SCORCH
+                    elif id == 8242:
+                        return cls.UNFLINCHING
+                    elif id == 8275:
+                        return cls.NIMBUSCLOAK
+                    elif id == 8299:
+                        return cls.LASTSTAND
+                    elif id == 8304:
+                        return cls.MAGICALFOOTWEAR
+                    elif id == 8306:
+                        return cls.HEXTECHFLASH
+                    elif id == 8313:
+                        return cls.PERFECTTIMING
+                    elif id == 8316:
+                        return cls.MINIONDEMATERIALIZER
+                    elif id == 8321:
+                        return cls.FUTURESMARKET
+                    elif id == 8345:
+                        return cls.BISCUITDELIVERY
+                    elif id == 8347:
+                        return cls.COSMICINSIGHT
                     elif id == 8351:
                         return cls.GLACIALAUGMENT
+                    elif id == 8360:
+                        return cls.SPELLBOOK
                     elif id == 8369:
                         return cls.FIRSSTRIKE
+                    elif id == 8401:
+                        return cls.SHIELDBASH
+                    elif id == 8410:
+                        return cls.APPROACHVELOCITY
+                    elif id == 8352:
+                        return cls.TIMEWARPTONIC
+                    elif id == 8429:
+                        return cls.CONDITIONING
                     elif id == 8437:
                         return cls.GRASP
-                    elif id == 8437:
+                    elif id == 8439:
                         return cls.AFTERSHOCK
+                    elif id == 8444:
+                        return cls.SECONDWIND
+                    elif id == 8446:
+                        return cls.DEMOLISH
+                    elif id == 8451:
+                        return cls.OVERGROWTH
+                    elif id == 8453:
+                        return cls.REVITALIZE
+                    elif id == 8463:
+                        return cls.FONTOFLIFE
                     elif id == 8465:
                         return cls.GUARDIAN
+                    elif id == 8473:
+                        return cls.BONEPLATING
+                    elif id == 9101:
+                        return cls.OVERHEALT
+                    elif id == 9103:
+                        return cls.LEGENDBLOODLINE
+                    elif id == 9104:
+                        return cls.LEGENDALACRITY
+                    elif id == 9105:
+                        return cls.LEGENDTENACITE
+                    elif id == 9111:
+                        return cls.TRIUMPHE
                     elif id == 9923:
                         return cls.HAILOFBLADES
                     return f"Perks:{id}"
@@ -210,13 +372,7 @@ class Emotes:
                 PRESENCEOFMIND : str = "<:presenceofmind:1009809738617335868>"
             
             
-        class Stats:
-            MAGICRESIST : str = "<:magicresistance:1009809784586903552>"
-            HEALT : str = "<:healt:1009809788194013334>"
-            ABILITYHASTE : str = "<:abilityhaste:1009809789930446928>"
-            ATTACKSPEED : str = "<:attackspeed:1009809793369788427>"
-            ARMOR : str = "<:armor:1009809797614407690>"
-            ABILITYPOWER : str = "<:abilityPower:1009809800579780608>"
+        
             
         class Positions:
             UNSELECTED : str = "<:unselected:1007994502318923896>"

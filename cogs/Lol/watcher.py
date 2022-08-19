@@ -173,11 +173,18 @@ class CurrentGame(Watcher):
         
         @property    
         def emote(self) -> str:
-            return FS.Emotes.Lol.Runes.NONE
+            return FS.Emotes.Lol.Runes.Perks.NONE
         
         @property    
         def subEmote(self) -> str:
-            return FS.Emotes.Lol.Runes.NONE
+            return FS.Emotes.Lol.Runes.Perks.NONE
+        
+        @property
+        def text(self) -> str:
+            return f"""> {FS.Emotes.Lol.Runes.Perks.Get(self.perkIds[0])}{FS.Emotes.Lol.Runes.Perks.Get(self.perkIds[4])}{FS.Emotes.Lol.Runes.Perks.Get(self.perkIds[6])}
+        > {FS.Emotes.Lol.Runes.Perks.Get(self.perkIds[1])}{FS.Emotes.Lol.Runes.Perks.Get(self.perkIds[5])}{FS.Emotes.Lol.Runes.Perks.Get(self.perkIds[7])}
+        > {FS.Emotes.Lol.Runes.Perks.Get(self.perkIds[2])}⬛{FS.Emotes.Lol.Runes.Perks.Get(self.perkIds[8])}
+        > {FS.Emotes.Lol.Runes.Perks.Get(self.perkIds[3])}"""
 
     class CustomizationObject:
 
@@ -215,14 +222,25 @@ class CurrentGame(Watcher):
         @property
         def spell2Emote(self) -> str:
             return FS.Emotes.Lol.SummonerSpells.get(self.spell2Id)
-            
-        async def lines(self) -> Tuple[str,str,str,str,str]:
+        
+        @property
+        def runes(self) -> str:
+            return f"{FS.Emotes.Lol.Runes.Perks.Get(self.p)}"
+        
+        async def embed(self) -> disnake.Embed:
+            embed = await (await self.summoner()).embed(force_update=True)
+            embed.add_field(name=f"➖",value=f"{self.championIcon} __**{self.championName.upper()}**__",inline=False)
+            embed.add_field(name=f"{FS.Emotes.Lol.Runes.Perks.NONE} **RUNES**",value=self.perks.text)
+            embed.add_field(name=f"{FS.Emotes.FLAME} **SPELL**",value=f"> {self.spell1Emote}{self.spell2Emote}")
+            embed.add_field(name=f"{FS.Emotes.Lol.MASTERIES[0]} **MASTERY**",value="> "+(await ChampionMastery.by_summoner_and_champion(self.summonerId,self.championId)).line_description)
+            return embed
+        
+        async def lines(self) -> Tuple[str,str]:
             league = (await (await self.summoner()).leagues()).first
             championMastery = await ChampionMastery.by_summoner_and_champion(self.summonerId,self.championId)
             return (
                 f"{league.tier_emote} **{self.summonerName}**",
-                f"{self.championIcon} {championMastery.emote} ({championMastery.championPointsFormatted})",
-                f"{FS.Emotes.Lol.Runes.Perks.Get(self.perks.perkIds[0])}{FS.Emotes.Lol.Runes.Styles.Get(self.perks.perkSubStyle)} **-** {self.spell1Emote}{self.spell2Emote}"
+                f"{self.championIcon} {championMastery.emote} ➖ {FS.Emotes.Lol.Runes.Perks.Get(self.perks.perkIds[0])}{FS.Emotes.Lol.Runes.Styles.Get(self.perks.perkSubStyle)} ➖ {self.spell1Emote}{self.spell2Emote}"
                 )
             
         async def summoner(self, force_update : bool = False):
@@ -329,7 +347,7 @@ class CurrentGame(Watcher):
     async def embeds(self) -> List[disnake.Embed]:
         embeds = [FS.Embed(
             title=f"{FS.Emotes.Lol.LOGO} __**GAME EN COURS**__",
-            description=f"> **Map :** `{self.mapName}` {self.mapIcon}\n> **Type :** `{self.gameName}`\n> **Durée :** `{self.gameLengthFormatted}`",
+            description=f"> **Map :** `{self.mapName}`\n> **Type :** `{self.gameName}`\n> **Durée :** `{self.gameLengthFormatted}`",
             color=disnake.Colour.blue(),
             thumbnail=self.mapImage
         )]
@@ -469,7 +487,7 @@ class Summoner(Watcher):
             author_url=self.opgg,
             author_name=self.name,
             color=disnake.Colour.blue(),
-            thumbnail=self.icon
+            author_icon_url=self.icon
         )
         if force_update:
             await self.leagues(force_update=True)
@@ -477,15 +495,13 @@ class Summoner(Watcher):
         if self._masteries:
             embed.add_field(
                 name=f'{FS.Emotes.Lol.MASTERIES[0]} **MASTERIES**',
-                value=("\n".join([f"> {self._masteries.champions[i].line_description}" for i in range(min(3,len(self._masteries.champions)))]) if len(self._masteries.champions) > 0 else f"{FS.Emotes.Lol.MASTERIES[0]} *Aucune maitrise*"),
-                inline=False
+                value=("\n".join([f"> {self._masteries.champions[i].line_description}" for i in range(min(3,len(self._masteries.champions)))]) if len(self._masteries.champions) > 0 else f"{FS.Emotes.Lol.MASTERIES[0]} *Aucune maitrise*")
             )
         if self._leagues or force_update:
             leagues = (await self.leagues())
             embed.add_field(
                 name=f'{FS.Emotes.Lol.Ranks.NONE} **RANKED**',
-                value=f"> **Solo/Duo :** {leagues.solo.tier_emote} **{leagues.solo.rank}** *({leagues.solo.leaguePoints} LP)*\n> **Flex :** {leagues.flex.tier_emote} **{leagues.flex.rank}** *({leagues.flex.leaguePoints} LP)*",
-                inline=False
+                value=f"> **Solo/Duo :** {leagues.solo.tier_emote} **{leagues.solo.rank}** *({leagues.solo.leaguePoints} LP)*\n> **Flex :** {leagues.flex.tier_emote} **{leagues.flex.rank}** *({leagues.flex.leaguePoints} LP)*"
             )
         return embed
 

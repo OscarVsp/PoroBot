@@ -1,3 +1,5 @@
+from ast import Delete
+from email.mime import application
 from math import ceil
 from random import shuffle
 from typing import Tuple
@@ -24,6 +26,7 @@ class Lol(commands.Cog):
         Watcher.init(bot.config["RIOT_APIKEY"])
         self.summoners = pickledb.load("cogs/Lol/summoners.db", False)
         self.clash_channel = None
+        self.gameTrackers : List[Tuple[str,disnake.ApplicationCommandInteraction]] = []
 
         
     @commands.Cog.listener('on_message')
@@ -234,11 +237,18 @@ class Lol(commands.Cog):
         description="Info sur une partie en cours"
     )
     async def live(self, inter: ApplicationCommandInteraction,
-                         invocateur: str = commands.Param(description="Le nom de l'invocateur.")):
+                         invocateur: str = commands.Param(description="Le nom de l'invocateur à rechercher.",default=None)):
         await inter.response.defer(ephemeral=False)
-        
+        if invocateur == None:
+            if str(inter.author.id) in self.summoners.getall():
+                invocateur = self.summoners.get(str(inter.author.id))
+            else:
+                await inter.edit_original_message(embed=FS.Embed(description="""Spécifie un nom d'invocateur ou bien lie ton compte lol en utilisant "/lol account"."""))
+                return
+
         view = CurrentGameView(invocateur)
         await view.start(inter)
+
             
     @lol.sub_command(
         name="invocateur",
@@ -364,7 +374,7 @@ class Lol(commands.Cog):
             embed=patch.embed,
             view=patch
         )
-
+        
 
 def setup(bot: commands.InteractionBot):
     bot.add_cog(Lol(bot))
