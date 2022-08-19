@@ -176,7 +176,8 @@ class ChampionMastery(Watcher):
         self.lastPlayTime: int = championMasteryDto.get('lastPlayTime')
         self.currentToken: int = championMasteryDto.get('tokensEarned')
 
-        self.name: str = Watcher.champion_name_from_id(self.championId)
+        self.name : str = Watcher.champion_name_from_id(self.championId)
+        self.icon : str = FS.Emotes.Lol.Champions.get(self.championId)
         num = float('{:.3g}'.format(self.championPoints))
         magnitude = 0
         while abs(num) >= 1000:
@@ -203,7 +204,7 @@ class ChampionMastery(Watcher):
 
     @property
     def line_description(self) -> str:
-        return f"{self.emote} **{self.name}** *({self.championPointsFormatted})*"
+        return f"{self.emote} **{self.icon}** *({self.championPointsFormatted})*"
 
 
 class Masteries(Watcher):
