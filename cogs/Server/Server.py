@@ -88,7 +88,25 @@ class Server(commands.Cog):
                             
                             
     def tr(self, text : str) -> str:
-        return self.translator.translate(text)
+        if text != None and text != disnake.Embed.Empty:
+            return_text = ""
+            i = (0,4999)
+            while i[1] < len(text):
+                tr_text = self.translator.translate(text[i[0]:i[1]])
+                if tr_text:
+                    return_text += tr_text
+                else:
+                    return_text += text[i[0]:i[1]]
+                i[0] += 5000
+                i[1] += 5000
+            tr_text = self.translator.translate(text[i[0]:])
+            if tr_text:
+                return_text += tr_text
+            else:
+                return_text += text[i[0]:]
+            return return_text
+        else:
+            return ""
             
             
     @commands.message_command(
@@ -100,7 +118,8 @@ class Server(commands.Cog):
         embeds = []
         if inter.target.embeds:
             for embed in inter.target.embeds:
-                embed.title = self.tr(embed.title)
+                if embed.title != disnake.Embed.Empty:
+                    embed.title = self.tr(embed.title)
                 if embed.description != disnake.Embed.Empty:
                     embed.description = self.tr(embed.description) 
                 if embed.footer.text:
