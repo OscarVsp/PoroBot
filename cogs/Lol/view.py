@@ -88,8 +88,10 @@ class CurrentGameView(disnake.ui.View):
         self.current_summoner : Summoner = None
         self.current_player : CurrentGame.Participant = None
         self.live_game : CurrentGame = None
+        self.inter : disnake.MessageCommandInteraction = None
                 
     async def start(self, inter : disnake.ApplicationCommandInteraction):
+        self.inter = inter
         try:
             self.current_summoner = await Summoner.by_name(self.summoner_name)
         except SummonerNotFound:
@@ -100,6 +102,9 @@ class CurrentGameView(disnake.ui.View):
         await inter.edit_original_message(embeds=[await self.current_summoner.embed(force_update=True),FS.Embed(description=f"{FS.Emotes.LOADING} *Recherche de game en cours...*")])
 
         self.live_game = await self.current_summoner.currentGame()
+        
+        await inter.edit_original_message(embeds=[await self.current_summoner.embed(),FS.Embed(description=f"{FS.Emotes.LOADING} *Récupération des données...*")])
+        
         if self.live_game:  
             self.buttons : List[disnake.ui.Button] = []
             for i,team in enumerate(self.live_game.teams):
@@ -139,6 +144,9 @@ class CurrentGameView(disnake.ui.View):
         await inter.response.defer()
         self.current_player = next((p for p in self.live_game.participants if p.summonerName.lower().startswith(inter.component.label.lower()) ), None)
         await self.update(inter)
+        
+    async def on_timeout(self) -> None:
+        await self.inter.delete_original_message()
 
     
     

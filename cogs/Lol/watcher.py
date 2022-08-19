@@ -188,10 +188,13 @@ class ChampionMastery(Watcher):
     @classmethod
     async def by_summoner_and_champion(cls, encrypted_summoner_id: str, champion_id: str):
         if cls.WATCHER:
-            championMasteryDto = cls.WATCHER.champion_mastery.by_summoner_by_champion(region=cls.REGION,
-                encrypted_summoner_id=encrypted_summoner_id, champion_id=champion_id)
-            await asyncio.sleep(0.1)
-            return ChampionMastery(championMasteryDto)
+            try:
+                championMasteryDto = cls.WATCHER.champion_mastery.by_summoner_by_champion(region=cls.REGION,
+                    encrypted_summoner_id=encrypted_summoner_id, champion_id=champion_id)
+                await asyncio.sleep(0.1)
+                return ChampionMastery(championMasteryDto)
+            except requests.exceptions.HTTPError:
+                return None
         raise WatcherNotInit
 
     @property
@@ -299,7 +302,7 @@ class CurrentGame(Watcher):
                 fields = [
                     {'name':f"{FS.Emotes.Lol.Runes.Perks.NONE} **RUNES**",'value':self.perks.text,'inline':True},
                     {'name':f"{FS.Emotes.FLAME} **SPELL**",'value':f"> {self.spell1Emote}{self.spell2Emote}",'inline':True},
-                    {'name':f"{FS.Emotes.Lol.MASTERIES[0]} **MASTERY**",'value':"> "+(await self.championMastery()).line_description,'inline':True},
+                    {'name':f"{FS.Emotes.Lol.MASTERIES[0]} **MASTERY**",'value':"> "+(await self.championMastery()).line_description if await self.championMastery() else "N/A",'inline':True},
                 ]    
             ))
 
@@ -316,7 +319,7 @@ class CurrentGame(Watcher):
             championMastery = await self.championMastery()
             return (
                 f"{league.tier_emote} **{self.summonerName}**",
-                f"{self.championIcon} {championMastery.emote} ➖ {FS.Emotes.Lol.Runes.Perks.Get(self.perks.perkIds[0])}{FS.Emotes.Lol.Runes.Styles.Get(self.perks.perkSubStyle)} ➖ {self.spell1Emote}{self.spell2Emote}"
+                f"{self.championIcon} {championMastery.emote if championMastery else FS.Emotes.Lol.MASTERIES[0]} ➖ {FS.Emotes.Lol.Runes.Perks.Get(self.perks.perkIds[0])}{FS.Emotes.Lol.Runes.Styles.Get(self.perks.perkSubStyle)} ➖ {self.spell1Emote}{self.spell2Emote}"
                 )
             
         async def summoner(self, force_update : bool = False):
