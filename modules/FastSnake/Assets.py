@@ -489,15 +489,15 @@ class Emotes:
                     return cls.SMITE
                 elif id == 12:
                     return cls.TELEPORTATION
-                elif id == 12:
+                elif id == 13:
                     return cls.CLARITY
                 elif id == 14:
                     return cls.IGNITE
                 elif id == 21:
                     return cls.BARRIER
-                elif id == 3:
+                elif id == 30:
                     return cls.NONE #PoroKingDash
-                elif id == 3:
+                elif id == 31:
                     return cls.NONE #PoroMark
                 elif id == 32:
                     return cls.MARK
