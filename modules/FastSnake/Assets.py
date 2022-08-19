@@ -226,7 +226,9 @@ class Emotes:
                 
                 @classmethod
                 def Get(cls, id : int) -> str:
-                    if id == 5002:
+                    if id == 5001:
+                        return cls.HEALT
+                    elif id == 5002:
                         return cls.ARMOR
                     elif id == 5003:
                         return cls.MAGICRESIST
