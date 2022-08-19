@@ -399,7 +399,7 @@ class CurrentGame(Watcher):
         
         queue : dict = self.queue_dict_from_id(self.gameQueueConfigId)
         self.mapName : str = queue.get('map')
-        self.gameName : str = queue.get('description')[4:]
+        self.gameName : str = queue.get('description')[:-6]
         
         if self.mapName == "Summoner's Rift":
             self.mapImage : str = FS.Images.Lol.RIFT
