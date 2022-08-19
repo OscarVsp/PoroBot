@@ -1,5 +1,3 @@
-from ast import Delete
-from email.mime import application
 from math import ceil
 from random import shuffle
 from typing import Tuple
@@ -61,17 +59,7 @@ class Lol(commands.Cog):
                 
   
 
-    @commands.slash_command(
-        description="Scouter une team clash à partir du nom d'un des joueurs"
-    )
-    async def clash(self, inter: ApplicationCommandInteraction,
-                    summoner: str = commands.Param(
-                        description="Le nom d'invocateur d'un des joueurs"
-                    )
-                    ):
-        await inter.response.defer()
-        clashView = ClashTeamView(summoner)
-        await clashView.start(inter)
+   
 
     @commands.slash_command(
         name="lol"
@@ -336,6 +324,20 @@ class Lol(commands.Cog):
                 await inter.edit_original_message(embed=FS.Embed(description="Groupes crées !",footer_text="Tu peux rejeter ce message pour le faire disparaitre"),view=None)
         else:
             await inter.edit_original_message(embed=FS.Embed(description=":x Annulé",footer_text="Tu peux rejeter ce message pour le faire disparaitre"),view=None) 
+
+    @lol.sub_command(
+        name='clash',
+        description="Scouter une team clash à partir du nom d'un des joueurs"
+    )
+    async def clash(self, inter: ApplicationCommandInteraction,
+                    summoner: str = commands.Param(
+                        description="Le nom d'invocateur d'un des joueurs"
+                    )
+                    ):
+        await inter.response.defer()
+        clashView = ClashTeamView(summoner)
+        await clashView.start(inter)
+
 
     @commands.slash_command(
         description="Voir combien de temps et d'argent tu as dépensés sur LOL"

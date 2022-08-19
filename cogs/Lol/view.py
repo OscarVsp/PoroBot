@@ -207,7 +207,6 @@ class ClashTeamView(disnake.ui.View):
                 
                 
     async def call_back(self, inter : disnake.MessageInteraction):
-        await inter.response.defer()
         self.current_player = next((p for p in await self.team.players() if p.name.lower().startswith(inter.component.label.lower()) ), None)
         await self.update(inter)
         
