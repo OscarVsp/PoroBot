@@ -113,7 +113,7 @@ class PoroBot(InteractionBot):
                 fields = [
                     {
                         'name':f"Raised on command :",
-                        'value':f"**/{interaction.application_command.name}:{interaction.id}** from {interaction.guild.name} #{interaction.channel.mention} by {interaction.author.mention} at {interaction.created_at} with options {interaction.filled_options}" + (f" and target '{interaction.target}'." if interaction.target else ".")
+                        'value':f"**/{interaction.application_command.name}:{interaction.id}** from {interaction.guild.name} #{interaction.channel.mention} by {interaction.author.mention} at {interaction.created_at} with options\n```{interaction.filled_options}```" + (f" and target\n``'{interaction.target}``'." if interaction.target else ".")
                     }
                 ]
             )
