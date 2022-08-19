@@ -145,12 +145,7 @@ class CurrentGameView(disnake.ui.View):
         await inter.response.defer()
         self.current_player = next((p for p in self.live_game.participants if p.summonerName.lower().startswith(inter.component.label.lower()) ), None)
         await self.update(inter)
-        
-    async def on_timeout(self) -> None:
-        await self.inter.delete_original_message()
-        
-        
-        
+
 class ClashTeamView(disnake.ui.View):
     
     def __init__(self, summoner_name : str):
@@ -163,7 +158,6 @@ class ClashTeamView(disnake.ui.View):
     async def start(self, inter : disnake.ApplicationCommandInteraction):
         self.inter = inter
         
-
         try:
             self.team = await ClashTeam.by_summoner_name(self.summoner_name)
         
@@ -209,10 +203,7 @@ class ClashTeamView(disnake.ui.View):
     async def call_back(self, inter : disnake.MessageInteraction):
         self.current_player = next((p for p in await self.team.players() if p.name.lower().startswith(inter.component.label.lower()) ), None)
         await self.update(inter)
-        
-        
-    async def on_timeout(self) -> None:
-        await self.inter.delete_original_message()
+    
 
     
     
