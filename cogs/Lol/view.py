@@ -124,7 +124,7 @@ class CurrentGameView(disnake.ui.View):
                 
     async def embeds(self) -> List[disnake.Embed]:
         game_embed = await self.live_game.embeds()
-        return [game_embed[0],await self.current_player.embed()] +  game_embed[1:]
+        return [game_embed[0]] + await self.current_player.embeds() +  game_embed[1:]
     
     async def update(self, inter : disnake.MessageInteraction):
         for button in self.buttons:

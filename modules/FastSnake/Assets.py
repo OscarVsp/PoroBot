@@ -123,8 +123,7 @@ class Emotes:
             "<:tokengrandmaster:1009110727358939248>",
             "<:tokenchallenger:1009110722657132615>"
         ]
-            
-            
+                     
         class Runes:
             class Styles:
                 NONE : str = "<:rune:1007206351019180042>"
@@ -370,10 +369,7 @@ class Emotes:
                 
             class SubPerk:
                 PRESENCEOFMIND : str = "<:presenceofmind:1009809738617335868>"
-            
-            
-        
-            
+                    
         class Positions:
             UNSELECTED : str = "<:unselected:1007994502318923896>"
             TOP : str = '<:top:1007994503858245672>'
@@ -1053,6 +1049,10 @@ class Images:
             if tier not in ['iron','bronze','silver','gold','platinum','diamond','master','grandmaster','challenger']:
                 raise KeyError(f"tier {tier} is invalide")
             return f"https://raw.communitydragon.org/pbe/plugins/rcp-be-lol-game-data/global/default/assets/challenges/config/{id}/tokens/{tier}.png"
+        
+        @staticmethod
+        def champion_icon(id : int) -> str:
+            return f"https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/{id}.png"
 
         LOGO : str = "https://raw.communitydragon.org/pbe/plugins/rcp-be-lol-game-data/global/default/assets/splashscreens/lol_icon.png"
         

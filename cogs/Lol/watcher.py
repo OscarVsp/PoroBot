@@ -161,6 +161,66 @@ class Leagues(Watcher):
             return self.solo
         return self.flex
 
+class ChampionMastery(Watcher):
+
+    def __init__(self, championMasteryDto: dict):
+        self._championMasteryDto: dict = championMasteryDto
+        self.championId: str = str(championMasteryDto.get("championId"))
+        self.championLevel: int = championMasteryDto.get('championLevel')
+        self.championPoints: int = championMasteryDto.get('championPoints')
+        self.championPointsUntilNextLevel: int = championMasteryDto.get(
+            'championPointsUntilNextLevel')
+        self.championPointsSinceLastLevel: int = championMasteryDto.get(
+            'championPointsSinceLastLevel')
+        self.chestGranted: bool = championMasteryDto.get('chestGranted')
+        self.lastPlayTime: int = championMasteryDto.get('lastPlayTime')
+        self.currentToken: int = championMasteryDto.get('tokensEarned')
+
+        self.name: str = Watcher.champion_name_from_id(self.championId)
+        num = float('{:.3g}'.format(self.championPoints))
+        magnitude = 0
+        while abs(num) >= 1000:
+            magnitude += 1
+            num /= 1000.0
+        self.championPointsFormatted: str = '{}{}'.format('{:f}'.format(
+            num).rstrip('0').rstrip('.'), ['', 'K', 'M', 'B', 'T'][magnitude])
+
+    @classmethod
+    async def by_summoner_and_champion(cls, encrypted_summoner_id: str, champion_id: str):
+        if cls.WATCHER:
+            championMasteryDto = cls.WATCHER.champion_mastery.by_summoner_by_champion(region=cls.REGION,
+                encrypted_summoner_id=encrypted_summoner_id, champion_id=champion_id)
+            await asyncio.sleep(0.1)
+            return ChampionMastery(championMasteryDto)
+        raise WatcherNotInit
+
+    @property
+    def emote(self) -> str:
+        return FS.Emotes.Lol.MASTERIES[self.championLevel]
+
+    @property
+    def line_description(self) -> str:
+        return f"{self.emote} **{self.name}** *({self.championPointsFormatted})*"
+
+
+class Masteries(Watcher):
+
+    def __init__(self, listChampionMasteryDto : dict):
+        self._listChampionMasteryDto: List[dict] = listChampionMasteryDto
+        self.champions: List[ChampionMastery] = []
+        for championMasteryDto in listChampionMasteryDto:
+            self.champions.append(ChampionMastery(championMasteryDto))
+        self.champions.sort(key=lambda x: x.championPoints, reverse=True)
+
+    @classmethod
+    async def by_summoner(cls, id: str):
+        try:
+            listChampionMasteryDto: List[dict] = cls.get_watcher(
+            ).champion_mastery.by_summoner(cls.REGION, id)
+            await asyncio.sleep(0.1)
+            return Masteries(listChampionMasteryDto)
+        except (ApiError):
+            MasteriesNotFound
 
 class CurrentGame(Watcher):
 
@@ -213,6 +273,8 @@ class CurrentGame(Watcher):
             
             self.championName : str = Watcher.champion_name_from_id(self.championId)
             self.championIcon : str = FS.Emotes.Lol.Champions.get(self.championId)
+            self.championImage : str = FS.Images.Lol.champion_icon(self.championId)
+            self._championMastery : ChampionMastery = None
             
             self._summoner : Summoner = None
             
@@ -228,17 +290,30 @@ class CurrentGame(Watcher):
         def runes(self) -> str:
             return f"{FS.Emotes.Lol.Runes.Perks.Get(self.p)}"
         
-        async def embed(self) -> disnake.Embed:
-            embed = await (await self.summoner()).embed(force_update=True)
-            embed.add_field(name=f"➖",value=f"{self.championIcon} __**{self.championName.upper()}**__",inline=False)
-            embed.add_field(name=f"{FS.Emotes.Lol.Runes.Perks.NONE} **RUNES**",value=self.perks.text)
-            embed.add_field(name=f"{FS.Emotes.FLAME} **SPELL**",value=f"> {self.spell1Emote}{self.spell2Emote}")
-            embed.add_field(name=f"{FS.Emotes.Lol.MASTERIES[0]} **MASTERY**",value="> "+(await ChampionMastery.by_summoner_and_champion(self.summonerId,self.championId)).line_description)
-            return embed
+        async def embeds(self) -> List[disnake.Embed]:
+            embeds = [await (await self.summoner()).embed(force_update=True)]
+            embeds.append(FS.Embed(
+                author_name=self.championName.upper(),
+                author_icon_url=self.championImage,
+                color=disnake.Colour.blue(),
+                fields = [
+                    {'name':f"{FS.Emotes.Lol.Runes.Perks.NONE} **RUNES**",'value':self.perks.text,'inline':True},
+                    {'name':f"{FS.Emotes.FLAME} **SPELL**",'value':f"> {self.spell1Emote}{self.spell2Emote}",'inline':True},
+                    {'name':f"{FS.Emotes.Lol.MASTERIES[0]} **MASTERY**",'value':"> "+(await self.championMastery()).line_description,'inline':True},
+                ]    
+            ))
+
+            return embeds
+        
+        async def championMastery(self) -> ChampionMastery:
+            if self._championMastery == None:
+                self._championMastery = await ChampionMastery.by_summoner_and_champion(self.summonerId,self.championId)
+            return self._championMastery
+                
         
         async def lines(self) -> Tuple[str,str]:
             league = (await (await self.summoner()).leagues()).first
-            championMastery = await ChampionMastery.by_summoner_and_champion(self.summonerId,self.championId)
+            championMastery = await self.championMastery()
             return (
                 f"{league.tier_emote} **{self.summonerName}**",
                 f"{self.championIcon} {championMastery.emote} ➖ {FS.Emotes.Lol.Runes.Perks.Get(self.perks.perkIds[0])}{FS.Emotes.Lol.Runes.Styles.Get(self.perks.perkSubStyle)} ➖ {self.spell1Emote}{self.spell2Emote}"
@@ -362,66 +437,6 @@ class CurrentGame(Watcher):
     
 
 
-class ChampionMastery(Watcher):
-
-    def __init__(self, championMasteryDto: dict):
-        self._championMasteryDto: dict = championMasteryDto
-        self.championId: str = str(championMasteryDto.get("championId"))
-        self.championLevel: int = championMasteryDto.get('championLevel')
-        self.championPoints: int = championMasteryDto.get('championPoints')
-        self.championPointsUntilNextLevel: int = championMasteryDto.get(
-            'championPointsUntilNextLevel')
-        self.championPointsSinceLastLevel: int = championMasteryDto.get(
-            'championPointsSinceLastLevel')
-        self.chestGranted: bool = championMasteryDto.get('chestGranted')
-        self.lastPlayTime: int = championMasteryDto.get('lastPlayTime')
-        self.currentToken: int = championMasteryDto.get('tokensEarned')
-
-        self.name: str = Watcher.champion_name_from_id(self.championId)
-        num = float('{:.3g}'.format(self.championPoints))
-        magnitude = 0
-        while abs(num) >= 1000:
-            magnitude += 1
-            num /= 1000.0
-        self.championPointsFormatted: str = '{}{}'.format('{:f}'.format(
-            num).rstrip('0').rstrip('.'), ['', 'K', 'M', 'B', 'T'][magnitude])
-
-    @classmethod
-    async def by_summoner_and_champion(cls, encrypted_summoner_id: str, champion_id: str):
-        if cls.WATCHER:
-            championMasteryDto = cls.WATCHER.champion_mastery.by_summoner_by_champion(region=cls.REGION,
-                encrypted_summoner_id=encrypted_summoner_id, champion_id=champion_id)
-            await asyncio.sleep(0.1)
-            return ChampionMastery(championMasteryDto)
-        raise WatcherNotInit
-
-    @property
-    def emote(self) -> str:
-        return FS.Emotes.Lol.MASTERIES[self.championLevel]
-
-    @property
-    def line_description(self) -> str:
-        return f"{self.emote} **{self.name}** *({self.championPointsFormatted})*"
-
-
-class Masteries(Watcher):
-
-    def __init__(self, listChampionMasteryDto : dict):
-        self._listChampionMasteryDto: List[dict] = listChampionMasteryDto
-        self.champions: List[ChampionMastery] = []
-        for championMasteryDto in listChampionMasteryDto:
-            self.champions.append(ChampionMastery(championMasteryDto))
-        self.champions.sort(key=lambda x: x.championPoints, reverse=True)
-
-    @classmethod
-    async def by_summoner(cls, id: str):
-        try:
-            listChampionMasteryDto: List[dict] = cls.get_watcher(
-            ).champion_mastery.by_summoner(cls.REGION, id)
-            await asyncio.sleep(0.1)
-            return Masteries(listChampionMasteryDto)
-        except (ApiError):
-            MasteriesNotFound
 
 
 class Summoner(Watcher):
@@ -484,11 +499,10 @@ class Summoner(Watcher):
 
     async def embed(self, force_update : bool = False) -> disnake.Embed:
         embed = FS.Embed(
+            title = f"__**{self.name.upper()}**__",
             description=f"{FS.Emotes.Lol.XP} **LEVEL**\n> **{self.summonerLevel}**",
-            author_url=self.opgg,
-            author_name=self.name,
             color=disnake.Colour.blue(),
-            author_icon_url=self.icon
+            thumbnail=self.icon
         )
         if force_update:
             await self.leagues(force_update=True)
