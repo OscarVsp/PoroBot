@@ -118,15 +118,15 @@ class PoroBot(InteractionBot):
                 ]
             )
         )
-        n = (len(tb) // 4090) 
+        n = (len(tb) // 4050) 
         for i in range(n):
             await self.log_channel.send(
                 embed=FS.Embed(
-                    description=f"```python\n{tb[4096*i:4096*(i+1)]}```")
+                    description=f"```python\n{tb[4050*i:4050*(i+1)]}```")
             )
         await self.log_channel.send(
             embed=FS.Embed(
-                description=f"```python\n{tb[4096*n:]}```")
+                description=f"```python\n{tb[4050*n:]}```")
         )
         
     async def on_slash_command(self, interaction: disnake.ApplicationCommandInteraction) -> None:
