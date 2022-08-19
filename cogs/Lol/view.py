@@ -1,7 +1,8 @@
+from pickle import TRUE
 from typing import List
 import disnake
 from cogs.Lol.exceptions import SummonerNotFound
-from cogs.Lol.watcher import CurrentGame, Summoner 
+from cogs.Lol.watcher import ClashPlayer, ClashTeam, CurrentGame, Summoner 
 import modules.FastSnake as FS
 from modules.LolPatchNoteScraper import PatchNote
 
@@ -95,7 +96,7 @@ class CurrentGameView(disnake.ui.View):
         try:
             self.current_summoner = await Summoner.by_name(self.summoner_name)
         except SummonerNotFound:
-            await inter.edit_original_message(embed=FS.Embed(title="Invocateur inconnu", description=f"Le nom d'invocateur ***{self.summoner_name}*** ne correspond à aucun invocateur...", footer_text="Tu peux rejeter ce message pour le faire disparaitre"), view=None)
+            await inter.edit_original_message(embed=FS.Embed(title="Invocateur inconnu", description=f"Le nom d'invocateur ***{self.summoner_name}*** ne correspond à aucun invocateur..."), view=None)
             await inter.delete_original_message(delay = 3)
             return
         
@@ -144,6 +145,72 @@ class CurrentGameView(disnake.ui.View):
         await inter.response.defer()
         self.current_player = next((p for p in self.live_game.participants if p.summonerName.lower().startswith(inter.component.label.lower()) ), None)
         await self.update(inter)
+        
+    async def on_timeout(self) -> None:
+        await self.inter.delete_original_message()
+        
+        
+        
+class ClashTeamView(disnake.ui.View):
+    
+    def __init__(self, summoner_name : str):
+        super().__init__(timeout=60*60)
+        self.summoner_name : str = summoner_name
+        self.current_player : ClashPlayer = None
+        self.team : ClashTeam = None
+        self.inter : disnake.MessageCommandInteraction = None
+                
+    async def start(self, inter : disnake.ApplicationCommandInteraction):
+        self.inter = inter
+        
+
+        try:
+            self.team = await ClashTeam.by_summoner_name(self.summoner_name)
+        
+            if self.team == None:
+                await inter.edit_original_message(embed=FS.Embed(title="Pas de team clash", description=f"L'invocateur ***{self.summoner_name}*** ne fais pas parti d'une équipe clash..."), view=None)
+                await inter.delete_original_message(delay = 5)
+                return
+        except SummonerNotFound:
+            await inter.edit_original_message(embed=FS.Embed(title="Invocateur inconnu", description=f"Le nom d'invocateur ***{self.summoner_name}*** ne correspond à aucun invocateur..."), view=None)
+            await inter.delete_original_message(delay = 5)
+            return
+
+        self.buttons : List[disnake.ui.Button] = []
+        for j,player in enumerate(await self.team.players(force_update=True)):
+            name = player.name
+            if len(name) > 12:
+                name = name[:12]
+            button = disnake.ui.Button(label=name,custom_id=f'{j}',emoji=player.position_emote)
+            button.callback = self.call_back
+            self.add_item(button)
+            self.buttons.append(button)
+        self.current_player = next((p for p in await self.team.players() if p.name.lower() == self.summoner_name.lower() ), None)
+        await self.current_player.embed(True)
+        self.add_item(disnake.ui.Button(style=disnake.ButtonStyle.link,url=await self.team.opgg(),emoji=FS.Emotes.Lol.OPGG, row=2))
+        await self.update(inter)
+        for player in await self.team.players():
+            if player != self.current_player:
+                await player.embed(True)
+
+        
+    async def embeds(self) -> List[disnake.Embed]:
+        return [await self.current_player.embed(),await self.team.embed()]
+    
+    async def update(self, inter : disnake.MessageInteraction):
+        for button in self.buttons:
+            button.disabled = (self.current_player.name.lower().startswith(button.label.lower()))
+        if inter.response.is_done():
+            await inter.edit_original_message(embeds=await self.embeds(), view = self)
+        else:
+            await inter.response.edit_message(embeds=await self.embeds(), view = self)
+                
+                
+    async def call_back(self, inter : disnake.MessageInteraction):
+        await inter.response.defer()
+        self.current_player = next((p for p in await self.team.players() if p.name.lower().startswith(inter.component.label.lower()) ), None)
+        await self.update(inter)
+        
         
     async def on_timeout(self) -> None:
         await self.inter.delete_original_message()

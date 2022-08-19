@@ -544,7 +544,7 @@ class ClashPlayer(Summoner):
         listPlayerDto: dict = cls.get_watcher().clash.by_summoner(cls.REGION, summoner.id)
         await asyncio.sleep(0.1)
         if len(listPlayerDto) > 0:
-            return ClashPlayer(listPlayerDto[0], summoner=summoner._summonerDto)
+            return ClashPlayer(listPlayerDto[0], summoner._summonerDto)
         return None
     
     @classmethod
@@ -576,6 +576,8 @@ class ClashTeam(Watcher):
         self.icon = f"https://raw.communitydragon.org/pbe/plugins/rcp-be-lol-game-data/global/default/assets/clash/roster-logos/{self.iconId}/1.png"
         self.listPlayerDto: dict = TeamDto.get('players')
         self._players: List[ClashPlayer] = None
+        
+        self.tierFormatted : str = 'I'*self.tier if self.tier != 4 else "IV"
 
     async def players(self, force_update: bool = False) -> List[ClashPlayer]:
         if self._players == None or force_update:
@@ -622,8 +624,8 @@ class ClashTeam(Watcher):
 
     async def embed(self) -> disnake.Embed:
         return FS.Embed(
-            title=f"__**{self.name} ({self.abbreviation})**__",
-            description=f"\n".join([f"{p.position_emote}{(await p.leagues()).first.tier_emote} {p.name}"+(" "+FS.Emotes.Lol.CAPTAIN if p.summonerId == self.captain else "") for p in (await self.players())]),
+            title=f"__**{self.name} [{self.abbreviation}]**__",
+            description=f"Tier **{self.tierFormatted}**\n\n"+"\n".join([f"> {p.position_emote}{(await p.leagues()).first.tier_emote} {p.name}"+(" "+FS.Emotes.Lol.CAPTAIN if p.summonerId == self.captain else "") for p in (await self.players())]),
             thumbnail=self.icon,
             color=disnake.Colour.blue()
         )

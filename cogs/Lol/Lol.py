@@ -70,30 +70,8 @@ class Lol(commands.Cog):
                     )
                     ):
         await inter.response.defer()
-        try:
-            team = await ClashTeam.by_summoner_name(summoner)
-            if team:
-                await inter.edit_original_message(
-                    embed=(await team.embed()),
-                    components=disnake.ui.Button(label="OPGG", emoji=FS.Emotes.Lol.OPGG, style=disnake.ButtonStyle.link, url=(await team.opgg()))
-                )
-
-            else:
-                await inter.edit_original_message(
-                    embed=FS.Embed(
-                        title=f"__**Clash**__",
-                        description=f"**{summoner}** ne fait pas parti d'une équipe clash actuellement...",
-                        thumbnail=FS.Images.Poros.QUESTION
-                    )
-                )
-        except (SummonerNotFound):
-            await inter.edit_original_message(
-                embed=FS.Embed(
-                    title=f"__**Clash**__",
-                    description=f"**{summoner}** n'a pas pu être trouvé...\nVérifiez que le nom d'invocateur soit correct.",
-                    thumbnail=FS.Images.Poros.QUESTION
-                )
-            )
+        clashView = ClashTeamView(summoner)
+        await clashView.start(inter)
 
     @commands.slash_command(
         name="lol"
