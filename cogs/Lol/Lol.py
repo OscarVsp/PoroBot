@@ -266,6 +266,32 @@ class Lol(commands.Cog):
             await inter.delete_original_message(delay = 3)
             
             
+    @lol.sub_command(
+        name="champion",
+        description="Info sur un champion"
+    )
+    async def champion(self, inter: ApplicationCommandInteraction,
+                         nom: str = commands.Param(description="Le nom du champion.")):
+        await inter.response.defer(ephemeral=False)
+        championData : dict = None
+        for championItem in Watcher.CHAMPIONS.values():
+            if championItem.get('name') == nom:
+                champion = await Champion.by_id(championItem.get('id'))
+                await inter.edit_original_message(embeds=champion.embeds)
+                return
+        
+    
+    @champion.autocomplete("nom")
+    async def autocomp_championt(self, inter: disnake.ApplicationCommandInteraction, user_input: str):
+        champions = []
+        for champion in Watcher.CHAMPIONS.values():
+            if champion.get('name').lower().startswith(user_input.lower()):
+                champions.append(champion.get('name'))
+        if len(champions) > 25:
+            champions = champions[:25]
+        return champions    
+            
+            
     def seeding_check(self, **kwargs) -> bool:
         return str(kwargs.get("member").id) in self.summoners.getall()
             

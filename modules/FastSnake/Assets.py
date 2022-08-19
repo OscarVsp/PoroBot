@@ -407,10 +407,25 @@ class Emotes:
         class Roles:
             ADC : str = "<:adc:1009110682639290380>"
             ASSASSIN : str = "<:assassin:1009110684023410698>"
-            FIGTHER : str = "<:figher:1009110714327257098>"
+            FIGHTER : str = "<:figher:1009110714327257098>"
             MAGE : str = "<:mage:1009110736691282061>"
             SUPPORT : str = "<:support:1009110748523413556>"
             TANK : str = "<:tank:1009110749727162401>"
+            
+            @classmethod
+            def get(cls, id : str):
+                if id == "Fighter":
+                    return cls.FIGHTER
+                elif id == "Tank":
+                    return cls.TANK
+                elif id == "Assassin":
+                    return cls.ASSASSIN
+                elif id == "Marksman":
+                    return cls.ADC
+                elif id == "Mage":
+                    return cls.MAGE
+                elif id == "Support":
+                    return cls.SUPPORT
             
         class Drakes:
             CHEMTECH : str = "<:chemtechdrake:1009110685256515705>"
@@ -420,6 +435,26 @@ class Emotes:
             OCEAN : str = "<:oceandrake:1009110741393088604>"
             INFERNAL : str = "<:infernaldrake:1009110735462342656>"
             MOUNTAIN : str = "<:mountainedrake:1009110738335436810>"
+            
+        class Stats:
+            RANGE : str = "<:range:1010137849632395295>"
+            MOVESPEED : str = "<:movespeed:1010137850760659016>"
+            TENACITE : str = "<:tenacite:1010137852534861825>"
+            CRIT : str = "<:crit:1010137853856055387>"
+            ABILITYHASTE : str = "<:abilityhaste:1010137855223410729>"
+            LIFESTEAL : str = "<:lifesteal:1010137856301355048>"
+            LIFESTEALPHYSIC : str = "<:lifestealphysic:1010137857618366486>"
+            ATTACKSPEED : str = "<:attackspeed:1010137859073777694>"
+            MAGICRESISTE : str = "<:magicresiste:1010137860374024284>"
+            ARMOR : str = "<:armor:1010137862043357224>"
+            MAGICPEN : str = "<:magicpen:1010137863234519041>"
+            ARMORPEN : str = "<:armorpen:1010137864379564052>"
+            ABILITYPOWER : str = "<:abilitypower:1010137865545592912>"
+            ATTACKDAMAGE : str = "<:attackdamage:1010137867256873040>"
+            MANAREGEN : str = "<:manaregen:1010137868615827476>"
+            HEALTREGEN : str = "<:healtregen:1010137869836369960>"
+            HEALT : str = "<:healt:1009809788194013334>"
+            MANA : str = "💧"
             
         class SummonerSpells:
             NONE : str = "<:summonerSpell:1009110747214774402>"
