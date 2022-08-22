@@ -100,7 +100,7 @@ class CurrentGameView(disnake.ui.View):
             await inter.delete_original_message(delay = 3)
             return
         
-        await inter.edit_original_message(embeds=[await self.current_summoner.embed(force_update=True),FS.Embed(description=f"{FS.Emotes.LOADING} *Recherche de game en cours...*")])
+        await inter.edit_original_message(embeds=[await self.current_summoner.embed(),FS.Embed(description=f"{FS.Emotes.LOADING} *Recherche de game en cours...*")])
 
         self.live_game = await self.current_summoner.currentGame()
         
@@ -118,9 +118,8 @@ class CurrentGameView(disnake.ui.View):
                     self.add_item(button)
                     self.buttons.append(button)
             self.current_player = next((p for p in self.live_game.participants if p.summonerName.lower() == self.summoner_name.lower() ), None)
+            self.current_player._summoner = self.current_summoner
             await self.update(inter)
-            for participant in self.live_game.participants:
-                await (await participant.summoner()).masteries()
         else:
             await inter.edit_original_message(embeds=[(await self.current_summoner.embed()),FS.Embed(description="*Pas de partie en cours*")])
             await inter.delete_original_message(delay=10)
@@ -180,12 +179,9 @@ class ClashTeamView(disnake.ui.View):
             self.add_item(button)
             self.buttons.append(button)
         self.current_player = next((p for p in await self.team.players() if p.name.lower() == self.summoner_name.lower() ), None)
-        await self.current_player.embed(True)
         self.add_item(disnake.ui.Button(style=disnake.ButtonStyle.link,url=await self.team.opgg(),emoji=FS.Emotes.Lol.OPGG, row=2))
         await self.update(inter)
-        for player in await self.team.players():
-            if player != self.current_player:
-                await player.embed(True)
+
 
         
     async def embeds(self) -> List[disnake.Embed]:

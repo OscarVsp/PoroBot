@@ -1,3 +1,4 @@
+import logging
 import time
 from typing import Dict, List, Optional, Tuple
 from urllib.error import HTTPError
@@ -297,10 +298,10 @@ class CurrentGame(Watcher):
             return f"{FS.Emotes.Lol.Runes.Perks.Get(self.p)}"
         
         async def embeds(self) -> List[disnake.Embed]:
-            embeds = [await (await self.summoner()).embed(force_update=True)]
+            embeds = [await (await self.summoner()).embed()]
             embeds.append(FS.Embed(
-                author_name=self.championName.upper(),
-                author_icon_url=self.championImage,
+                title=f"__**{self.championName.upper()}**__",
+                thumbnail=self.championImage,
                 color=disnake.Colour.blue(),
                 fields = [
                     {'name':f"{FS.Emotes.Lol.Runes.Perks.NONE} **RUNES**",'value':self.perks.text,'inline':True},
@@ -313,6 +314,7 @@ class CurrentGame(Watcher):
         
         async def championMastery(self) -> ChampionMastery:
             if self._championMastery == None:
+                logging.info(f"Loading champion mastery for summoner {self.summonerName} champion {self.championName}")
                 self._championMastery = await ChampionMastery.by_summoner_and_champion(self.summonerId,self.championId)
             return self._championMastery
                 
@@ -327,6 +329,7 @@ class CurrentGame(Watcher):
             
         async def summoner(self, force_update : bool = False):
             if self._summoner == None or force_update:
+                logging.info(f"Loading summoner for participant {self.summonerName}")
                 self._summoner = await Summoner.by_id(self.summonerId)
             return self._summoner
         
@@ -485,11 +488,13 @@ class Summoner(Watcher):
 
     async def leagues(self, force_update: bool = False) -> Leagues:
         if self._leagues == None or force_update:
+            logging.info(f"Loading leagues for {self.name}")
             self._leagues = await Leagues.by_summoner_id(self.id)
         return self._leagues
 
     async def masteries(self, force_update: bool = False) -> Masteries:
         if self._masteries == None or force_update:
+            logging.info(f"Loading masteries for {self.name}")
             self._masteries = await Masteries.by_summoner(self.id)
         return self._masteries
 
@@ -505,14 +510,15 @@ class Summoner(Watcher):
 
     async def embed(self, force_update : bool = False) -> disnake.Embed:
         embed = FS.Embed(
-            title = f"__**{self.name.upper()}**__",
+            author_name=f"{self.name.upper()}",
             description=f"{FS.Emotes.Lol.XP} **LEVEL**\n> **{self.summonerLevel}**",
             color=disnake.Colour.blue(),
-            thumbnail=self.icon
+            author_icon_url=self.icon
         )
-        if force_update:
-            await self.leagues(force_update=True)
-            await self.masteries(force_update=True)
+        if force_update or self._leagues == None:
+            await self.leagues(force_update=force_update)
+        if force_update or self._masteries == None:
+            await self.masteries(force_update=force_update)
         if self._masteries:
             embed.add_field(
                 name=f'{FS.Emotes.Lol.MASTERIES[0]} **MASTERIES**',
@@ -627,7 +633,7 @@ class ClashTeam(Watcher):
 
     async def embed(self) -> disnake.Embed:
         return FS.Embed(
-            title=f"__**{self.name} [{self.abbreviation}]**__",
+            title=f"__**{self.name} [{self.abbreviation.upper()}]**__",
             description=f"Tier **{self.tierFormatted}**\n\n"+"\n".join([f"> {p.position_emote}{(await p.leagues()).first.tier_emote} {p.name}"+(" "+FS.Emotes.Lol.CAPTAIN if p.summonerId == self.captain else "") for p in (await self.players())]),
             thumbnail=self.icon,
             color=disnake.Colour.blue()

@@ -239,7 +239,6 @@ class Lol(commands.Cog):
     async def champion(self, inter: ApplicationCommandInteraction,
                          nom: str = commands.Param(description="Le nom du champion.")):
         await inter.response.defer(ephemeral=False)
-        championData : dict = None
         for championItem in Watcher.CHAMPIONS.values():
             if championItem.get('name') == nom:
                 champion = await Champion.by_id(championItem.get('id'))
