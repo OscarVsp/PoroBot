@@ -76,8 +76,8 @@ class State(Enum):
             if isinstance(other, str):
                 return self.name == other
         except:
-            pass
-        return NotImplemented
+            return NotImplemented
+        
 
 class SaveLoadError(Exception):
     pass
