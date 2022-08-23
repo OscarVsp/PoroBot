@@ -1,3 +1,4 @@
+import os
 import disnake
 from disnake.ext import commands,tasks
 from disnake import ApplicationCommandInteraction
@@ -59,7 +60,7 @@ class Dofus(commands.Cog):
 
     @almanax_task.before_loop
     async def before_almanax_task(self):
-        if bool(self.bot.config.get("TEST")):
+        if bool(os.getenv("TEST")):
             self.almanax_task.cancel()
             logging.info("Almanax task skipped because test mod")
         else:

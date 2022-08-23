@@ -1,837 +1,447 @@
-import logging
-import time
-from typing import Dict, List, Optional, Tuple
-from urllib.error import HTTPError
-from riotwatcher import LolWatcher, ApiError
+import os
+from typing import Dict, List, Optional
 
-from .exceptions import LeagueNotFound, MasteriesNotFound, SummonerNotFound, TeamNotFound, WatcherNotInit
 import modules.FastSnake as FS
 import disnake
-import asyncio
-import requests
-import json
+
+from pyot.conf.model import activate_model, ModelConf
+from pyot.conf.pipeline import activate_pipeline, PipelineConf
+from pyot.core.exceptions import *
+from pyot.core.queue import Queue
+
+from pyot.utils.lol.champion import *
 
 
-class Watcher:
-
-    REGION: str = "euw1"
-    WATCHER: LolWatcher = None
-    VERSION: str = None
-    CHAMPIONS: dict = {}
-    QUEUETYPE : List[dict] = []
-    QUEUES : List[dict] = []
-    MAPS : List[dict] = []
+@activate_model("lol")
+class LolModel(ModelConf):
+    default_platform = "euw1"
+    default_region = "europe"
+    default_version = "latest"
+    default_locale = "en_us"
 
 
-    @classmethod
-    def init(cls, api_key: str):
-        cls.WATCHER = LolWatcher(api_key=api_key)
-        cls.VERSION = json.loads(requests.get(
-            "https://ddragon.leagueoflegends.com/api/versions.json").text)[0]
-        cls.CHAMPIONS = json.loads(requests.get(
-            f"https://ddragon.leagueoflegends.com/cdn/{cls.VERSION}/data/en_US/champion.json").text).get('data')
-        cls.QUEUETYPE = json.loads(requests.get(
-            f"https://static.developer.riotgames.com/docs/lol/queues.json").text)
-        cls.MAPS = json.loads(requests.get(
-            f"https://static.developer.riotgames.com/docs/lol/maps.json").text)
-        cls.QUEUES = json.loads(requests.get(
-            f"https://static.developer.riotgames.com/docs/lol/queues.json").text)
+@activate_pipeline("lol")
+class LolPipeline(PipelineConf):
+    name = "lol_main"
+    default = True
+    stores = [
+        {
+            "backend": "pyot.stores.omnistone.Omnistone",
+            "expirations": {
+                "summoner_v4_by_name": 120,
+                "match_v4_match": 600,
+                "match_v4_timeline": 600,
+            }
+        },
+        {
+            "backend": "pyot.stores.cdragon.CDragon",
+        },
+        {
+            "backend": "pyot.stores.merakicdn.MerakiCDN",
+        },
+        {
+            "backend": "pyot.stores.riotapi.RiotAPI",
+            "api_key": os.getenv("RIOT_APIKEY"),
+        }
+    ]
 
 
-    @property
-    def watcher(self) -> LolWatcher:
-        if self.WATCHER:
-            return self.WATCHER
-        raise WatcherNotInit
+from pyot.models import lol
 
-    @property
-    def region(self) -> str:
-        return self.REGION
-
-    @classmethod
-    def get_watcher(cls):
-        if cls.WATCHER:
-            return cls.WATCHER
-        raise WatcherNotInit
-
-    @classmethod
-    def champion_name_from_id(cls, champion_id: int) -> str:
-        for champion in cls.CHAMPIONS.values():
-            if champion.get('key') == str(champion_id):
-                return champion.get('name')
-        return f"Unknown (id: {champion_id})"
-            
-    @classmethod
-    def maps_name_from_id(cls, map_id : int) -> str:
-        for map in cls.MAPS:
-            if map.get('mapID') == map_id:
-                return map.get('mapName')
-        return f"Unknown (id: {map_id})"
+class SummonerLeague(lol.SummonerLeague):
     
-    @classmethod
-    def queue_dict_from_id(cls, queue_id : int) -> dict:
-        for queue in cls.QUEUES:
-            if queue.get('queueId') == queue_id:
-                return queue
-        return {'map':'UNKNOWN MAP','description':'UNKNOWN GAME'}
-
-
-
-class Leagues(Watcher):
-
-    class QueueType:
+    class Queue:
         RANKED_SOLO_5x5 = "RANKED_SOLO_5x5"
         RANKED_FLEX_SR = "RANKED_FLEX_SR"
-
+    
     TIERS = ['UNRANKED', 'IRON', 'BRONZE', 'SILVER', 'GOLD',
              'PLATINUM', 'DIAMOND', 'MASTER', 'GRANDMASTER', 'CHALLENGER']
     RANKS = ['-', 'IV', 'III', 'II', 'I']
-
-    class League:
-
-        def __init__(self, leagueEntryDto: dict):
-            self._leagueEntryDto: dict = leagueEntryDto
-            self.leagueId: str = leagueEntryDto.get('leagueId')
-            self.summonerId: str = leagueEntryDto.get('summonerId')
-            self.summonerName: str = leagueEntryDto.get('summonerName')
-            self.queueType: str = leagueEntryDto.get('queueType')
-            self.tier: str = leagueEntryDto.get('tier')
-            self.rank: str = leagueEntryDto.get('rank')
-            self.leaguePoints: int = leagueEntryDto.get('leaguePoints')
-            self.wins: int = leagueEntryDto.get('wins')
-            self.losses: int = leagueEntryDto.get('losses')
-            self.hotStreak: bool = leagueEntryDto.get('hotStreak')
-            self.veteran: bool = leagueEntryDto.get('veteran')
-            self.freshBlood: bool = leagueEntryDto.get('freshBlood')
-            self.inactive: bool = leagueEntryDto.get('inactive')
-            self.miniSeries = leagueEntryDto.get('miniSeries')
-
-        @staticmethod
-        def default(queueType: str):
-            return Leagues.League({
-                'queueType': queueType,
-                'tier': Leagues.TIERS[0],
-                'rank': Leagues.RANKS[0],
-                'leaguePoints': 0
-            })
-
-        @property
-        def absolut_score(self) -> int:
-            return Leagues.TIERS.index(self.tier)*10000 + Leagues.RANKS.index(self.rank)*1000 + self.leaguePoints
-
-        @property
-        def tier_emote(self) -> str:
-            return FS.Emotes.Lol.Ranks.get(self.tier)
-
-    def __init__(self, listLeagueEntryDto: dict):
-        self._listLeagueEntryDto: List[dict] = listLeagueEntryDto
-        self.solo: Leagues.League = None
-        self.flex: Leagues.League = None
-        for leagueEntryDto in listLeagueEntryDto:
-            new_league = Leagues.League(leagueEntryDto)
-            if new_league.queueType == Leagues.QueueType.RANKED_SOLO_5x5:
-                self.solo = new_league
-            elif new_league.queueType == Leagues.QueueType.RANKED_FLEX_SR:
-                self.flex = new_league
-        if self.solo == None:
-            self.solo = Leagues.League.default(
-                Leagues.QueueType.RANKED_SOLO_5x5)
-        if self.flex == None:
-            self.flex = Leagues.League.default(
-                Leagues.QueueType.RANKED_FLEX_SR)
-
-    @classmethod
-    async def by_summoner_id(cls, summoner_id: str):
-        try:
-            listLeagueEntryDto: dict = cls.get_watcher(
-            ).league.by_summoner(cls.REGION, summoner_id)
-            await asyncio.sleep(0.1)
-            return Leagues(listLeagueEntryDto)
-        except (ApiError):
-            raise LeagueNotFound
-
+    
+    class Meta(lol.SummonerLeague.Meta):
+        pass
+    
+        
     @property
-    def highest(self) -> Optional[League]:
-        if self.solo.absolut_score > self.flex.absolut_score:
+    def summoner(self) -> "Summoner":
+        return Summoner(id=self.summoner_id, platform=self.platform)
+    
+    ################""
+    
+    @staticmethod
+    def sorting_score(entry : lol.league.SummonerLeagueEntryData):
+        return SummonerLeague.TIERS.index(entry.tier)*10000 + SummonerLeague.RANKS.index(entry.rank)*1000 + entry.league_points
+    
+    @property
+    def solo(self) -> Optional[lol.league.SummonerLeagueEntryData]:
+        for entry in self.entries:
+            if entry.queue == SummonerLeague.Queue.RANKED_SOLO_5x5:
+                return entry
+        return None
+    
+    @property
+    def flex(self) -> Optional[lol.league.SummonerLeagueEntryData]:
+        for entry in self.entries:
+            if entry.queue == SummonerLeague.Queue.RANKED_FLEX_SR:
+                return entry
+        return None
+    
+    @property
+    def highest(self) -> Optional[lol.league.SummonerLeagueEntryData]:
+        scoring = [self.sorting_score(entry) for entry in self.entries]
+        return self.entries[scoring.index(max(scoring))]
+    
+    @property
+    def first(self) -> Optional[lol.league.SummonerLeagueEntryData]:
+        if self.solo:
             return self.solo
         return self.flex
-
+    
+    def league_to_line(self, league : lol.league.SummonerLeagueEntryData) -> str:
+        return f"{FS.Emotes.Lol.Tier.get(league.tier)} **{league.rank}** *({league.league_points} LP)*"
+       
+    @property 
+    def field(self) -> dict:
+        value = ""
+        if self.solo:
+            value += f"> **Solo/Duo :** {self.league_to_line(self.solo)}"
+            if self.flex:
+                value+="\n"
+        if self.flex:
+            value += f"> **Flex :** {self.league_to_line(self.flex)}"
+        if value == "":
+            value = "*No Ranked Data*"
+        return {
+            'name':f'{FS.Emotes.Lol.Tier.NONE} **RANKED**',
+            'value':value
+        }
+    
+class ChampionMasteries(lol.ChampionMasteries):
+    
+    class Meta(lol.ChampionMasteries.Meta):
+        pass
+    
     @property
-    def first(self) -> Optional[League]:
-        if self.solo.absolut_score > 0:
-            return self.solo
-        return self.flex
-
-class ChampionMastery(Watcher):
-
-    def __init__(self, championMasteryDto: dict):
-        self._championMasteryDto: dict = championMasteryDto
-        self.championId: str = str(championMasteryDto.get("championId"))
-        self.championLevel: int = championMasteryDto.get('championLevel')
-        self.championPoints: int = championMasteryDto.get('championPoints')
-        self.championPointsUntilNextLevel: int = championMasteryDto.get(
-            'championPointsUntilNextLevel')
-        self.championPointsSinceLastLevel: int = championMasteryDto.get(
-            'championPointsSinceLastLevel')
-        self.chestGranted: bool = championMasteryDto.get('chestGranted')
-        self.lastPlayTime: int = championMasteryDto.get('lastPlayTime')
-        self.currentToken: int = championMasteryDto.get('tokensEarned')
-
-        self.name : str = Watcher.champion_name_from_id(self.championId)
-        self.icon : str = FS.Emotes.Lol.Champions.get(self.championId)
-        num = float('{:.3g}'.format(self.championPoints))
+    def summoner(self) -> "Summoner":
+        return Summoner(id=self.summoner_id, platform=self.platform)
+    
+    ###########################
+    
+    def champion_by_name(self, name : str) -> lol.ChampionMastery:
+        return next((mastery for mastery in self.masteries if mastery.champion.name == name))
+    
+    def top(self, n : int = 3) -> List[lol.ChampionMastery]:
+        self.masteries.sort(key=lambda m: (m.champion_level, m.champion_points), reverse=True)
+        return [self.masteries[i] for i in range(min(n,len(self.masteries)))]
+    
+    def field(self, n : int = 3) -> dict:
+        top = self.top(n=n)
+        return {
+            'name':f"{FS.Emotes.Lol.MASTERIES[0]} **MASTERIES**",
+            'value':("\n".join([f"> {self.champion_to_line(champ)}" for champ in top]) if len(top) > 0 else f"{FS.Emotes.Lol.MASTERIES[0]} *Aucune maitrise*")
+        }
+    
+    def champion_to_line(self, champion : lol.ChampionMastery) -> str:
+        return f"{FS.Emotes.Lol.MASTERIES[champion.champion_level]} **{FS.Emotes.Lol.Champions.get(champion.champion_id)}** *{self.champion_points_formatted(champion)}*"
+    
+    def champion_points_formatted(self, champion : lol.ChampionMastery) -> str:
+        num = float('{:.3g}'.format(champion.champion_points))
         magnitude = 0
         while abs(num) >= 1000:
             magnitude += 1
             num /= 1000.0
-        self.championPointsFormatted: str = '{}{}'.format('{:f}'.format(
-            num).rstrip('0').rstrip('.'), ['', 'K', 'M', 'B', 'T'][magnitude])
-
-    @classmethod
-    async def by_summoner_and_champion(cls, encrypted_summoner_id: str, champion_id: str):
-        if cls.WATCHER:
-            try:
-                championMasteryDto = cls.WATCHER.champion_mastery.by_summoner_by_champion(region=cls.REGION,
-                    encrypted_summoner_id=encrypted_summoner_id, champion_id=champion_id)
-                await asyncio.sleep(0.1)
-                return ChampionMastery(championMasteryDto)
-            except requests.exceptions.HTTPError:
-                return None
-        raise WatcherNotInit
-
+        return '{}{}'.format('{:f}'.format(num).rstrip('0').rstrip('.'), ['', 'K', 'M', 'B', 'T'][magnitude])
+    
+class ClashPlayers(lol.ClashPlayers):
+    
+    class Meta(lol.ClashPlayers.Meta):
+        pass
+    
     @property
-    def emote(self) -> str:
-        return FS.Emotes.Lol.MASTERIES[self.championLevel]
-
+    def summoner(self) -> "Summoner":
+        return Summoner(id=self.summoner_id, platform=self.platform)
+    
+class ClashTeam(lol.ClashTeam):
+    
+    _icon_url : str = "https://raw.communitydragon.org/pbe/plugins/rcp-be-lol-game-data/global/default/assets/clash/roster-logos/"
+    _opgg_url : str = "https://euw.op.gg/multi/query="
+    
+    class Meta(lol.ClashTeam.Meta):
+        pass
+    
     @property
-    def line_description(self) -> str:
-        return f"{self.emote} **{self.icon}** *{self.championPointsFormatted}*"
-
-
-class Masteries(Watcher):
-
-    def __init__(self, listChampionMasteryDto : dict):
-        self._listChampionMasteryDto: List[dict] = listChampionMasteryDto
-        self.champions: List[ChampionMastery] = []
-        for championMasteryDto in listChampionMasteryDto:
-            self.champions.append(ChampionMastery(championMasteryDto))
-        self.champions.sort(key=lambda x: x.championPoints, reverse=True)
-
-    @classmethod
-    async def by_summoner(cls, id: str):
-        try:
-            listChampionMasteryDto: List[dict] = cls.get_watcher(
-            ).champion_mastery.by_summoner(cls.REGION, id)
-            await asyncio.sleep(0.1)
-            return Masteries(listChampionMasteryDto)
-        except (ApiError):
-            MasteriesNotFound
-
-class CurrentGame(Watcher):
-
-    class Perks:
-
-        def __init__(self, perksInfo: dict):
-            self._perksInfo: dict = perksInfo
-            self.perkIds: List[int] = perksInfo.get('perkIds')
-            self.perkStyle: int = perksInfo.get('perkStyle')
-            self.perkSubStyle: int = perksInfo.get('perkSubStyle')
-        
-        @property    
-        def emote(self) -> str:
-            return FS.Emotes.Lol.Runes.Perks.NONE
-        
-        @property    
-        def subEmote(self) -> str:
-            return FS.Emotes.Lol.Runes.Perks.NONE
-        
-        @property
-        def text(self) -> str:
-            return f"""> {FS.Emotes.Lol.Runes.Perks.Get(self.perkIds[0])}{FS.Emotes.Lol.Runes.Perks.Get(self.perkIds[4])}{FS.Emotes.Lol.Runes.Perks.Get(self.perkIds[6])}
-        > {FS.Emotes.Lol.Runes.Perks.Get(self.perkIds[1])}{FS.Emotes.Lol.Runes.Perks.Get(self.perkIds[5])}{FS.Emotes.Lol.Runes.Perks.Get(self.perkIds[7])}
-        > {FS.Emotes.Lol.Runes.Perks.Get(self.perkIds[2])}⬛{FS.Emotes.Lol.Runes.Perks.Get(self.perkIds[8])}
-        > {FS.Emotes.Lol.Runes.Perks.Get(self.perkIds[3])}"""
-
-    class CustomizationObject:
-
-        def __init__(self, customizationObjectInfo: dict):
-            self._customizationObjectInfo: dict = customizationObjectInfo
-            self.category: str = customizationObjectInfo.get('category')
-            self.content: str = customizationObjectInfo.get('content')
-  
-    class Participant:
-
-        def __init__(self, participantInfo: dict):
-            self._participantInfo: dict = participantInfo
-            self.championId: str = str(participantInfo.get('championId'))
-            self.perks: CurrentGame.Perks = CurrentGame.Perks(
-                participantInfo.get('perks'))
-            self.profileIconId: int = participantInfo.get('profileIconId')
-            self.bot: bool = participantInfo.get('bot')
-            self.teamId: int = participantInfo.get('teamId')
-            self.summonerName: str = participantInfo.get('summonerName')
-            self.summonerId: str = participantInfo.get('summonerId')
-            self.spell1Id: int = participantInfo.get('spell1Id')
-            self.spell2Id: int = participantInfo.get('spell2Id')
-            if self.spell2Id == 4:
-                self.spell1Id,self.spell2Id = self.spell2Id,self.spell1Id
-            self.gameCustomizationObjects: List[CurrentGame.CustomizationObject] = [CurrentGame.CustomizationObject(
-                customizationObjectInfo) for customizationObjectInfo in participantInfo.get('gameCustomizationObjects')]
-            
-            self.championName : str = Watcher.champion_name_from_id(self.championId)
-            self.championIcon : str = FS.Emotes.Lol.Champions.get(self.championId)
-            self.championImage : str = FS.Images.Lol.champion_icon(self.championId)
-            self._championMastery : ChampionMastery = None
-            
-            self._summoner : Summoner = None
-            
-        @property
-        def spell1Emote(self) -> str:
-            return FS.Emotes.Lol.SummonerSpells.get(self.spell1Id)
-        
-        @property
-        def spell2Emote(self) -> str:
-            return FS.Emotes.Lol.SummonerSpells.get(self.spell2Id)
-        
-        @property
-        def runes(self) -> str:
-            return f"{FS.Emotes.Lol.Runes.Perks.Get(self.p)}"
-        
-        async def embeds(self) -> List[disnake.Embed]:
-            embeds = [await (await self.summoner()).embed()]
-            embeds.append(FS.Embed(
-                title=f"__**{self.championName.upper()}**__",
-                thumbnail=self.championImage,
-                color=disnake.Colour.blue(),
-                fields = [
-                    {'name':f"{FS.Emotes.Lol.Runes.Perks.NONE} **RUNES**",'value':self.perks.text,'inline':True},
-                    {'name':f"{FS.Emotes.FLAME} **SPELL**",'value':f"> {self.spell1Emote}{self.spell2Emote}",'inline':True},
-                    {'name':f"{FS.Emotes.Lol.MASTERIES[0]} **MASTERY**",'value':"> "+(await self.championMastery()).line_description if await self.championMastery() else "N/A",'inline':True},
-                ]    
-            ))
-
-            return embeds
-        
-        async def championMastery(self) -> ChampionMastery:
-            if self._championMastery == None:
-                logging.info(f"Loading champion mastery for summoner {self.summonerName} champion {self.championName}")
-                self._championMastery = await ChampionMastery.by_summoner_and_champion(self.summonerId,self.championId)
-            return self._championMastery
-                
-        
-        async def lines(self) -> Tuple[str,str]:
-            league = (await (await self.summoner()).leagues()).first
-            championMastery = await self.championMastery()
-            return (
-                f"{league.tier_emote} **{self.summonerName}**",
-                f"{self.championIcon} {championMastery.emote if championMastery else FS.Emotes.Lol.MASTERIES[0]} ➖ {FS.Emotes.Lol.Runes.Perks.Get(self.perks.perkIds[0])}{FS.Emotes.Lol.Runes.Styles.Get(self.perks.perkSubStyle)} ➖ {self.spell1Emote}{self.spell2Emote}"
-                )
-            
-        async def summoner(self, force_update : bool = False):
-            if self._summoner == None or force_update:
-                logging.info(f"Loading summoner for participant {self.summonerName}")
-                self._summoner = await Summoner.by_id(self.summonerId)
-            return self._summoner
-        
-    class Team:
-        
-        def __init__(self, team_id : int) -> None:
-            self.bannedChampions : List[CurrentGame.BannedChampion] = []
-            self.participants : List[CurrentGame.Participant] = []
-            self.id : int = team_id
-            
-        @property
-        def bans_block(self) -> str:
-            return "\n".join([f"> `{b.name}`" for b in self.bannedChampions])
-        
-        async def embed(self) -> disnake.Embed:
-            participant_tuples = [await p.lines() for p in self.participants]
-            return FS.Embed(
-                title=f"__**TEAM {FS.Emotes.ALPHA[self.id//100 -1]}**__",
-                color=disnake.Colour.blue(),
-                fields=[
-                    {'name':'➖','value':'\n'.join([p[i] for p in participant_tuples]),'inline':True} for i in range(len(participant_tuples[0]))
-                ]
-            )
-            
-        @property
-        def opgg(self) -> str:
-            return f"https://euw.op.gg/multi/query={''.join([p.summonerName.replace(' ','%20')+'%2C' for p in self.participants])}"
-
-    class BannedChampion:
-
-        def __init__(self, bannedChampionInfo: dict):
-            self._bannedChampionInfo: dict = bannedChampionInfo
-            self.pickTurn: int = bannedChampionInfo.get('pickTurn')
-            self.championId: int = bannedChampionInfo.get('championId')
-            self.teamId: int = bannedChampionInfo.get('teamId')
-
-            self.name: str = Watcher.champion_name_from_id(self.championId) if self.championId > 0 else "-"
-            
-
-    def __init__(self, CurrentGameInfo: dict):
-        self._currentGameInfo: dict = CurrentGameInfo
-        self.gameId: int = CurrentGameInfo.get('gameId')
-        self.gameType: str = CurrentGameInfo.get('gameType')
-        self.gameStartTime: int = CurrentGameInfo.get('gameStartTime')
-        self.mapId: int = CurrentGameInfo.get('mapId')
-        self.gameLength: int = CurrentGameInfo.get('gameLength')
-        self.platformId: int = CurrentGameInfo.get('platformId')
-        self.gameMode: str = CurrentGameInfo.get('gameMode')
-        self.bannedChampions: List[CurrentGame.BannedChampion] = [CurrentGame.BannedChampion(
-            bannedChampionInfo) for bannedChampionInfo in CurrentGameInfo.get("bannedChampions")]
-        self.gameQueueConfigId: int = CurrentGameInfo.get('gameQueueConfigId')
-        self.observers_key: str = (CurrentGameInfo.get(
-            "observers")).get('encryptionKey')
-        self.participants: List[CurrentGame.Participant] = [CurrentGame.Participant(
-            participantInfo) for participantInfo in CurrentGameInfo.get("participants")]
-        
-        self.teams : List[CurrentGame.Team] = []
-        for participant in self.participants:
-            team = next((team for team in self.teams if team.id == participant.teamId), None)
-            if team == None:
-                team = CurrentGame.Team(participant.teamId)
-                self.teams.append(team)
-            team.participants.append(participant)
-            
-        for bannedChampion in self.bannedChampions:
-            team = next((team for team in self.teams if team.id == bannedChampion.teamId), None)
-            team.bannedChampions.append(bannedChampion)
-            
-        for team in self.teams:
-            team.bannedChampions.sort(key=lambda b:b.pickTurn)
-        
-        self.gameLengthFormatted : str = time.strftime("%M:%S", time.gmtime(self.gameLength))
-        
-        queue : dict = self.queue_dict_from_id(self.gameQueueConfigId)
-        self.mapName : str = queue.get('map')
-        self.gameName : str = queue.get('description')[:-6]
-        
-        if self.mapName == "Summoner's Rift":
-            self.mapImage : str = FS.Images.Lol.RIFT
-            self.mapIcon : str = FS.Emotes.Lol.RIFT
-        elif self.mapName == "Howling Abyss":
-            self.mapImage : str = FS.Images.Lol.ARAM
-            self.mapIcon : str = FS.Emotes.Lol.ARAM
-        else:
-            self.mapImage : str = None
-            
-        
-            
-            
-    @classmethod
-    async def by_summoner(cls, summoner_id: str):
-        try:
-            currentGameInfo = cls.get_watcher().spectator.by_summoner(cls.REGION, summoner_id)
-            await asyncio.sleep(0.1)
-            return CurrentGame(currentGameInfo)
-        except (ApiError):
-            return None
-        
+    def captain(self) -> "Summoner":
+        return Summoner(id=self.captain_summoner_id, platform=self.platform)
     
-    async def embeds(self) -> List[disnake.Embed]:
-        embeds = [FS.Embed(
-            title=f"{FS.Emotes.Lol.LOGO} __**GAME EN COURS**__",
-            description=f"> **Map :** `{self.mapName}`\n> **Type :** `{self.gameName}`\n> **Durée :** `{self.gameLengthFormatted}`",
-            color=disnake.Colour.blue(),
-            thumbnail=self.mapImage
-        )]
-        for team in self.teams:
-            embeds.append(await team.embed())
-
-        
-        return embeds
-        
+    @property
+    def tournament(self) -> "ClashTournament":
+        return super().tournament
     
     
-
-
-
-
-class Summoner(Watcher):
-
-    def __init__(self, summonerDto: dict):
-        self._summonerDto: dict = summonerDto
-        self.name: str = summonerDto.get('name')
-        self.revisionDate: int = summonerDto.get('revisionDate')
-        self.id: str = summonerDto.get('id')
-        self.puuid = str = summonerDto.get('puuid')
-        self.accountid: str = summonerDto.get('accountId')
-        self.summonerLevel = summonerDto.get('summonerLevel')
-        self.profileIconId = summonerDto.get('profileIconId')
-
-        self.icon = f"https://raw.communitydragon.org/pbe/plugins/rcp-be-lol-game-data/global/default/v1/profile-icons/{self.profileIconId}.jpg"
-        self.opgg = f"https://euw.op.gg/summoners/euw/{self.name.replace(' ','%20')}"
-
-        self._leagues: Leagues = None
-        self._masteries: Masteries = None
-        self._currentGame: CurrentGame = None
-        self._lastGame: CurrentGame = None
-
-    @classmethod
-    async def by_name(cls, summoner_name: str):
-        try:
-            summonerDto: dict = cls.get_watcher().summoner.by_name(cls.REGION, summoner_name)
-            await asyncio.sleep(0.1)
-            return Summoner(summonerDto)
-        except (ApiError):
-            raise SummonerNotFound
-
-    @classmethod
-    async def by_id(cls, summoner_id: str):
-        try:
-            summonerDto: dict = cls.get_watcher().summoner.by_id(cls.REGION, summoner_id)
-            await asyncio.sleep(0.1)
-            return Summoner(summonerDto)
-        except (ApiError):
-            return None
-
-    async def leagues(self, force_update: bool = False) -> Leagues:
-        if self._leagues == None or force_update:
-            logging.info(f"Loading leagues for {self.name}")
-            self._leagues = await Leagues.by_summoner_id(self.id)
-        return self._leagues
-
-    async def masteries(self, force_update: bool = False) -> Masteries:
-        if self._masteries == None or force_update:
-            logging.info(f"Loading masteries for {self.name}")
-            self._masteries = await Masteries.by_summoner(self.id)
-        return self._masteries
-
-    async def currentGame(self, force_update: bool = True) -> Optional[CurrentGame]:
-        if self._currentGame == None or force_update:
-            if force_update:
-                self._lastGame = self._currentGame
-            self._currentGame = await CurrentGame.by_summoner(self.id)
-        return self._currentGame
-
-    def lastGame(self) -> Optional[CurrentGame]:
-        return self._lastGame
-
-    async def embed(self, force_update : bool = False) -> disnake.Embed:
-        embed = FS.Embed(
-            author_name=f"{self.name.upper()}",
-            description=f"{FS.Emotes.Lol.XP} **LEVEL**\n> **{self.summonerLevel}**",
-            color=disnake.Colour.blue(),
-            author_icon_url=self.icon
-        )
-        if force_update or self._leagues == None:
-            await self.leagues(force_update=force_update)
-        if force_update or self._masteries == None:
-            await self.masteries(force_update=force_update)
-        if self._masteries:
-            embed.add_field(
-                name=f'{FS.Emotes.Lol.MASTERIES[0]} **MASTERIES**',
-                value=("\n".join([f"> {self._masteries.champions[i].line_description}" for i in range(min(3,len(self._masteries.champions)))]) if len(self._masteries.champions) > 0 else f"{FS.Emotes.Lol.MASTERIES[0]} *Aucune maitrise*")
-            )
-        if self._leagues or force_update:
-            leagues = (await self.leagues())
-            embed.add_field(
-                name=f'{FS.Emotes.Lol.Ranks.NONE} **RANKED**',
-                value=f"> **Solo/Duo :** {leagues.solo.tier_emote} **{leagues.solo.rank}** *({leagues.solo.leaguePoints} LP)*\n> **Flex :** {leagues.flex.tier_emote} **{leagues.flex.rank}** *({leagues.flex.leaguePoints} LP)*"
-            )
-        return embed
-
-class ClashPlayer(Summoner):
-
-    def __init__(self, playerDto: dict, summonerDto: dict):
-        super().__init__(summonerDto)
-        self._playerDto: dict = playerDto
-        self.role: str = playerDto.get('role')
-        self.position: str = playerDto.get('position')
-        self.teamId: str = playerDto.get('teamId')
-        self.summonerId: str = playerDto.get('summonerId')
-
-        self.position_emote: str = FS.Emotes.Lol.Positions.get(self.position)
-
-    @classmethod
-    async def by_name(cls, summoner_name: str):
-        return await cls.by_summoner(await super().by_name(summoner_name))
-
-    @classmethod
-    async def by_summoner(cls, summoner: Summoner):
-        listPlayerDto: dict = cls.get_watcher().clash.by_summoner(cls.REGION, summoner.id)
-        await asyncio.sleep(0.1)
-        if len(listPlayerDto) > 0:
-            return ClashPlayer(listPlayerDto[0], summoner._summonerDto)
-        return None
+    #################
     
-    @classmethod
-    async def by_summoner_id(cls, summoner_id : int):
-        return await cls.by_summoner(await super().by_id(summoner_id))
-
-    @classmethod
-    async def by_Dto(cls, playerDto: dict):
-        try:
-            summonerDto: dict = cls.get_watcher().summoner.by_id(
-                cls.REGION, playerDto.get('summonerId'))
-            await asyncio.sleep(0.1)
-            return ClashPlayer(playerDto, summonerDto)
-        except (ApiError):
-            raise SummonerNotFound
-
-
-class ClashTeam(Watcher):
-
-    def __init__(self, TeamDto: dict):
-        self._TeamDto: dict = TeamDto
-        self.id: str = TeamDto.get('id')
-        self.tournamentId: int = TeamDto.get('tournamentId')
-        self.name: str = TeamDto.get('name')
-        self.iconId: int = TeamDto.get('iconId')
-        self.tier: int = TeamDto.get('tier')
-        self.captain: str = TeamDto.get('captain')
-        self.abbreviation: str = TeamDto.get('abbreviation')
-        self.icon = f"https://raw.communitydragon.org/pbe/plugins/rcp-be-lol-game-data/global/default/assets/clash/roster-logos/{self.iconId}/1.png"
-        self.listPlayerDto: dict = TeamDto.get('players')
-        self._players: List[ClashPlayer] = None
-        
-        self.tierFormatted : str = 'I'*self.tier if self.tier != 4 else "IV"
-
-    async def players(self, force_update: bool = False) -> List[ClashPlayer]:
-        if self._players == None or force_update:
-            temp: Dict[List[ClashPlayer]] = {"TOP": [], "JUNGLE": [], "MIDDLE": [
-            ], "BOTTOM": [], "UTILITY": [], "FILL": [], "UNSELECTED": []}
-            for playerDto in self.listPlayerDto:
-                clash_player = await ClashPlayer.by_Dto(playerDto)
-                temp[clash_player.position].append(clash_player)
-            self._players = temp["TOP"] + temp["JUNGLE"] + temp["MIDDLE"] + \
-                temp["BOTTOM"] + temp["UTILITY"] + \
-                temp["FILL"] + temp["UNSELECTED"]
-
-        return self._players
-
-    @classmethod
-    async def by_id(cls, team_id: str):
-        try:
-            teamDto: dict = cls.get_watcher().clash.by_team(cls.REGION, team_id)
-            await asyncio.sleep(0.1)
-            return ClashTeam(teamDto)
-        except (ApiError):
-            raise TeamNotFound
-
-    @classmethod
-    async def by_summoner_name(cls, summoner_name: str):
-        player: ClashPlayer = await ClashPlayer.by_name(summoner_name)
-        if player:
-            return await cls.by_id(player.teamId)
-        return None
+    @property
+    def tierFormatted(self) -> str:
+        return 'I'*self.tier if self.tier != 4 else "IV"
     
-    @classmethod
-    async def by_summoner_id(cls, summoner_id: str):
-        player: ClashPlayer = await ClashPlayer.by_summoner_id(summoner_id)
-        if player:
-            return await cls.by_id(player.teamId)
-        return None
+    @property
+    def sortedPlayers(self) -> List[lol.clash.ClashPlayerData]:
+        temp: Dict[List[lol.clash.ClashPlayerData]] = {"TOP": [], "JUNGLE": [], "MIDDLE": [
+        ], "BOTTOM": [], "UTILITY": [], "FILL": [], "UNSELECTED": []}
+        for player in self.players:
+            temp[player.position].append(player)
+        return temp["TOP"] + temp["JUNGLE"] + temp["MIDDLE"] + \
+            temp["BOTTOM"] + temp["UTILITY"] + \
+            temp["FILL"] + temp["UNSELECTED"]
+            
+    @property
+    def icon_url(self) -> str:
+        return self._icon_url+self.icon_id+"/1.png"
     
-    @classmethod
-    async def by_summoner(cls, summoner: Summoner):
-        player: ClashPlayer = await ClashPlayer.by_summoner(summoner)
-        if player:
-            return await cls.by_id(player.teamId)
-        return None
-
+    @async_property
+    async def opgg_url(self) -> str:
+        return self._opgg_url+''.join([(await p.summoner.get()).name.replace(' ','%20')+'%2C' for p in self.players])
+               
+    @async_property
     async def embed(self) -> disnake.Embed:
+        description =f"Tier **{self.tierFormatted}**\n\n"
+        for player in self.sortedPlayers:
+            summoner = await Summoner(id=player.summoner_id).get()
+            league = await summoner.league_entries.get()
+            description += f"> {FS.Emotes.Lol.Positions.get(player.position)}{FS.Emotes.Lol.Ranks.get(league.first.rank)} {summoner.name}"
+            if player.role == "CAPTAIN":
+                description += f" {FS.Emotes.Lol.CAPTAIN}"
+            description += "\n"
         return FS.Embed(
             title=f"__**{self.name} [{self.abbreviation.upper()}]**__",
-            description=f"Tier **{self.tierFormatted}**\n\n"+"\n".join([f"> {p.position_emote}{(await p.leagues()).first.tier_emote} {p.name}"+(" "+FS.Emotes.Lol.CAPTAIN if p.summonerId == self.captain else "") for p in (await self.players())]),
-            thumbnail=self.icon,
+            description=description,
+            thumbnail=self.icon_url,
             color=disnake.Colour.blue()
         )
-
-    async def opgg(self) -> str:
-        return f"https://euw.op.gg/multi/query={''.join([p.name.replace(' ','%20')+'%2C' for p in (await self.players())])}"
     
+class ClashTournament(lol.ClashTournament):
     
-class Champion(Watcher):
+    class Meta(lol.ClashTournament.Meta):
+        pass
     
-    class Image:
-        
-        def __init__(self, imageData : dict):
-            self._imageData : dict = imageData
-            self.full : str = f"https://ddragon.leagueoflegends.com/cdn/{Watcher.VERSION}/img/champion/{imageData.get('full')}"
-            self.sprites : str = imageData.get('sprites')
-            self.group : str = imageData.get('group')
-            self.x : int = imageData.get('x')
-            self.y : int = imageData.get('y')
-            self.w: int = imageData.get('w')
-            self.n : int = imageData.get('n')
-    
-    class Infos:
-        
-        def __init__(self, infoData : dict):
-            self._infoData : dict = infoData
-            self.attack : int = infoData.get('attack')
-            self.defense : int = infoData.get('defense')
-            self.magic : int = infoData.get('magic')
-            self.difficulty : int = infoData.get('difficulty')
-    
-    class Stats:
-        
-        def __init__(self, statsData : dict):
-            self._statsData : dict = statsData
-            self.hp : int = statsData.get('hp')
-            self.hpperlevel : int = statsData.get('hpperlevel')
-            self.mp : int = statsData.get('mp')
-            self.mpperlevel : int = statsData.get('mpperlevel')
-            self.movespeed : int = statsData.get('movespeed')
-            self.armor : int = statsData.get('armor')
-            self.armorperlevel : int = statsData.get('armorperlevel')
-            self.magicresistance : int = statsData.get('spellblock')
-            self.magicresistanceperlevel : int = statsData.get('spellblockperlevel')
-            self.attackrange : int = statsData.get('attackrange')
-            self.hpregen : int = statsData.get('hpregen')
-            self.hpregenperlevel : int = statsData.get('hpregenperlevel')
-            self.mpregen : int = statsData.get('mpregen')
-            self.mpregenperlevel : int = statsData.get('mpregenperlevel')
-            self.crit : int = statsData.get('crit')
-            self.critperlevel : int = statsData.get('critperlevel')
-            self.attackdamage : int = statsData.get('attackdamage')
-            self.attackdamageperlevel : int = statsData.get('attackdamageperlevel')
-            self.attackspeedperlevel : int = statsData.get('attackspeedperlevel')
-            self.attackspeed : int = statsData.get('attackspeed')
-            
-        @property
-        def fields(self) -> List[dict]:
-            return [
-                {
-                    'name':"➖",
-                    'value':f"""{FS.Emotes.Lol.Stats.HEALT} ➖ **{self.hp}** + *{self.hpperlevel}/{FS.Emotes.Lol.XP}* ({round(self.hp+self.hpperlevel*18)})
-                                {FS.Emotes.Lol.Stats.MANA} ➖ **{self.mp}** + *{self.mpperlevel}/{FS.Emotes.Lol.XP}* ({round(self.mp+self.mpperlevel*18)})
-                                {FS.Emotes.Lol.Stats.ARMOR} ➖ **{self.armor}** + *{self.armorperlevel}/{FS.Emotes.Lol.XP}* ({round(self.armor+self.armorperlevel*18)})
-                                {FS.Emotes.Lol.Stats.ATTACKSPEED} ➖ **{self.attackspeed}** + *{self.attackspeedperlevel}/{FS.Emotes.Lol.XP}* ({round(self.attackspeed+self.attackspeedperlevel*18)})
-                                {FS.Emotes.Lol.Stats.CRIT} ➖ **{self.crit}** + *{self.critperlevel}/{FS.Emotes.Lol.XP}* ({round(self.crit+self.critperlevel*18)})
-                                {FS.Emotes.Lol.Stats.MOVESPEED} ➖ **{self.movespeed}**""",
-                    'inline':True
-                    },
-                {
-                    'name':"➖",
-                    'value':f"""{FS.Emotes.Lol.Stats.HEALTREGEN} ➖ **{self.hpregen}** + *{self.hpregenperlevel}/{FS.Emotes.Lol.XP}* ({round(self.hpregen+self.hpregenperlevel*18)})
-                                {FS.Emotes.Lol.Stats.MANAREGEN} ➖ **{self.mpregen}** + *{self.mpregenperlevel}/{FS.Emotes.Lol.XP}* ({round(self.mpregen+self.mpregenperlevel*18)})
-                                {FS.Emotes.Lol.Stats.MAGICRESISTE} ➖ **{self.magicresistance}** + *{self.magicresistanceperlevel}/{FS.Emotes.Lol.XP}* ({round(self.magicresistance+self.magicresistanceperlevel*18)})
-                                {FS.Emotes.Lol.Stats.ATTACKDAMAGE} ➖ **{self.attackdamage}** + *{self.attackdamageperlevel}/{FS.Emotes.Lol.XP}* ({round(self.attackdamage+self.attackdamageperlevel*18)})
-                                {FS.Emotes.Lol.Stats.RANGE} ➖ **{self.attackrange}**""",
-                    'inline':True
-                    }
-            ]
-            
-    class Passive:
-        
-        class Image:
-        
-            def __init__(self, imageData : dict):
-                self._imageData : dict = imageData
-                self.full : str = f"https://ddragon.leagueoflegends.com/cdn/{Watcher.VERSION}/img/passive/{imageData.get('full')}"
-                self.sprites : str = imageData.get('sprites')
-                self.group : str = imageData.get('group')
-                self.x : int = imageData.get('x')
-                self.y : int = imageData.get('y')
-                self.w: int = imageData.get('w')
-                self.n : int = imageData.get('n')
-        
-        def __init__(self, spellData : dict):
-            self._spellData : dict = spellData
-            self.name : str = spellData.get('name')
-            self.description : str = spellData.get('description')
-            self.image : Champion.Passive.Image = Champion.Passive.Image(spellData.get('image'))
-            
-        @property
-        def embed(self) -> disnake.Embed:
-            return FS.Embed(
-                author_name=f"P - {self.name}",
-                author_icon_url=self.image.full,
-                description=f">  {self.description}"
-            )
-            
-    class Spell:
-        
-        class Image:
-        
-            def __init__(self, imageData : dict):
-                self._imageData : dict = imageData
-                self.full : str = f"https://ddragon.leagueoflegends.com/cdn/{Watcher.VERSION}/img/spell/{imageData.get('full')}"
-                self.sprites : str = imageData.get('sprites')
-                self.group : str = imageData.get('group')
-                self.x : int = imageData.get('x')
-                self.y : int = imageData.get('y')
-                self.w: int = imageData.get('w')
-                self.n : int = imageData.get('n')
-        
-        def __init__(self, spellData : dict):
-            self._spellData : dict = spellData
-            self.name : str = spellData.get('name')
-            self.description : str = spellData.get('description')
-            self.image : Champion.Spell.Image = Champion.Spell.Image(spellData.get('image'))
-            self.id : str = spellData.get('id')
-            self.indicator : str = self.id[-1].upper()
-            self.tooltip : str = spellData.get('tooltip')
-            self.leveltiplabel : List[str] = spellData.get('leveltip').get('label')
-            self.maxrank : int = spellData.get('maxrank')
-            self.cooldown : List[int] = spellData.get("cooldown")
-            self.cooldownBurn : str = spellData.get("cooldownBurn")
-            self.cost : List[int] = spellData.get("cost")
-            self.costBrun : str = spellData.get("costBurn")
-            self.datavalues : dict = spellData.get("datavalues")
-            self.effect : List[List[int]] = spellData.get('effect')
-            self.effectBurn : List[str] = spellData.get('effectBurn')
-            self.vars : List[str] = spellData.get('vars')
-            self.costType : str = spellData.get('costType')
-            self.maxammo : str = spellData.get('maxammo')
-            self.range : List[int] = spellData.get('range')
-            self.rangeBrun : str = spellData.get('rangeBurn')
-            self.ressource : str = spellData.get('ressource')
-            
-        @property
-        def embed(self) -> disnake.Embed:
-            return FS.Embed(
-                author_name=f"{self.indicator} - {self.name}",
-                author_icon_url=self.image.full,
-                description=f"{FS.Emotes.Lol.Stats.ABILITYHASTE} **{self.cooldownBurn}** ➖ {FS.Emotes.Lol.Stats.MANA} **{self.costBrun}** ➖ {FS.Emotes.TARGET_BLUE} **{self.rangeBrun}**\n\n> {self.description}"
-            )
- 
-    def __init__(self, championData : dict):
-        self._championData : dict = championData
-        self.id : str = championData.get('id')
-        self.key : str = championData.get('key')
-        self.name : str = championData.get('name')
-        self.title : str = championData.get('title')
-        self.image : Champion.Image = Champion.Image(championData.get('image'))
-        self.lore : str = championData.get('lore')
-        self.blurb : str = championData.get('blurb')
-        self.ally_tips : List[str] = championData.get('allyTips')
-        self.enemy_tips : List[str] = championData.get('enemyTips')
-        self.tags : List[str] = championData.get('tags')
-        self.partype : str = championData.get('partype')
-        self.info : Champion.Infos = Champion.Infos(championData.get('info'))
-        self.stats : Champion.Stats = Champion.Stats(championData.get('stats'))
-        self.spells : List [Champion.Spell] = [Champion.Spell(data) for data in championData.get('spells')]
-        self.passive : Champion.Passive = Champion.Passive(championData.get('passive'))
-        self.recommended : list = championData.get('recommended')
-        
     @property
-    def tagsEmotes(self) -> str:
-        return " ".join([FS.Emotes.Lol.Roles.get(tag) for tag in self.tags])
+    def team(self) -> ClashTeam:
+        return ClashTeam(id=self.team_id, platform=self.platform)
+    
+    
+class Summoner(lol.Summoner):
+    
+    _icon_url : str = "https://raw.communitydragon.org/pbe/plugins/rcp-be-lol-game-data/global/default/v1/profile-icons/"
+    _opgg_url : str = "https://euw.op.gg/summoners/euw/"
+    
+    class Meta(lol.Summoner.Meta):
+        pass
+    
+    @property
+    def champion_masteries(self) -> "ChampionMasteries":
+        return ChampionMasteries(summoner_id=self.id, platform=self.platform)
+    
+    @property
+    def clash_players(self) -> "ClashPlayers":
+        return ClashPlayers(summoner_id=self.id, platform=self.platform)  
+    
+    @property
+    def current_game(self) -> "lol.CurrentGame":
+        return super().current_game     #TODO
+    
+    @property
+    def league_entries(self) -> "SummonerLeague":
+        return SummonerLeague(summoner_id=self.id, platform=self.platform)
+    
+    ####
+    
+    @property
+    def icon_url(self) -> str:
+        return self._icon_url+str(self.profile_icon_id)+".jpg"
+    
+    @property
+    def opgg_url(self) -> str:
+        return self._opgg_url+self.name.replace(' ','%20')
+    
+    @async_property
+    async def embed(self) -> disnake.Embed:
+        championMasteries = await self.champion_masteries.get()
+        summonerLeague = await self.league_entries.get()
+        return FS.Embed(
+            author_name=f"{self.name.upper()}",
+            description=f"{FS.Emotes.Lol.XP} **LEVEL**\n> **{self.level}**",
+            color=disnake.Colour.blue(),
+            author_icon_url=self.icon_url,
+            fields=[
+                championMasteries.field(),
+                summonerLeague.field
+            ]
+        )
+
+class Champion(lol.Champion):
+    
+    class Meta(lol.Champion.Meta):
+        pass
+    
+    @property
+    def meraki_champion(self) -> "lol.MerakiChampion":
+        return lol.MerakiChampion(id=self.id)
+    
+    
+class MerakiChampion(lol.MerakiChampion):
+    
+    class Meta(lol.MerakiChampion.Meta):
+        pass
+    
+    @property
+    def meraki_champion(self) -> "lol.Champion":
+        return Champion(key=self.key, locale="en_us")
+    
+    ###############
+    
+    def stat_to_line(self, stat : lol.merakichampion.MerakiChampionStatDetailData):
+        if stat.flat:
+            if stat.per_level:
+                return f"**{stat.flat}** + *{stat.per_level}/lvl* ➖ **{round(stat.flat+stat.per_level*18)}** at lvl. 18"
+            else:
+                return f"**{stat.flat}**"
+        elif stat.percent:
+            if stat.percent_per_level:
+                return f"**{stat.percent}%** + *{stat.percent_per_level}%/lvl* ➖ **{round(stat.percent+stat.percent_per_level*18)}%** at lvl. 18"
+            else:
+                return f"**{stat.percent}%**"
+        else:
+            return "*N/A*"
+    
+    @property
+    def stats_embed(self) -> disnake.Embed:
+        return FS.Embed(
+            title="__**Stats**__",
+            description=f"**Dammage type:** `{self.adaptive_type.split('_')[0]}`\n**Attack type:** `{self.attack_type}`\n**Roles:** "+" ".join([f"{FS.Emotes.Lol.Roles.get(role)}" for role in self.roles]),
+            fields = [
+                {
+                    'name':"➖",
+                    'value':f"""{FS.Emotes.Lol.Stats.HEALT} ➖ {self.stat_to_line(self.stats.health)}
+                                {FS.Emotes.Lol.Stats.MANA} ➖ {self.stat_to_line(self.stats.mana)}
+                                {FS.Emotes.Lol.Stats.ARMOR} ➖ {self.stat_to_line(self.stats.armor)}
+                                {FS.Emotes.Lol.Stats.ATTACKSPEED} ➖ {self.stat_to_line(self.stats.attack_speed)}
+                                {FS.Emotes.Lol.Stats.MOVESPEED} ➖ {self.stat_to_line(self.stats.movespeed)}""",
+                    'inline':True
+                },
+                {
+                    'name':"➖",
+                    'value':f"""{FS.Emotes.Lol.Stats.HEALTREGEN} ➖ {self.stat_to_line(self.stats.health_regen)}
+                                {FS.Emotes.Lol.Stats.MANAREGEN} ➖ {self.stat_to_line(self.stats.mana_regen)}
+                                {FS.Emotes.Lol.Stats.MAGICRESISTE} ➖ {self.stat_to_line(self.stats.magic_resistance)}
+                                {FS.Emotes.Lol.Stats.ATTACKDAMAGE} ➖ {self.stat_to_line(self.stats.attack_damage)}
+                                {FS.Emotes.Lol.Stats.RANGE} ➖ {self.stat_to_line(self.stats.attack_range)}""",
+                    'inline':True
+                }
+            ]
+        )
+        
+    def ability_detailled_embed(self, letter : str) -> List[disnake.Embed]:     #TODO better formatage
+        if letter == "P":
+            abilities = self.abilities.p
+        elif letter == "Q":
+            abilities = self.abilities.q
+        elif letter == "W":
+            abilities = self.abilities.w
+        elif letter == "E":
+            abilities = self.abilities.e
+        elif letter == "R":
+            abilities = self.abilities.r
+        else:
+            return None
+        
+        embeds : List[disnake.Embed] = []
+        
+        for ability in abilities:
+        
+            block : str = ""
+            if ability.resource:
+                block += f"**Ressource type:** `{ability.resource}`"
+                if ability.cost:
+                    block += f" - {FS.Emotes.Lol.Stats.MANA} `"+"/".join([f"{value}" for value in ability.cost.modifiers[0].values])+"`"
+                block += "\n"
+            if ability.cooldown:
+                block += f"**Cooldown:** {FS.Emotes.Lol.Stats.ABILITYHASTE} `"+"/".join([f"{value}" for value in ability.cooldown.modifiers[0].values]) +("` *(reduced by cdr)*" if ability.cooldown.affected_by_cdr else "` *(not reduced by cdr)*")
+                block += "\n"
+            if ability.on_target_cd_static:
+                block += f"**Per target cd:** {FS.Emotes.Lol.Stats.ABILITYHASTE} `{ability.on_target_cd_static}`\n"
+            if ability.targeting:
+                block += f"**Target type:** `{ability.targeting}`"
+                if ability.target_range:
+                    block += f" - {FS.Emotes.Lol.Stats.RANGE} `{ability.target_range}`"
+                block += "\n"
+            if ability.spell_effects:
+                block += f"**Effect type:** `{ability.spell_effects}`\n"
+            if ability.width:
+                block += f"**Width:** `{ability.width}`\n"
+            if ability.effect_radius:
+                block += f"**Effect Radius:** {FS.Emotes.Lol.Stats.RANGE} `{ability.effect_radius}`\n"
+            if ability.tether_radius:
+                block += f"**Tether Radius:** {FS.Emotes.Lol.Stats.RANGE} `{ability.tether_radius}`\n"
+            if ability.inner_radius:
+                block += f"**Inner Radius:** {FS.Emotes.Lol.Stats.RANGE} `{ability.inner_radius}`\n"
+            if ability.collision_radius:
+                block += f"**Collision Radius:** {FS.Emotes.Lol.Stats.RANGE} `{ability.collision_radius}`\n"
+            if ability.damage_type:
+                block += f"**Damage type:** `{ability.damage_type}`\n"
+            if ability.affects:
+                block += f"**Affects:** `{ability.affects}`\n"
+            if ability.spellshieldable:
+                block += f"**Spellshieldable:** `{ability.spellshieldable}`\n"
+            if ability.projectile:
+                block += f"**Projectile:** `{ability.projectile}`"
+            if ability.missile_speed:
+                block += f"**Missile speed:** `{ability.missile_speed}`\n"
+            if ability.on_hit_effects:
+                block += f"**On hit effects:** `{ability.on_hit_effects}`\n"
+            if ability.occurrence:
+                block += f"**Occurence:** `{ability.occurrence}`\n"
+            if ability.cast_time:
+                block += f"**Cast time:** `{ability.cast_time}`\n"
+                
+            embed = FS.Embed(title=f"__**{letter.upper()} - {ability.name}**__")
+            for effect in ability.effects:
+                description = effect.description
+                for attr in effect.leveling:
+                    description += f"\n**{attr.attribute} "
+                    if attr.modifiers and len(attr.modifiers) > 0:
+                        for i in range(len(attr.modifiers[0].values)):
+                            description += "".join([f"({attr.modifiers[j].values[i]}{attr.modifiers[j].units[i]})" for j in range(len(attr.modifiers))]) + "/"
+                    description += "**\n"
+                embed.add_field(name="➖",value=description[:-1], inline=False)
+                
+                
+            embeds.append(embed.add_field(name="**__DETAILS__**",value=block))
+        return embeds
+
+    
+
+        
+    def ability_embed(self, letter : str, ability : lol.merakichampion.MerakiChampionSpellData) -> disnake.Embed:
+        return FS.Embed(
+            title=f"__**{letter.upper()} - {ability.name}**__",
+            description=f"> {ability.blurb}",
+            thumbnail=ability.icon
+        )        
+
+    @property
+    def abilities_embeds(self) -> List[disnake.Embed]:
+        return [self.ability_embed("p",p) for p in self.abilities.p]+[self.ability_embed("q",q) for q in self.abilities.q]+[self.ability_embed("w",w) for w in self.abilities.w]+[self.ability_embed("e",e) for e in self.abilities.e]+[self.ability_embed("r",r) for r in self.abilities.r]
         
     @property
     def embeds(self) -> List[disnake.Embed]:
         embeds = [FS.Embed(
-            title=f"__**{self.name.upper()}**__ ➖ {self.tagsEmotes}",
-            description= f"> *{self.blurb}*",
-            thumbnail=self.image.full,
-            fields=self.stats.fields
+            title=self.full_name if self.full_name else self.name,
+            fields = {
+                'name':f"*{self.title}*",
+                'value':f"> *{self.lore}*"
+            },
+            thumbnail=self.skins[0].tile_path
         )]
-        embeds.append(self.passive.embed)
-        for spell in self.spells:
-            embeds.append(spell.embed)
+        embeds.append(self.stats_embed)
+        embeds += self.abilities_embeds
         return embeds
-        
-    @classmethod
-    async def by_id(cls, id : str):
-        try:
-            link = f"https://ddragon.leagueoflegends.com/cdn/{cls.VERSION}/data/en_US/champion/{id}.json"
-            championData : dict = (json.loads(requests.get(link).text).get('data')).get(id)
-            await asyncio.sleep(0.1)
-            return Champion(championData)
-        except HTTPError:
-            return None
-

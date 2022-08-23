@@ -412,18 +412,20 @@ class Emotes:
             
             @classmethod
             def get(cls, id : str):
-                if id == "Fighter":
+                if id == "FIGHTER":
                     return cls.FIGHTER
-                elif id == "Tank":
+                elif id == "TANK":
                     return cls.TANK
-                elif id == "Assassin":
+                elif id == "ASSASSIN":
                     return cls.ASSASSIN
-                elif id == "Marksman":
+                elif id == "MARKSMAN":
                     return cls.ADC
-                elif id == "Mage":
+                elif id == "MAGE":
                     return cls.MAGE
-                elif id == "Support":
+                elif id == "SUPPORT":
                     return cls.SUPPORT
+                else:
+                    return ""
             
         class Drakes:
             CHEMTECH : str = "<:chemtechdrake:1009110685256515705>"
@@ -508,7 +510,7 @@ class Emotes:
                 else:
                     return f"SumSpell:{id}"
 
-        class Ranks:
+        class Tier:
             NONE : str = "<:rankedemblem:1007206349509242880>"
             
             UNRANKED : str = "<:unranked:1007976696487608431>"

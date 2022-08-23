@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-from dotenv import dotenv_values
+from dotenv import load_dotenv
 import os
 import platform
 import logging
@@ -37,15 +37,14 @@ class PoroBot(InteractionBot):
     
     
     
-    def __init__(self, config, logger, logFormatter, test_mode = False):
-        self.config = config
+    def __init__(self, logger, logFormatter):
         self.logger = logger
         self.logFormatter = logFormatter
-        self.test_mode = test_mode
+        self.test_mode = bool(os.getenv("TEST"))
         self.start_succed : bool = True
         intents = disnake.Intents.all()  # Allow the use of custom intents
         
-        if test_mode:    
+        if self.test_mode:    
             logging.info("Starting in test mod...")
             super().__init__(intents=intents, test_guilds = [533360564878180382])
         else:
@@ -68,7 +67,7 @@ class PoroBot(InteractionBot):
         """
         The code in this even is executed when the bot is ready
         """
-        self.log_channel = self.get_channel(int(self.config['LOG_CHANNEL']))
+        self.log_channel = self.get_channel(int(os.getenv('LOG_CHANNEL')))
         logging.info("-"*50)
         logging.info("-"*50)
         logging.info(f"| Logged in as {self.user.name}")
@@ -186,12 +185,8 @@ if __name__ == "__main__":
     else:
         logging.warning("Non Linux system. Log info and debug file won't be available.")    
     
-    config = dotenv_values(".env")  
-
-
-    if bool(config.get("TEST")): 
-        poro = PoroBot(config, rootLogger, logFormatter, test_mode=True)
-    else:
-        poro = PoroBot(config, rootLogger, logFormatter, test_mode=False)
+    load_dotenv() 
+    
+    poro = PoroBot(logger=rootLogger,logFormatter=logFormatter)
         
-    poro.run(config['DISCORD_TOKEN'])
+    poro.run(os.getenv('DISCORD_TOKEN'))

@@ -1,10 +1,9 @@
 from pickle import TRUE
 from typing import List
 import disnake
-from cogs.Lol.exceptions import SummonerNotFound
-from cogs.Lol.watcher import ClashPlayer, ClashTeam, CurrentGame, Summoner
 import modules.FastSnake as FS
 from modules.LolPatchNoteScraper import PatchNote
+from .watcher import *
 
 drink_embed = FS.Embed(
     title="__**:underage: RÈGLES DE L'ARAM À BOIRE ! :beers:**__",
@@ -74,7 +73,7 @@ class PatchNoteView(disnake.ui.View):
 
     async def on_timeout(self) -> None:
         await self.inter.delete_original_message()
-
+"""
 class CurrentGameView(disnake.ui.View):
 
     def __init__(self, summoner_name: str):
@@ -137,58 +136,65 @@ class CurrentGameView(disnake.ui.View):
         await inter.response.defer()
         self.current_player = next((p for p in self.live_game.participants if p.summonerName.lower(
         ).startswith(inter.component.label.lower())), None)
-        await self.update(inter)
+        await self.update(inter)"""
 
 class ClashTeamView(disnake.ui.View):
 
     def __init__(self, summoner_name: str):
         super().__init__(timeout=60*60)
         self.summoner_name: str = summoner_name
-        self.current_player: ClashPlayer = None
+        self.current_summoner : Summoner = None
         self.team: ClashTeam = None
+        self.summoners : List[Summoner] = None
         self.inter: disnake.MessageCommandInteraction = None
+        
+    async def get(self, inter : disnake.ApplicationCommandInteraction) -> Optional["ClashTeamView"]:
+        try:
+            summoner = await lol.Summoner(name=self.summoner_name).get()
+            clashPlayers = await summoner.clash_players.get()
+            if len(clashPlayers.players) > 0:
+                self.team = lol.ClashTeam(id=clashPlayers.players[0].team_id)
+                self.summoners: List[Summoner] = [await player.summoner.get() for player in self.team.players]
+                return self
+            else:
+                await inter.edit_original_message(embed=FS.Embed(title="Pas de team clash", description=f"L'invocateur ***{self.summoner_name}*** ne fais pas parti d'une équipe clash..."), view=None)
+                await inter.delete_original_message(delay=5)
+                return None
+        except NotFound:
+            await inter.edit_original_message(embed=FS.Embed(title="Invocateur inconnu", description=f"Le nom d'invocateur ***{self.summoner_name}*** ne correspond à aucun invocateur..."), view=None)
+            await inter.delete_original_message(delay=5)
+            return None
 
     async def start(self, inter: disnake.ApplicationCommandInteraction):
         self.inter = inter
-
-        try:
-            self.team = await ClashTeam.by_summoner_name(self.summoner_name)
-
-            if self.team == None:
-                await inter.edit_original_message(embed=FS.Embed(title="Pas de team clash", description=f"L'invocateur ***{self.summoner_name}*** ne fais pas parti d'une équipe clash..."), view=None)
-                await inter.delete_original_message(delay=5)
-                return
-        except SummonerNotFound:
-            await inter.edit_original_message(embed=FS.Embed(title="Invocateur inconnu", description=f"Le nom d'invocateur ***{self.summoner_name}*** ne correspond à aucun invocateur..."), view=None)
-            await inter.delete_original_message(delay=5)
-            return
-
         self.buttons: List[disnake.ui.Button] = []
-        for j, player in enumerate(await self.team.players(force_update=True)):
-            name = player.name
+        for i in range(len(self.summoners)):
+            name = self.summoners[i].name
             if len(name) > 12:
                 name = name[:12]
             button = disnake.ui.Button(
-                label=name, custom_id=f'{j}', emoji=player.position_emote)
+                label=name, custom_id=f'{i}', emoji=FS.Emotes.Lol.Positions.get(self.team.players[i].position))
             button.callback = self.call_back
             self.add_item(button)
             self.buttons.append(button)
-        self.current_player = next((p for p in await self.team.players() if p.name.lower() == self.summoner_name.lower()), None)
-        self.add_item(disnake.ui.Button(style=disnake.ButtonStyle.link, url=await self.team.opgg(), emoji=FS.Emotes.Lol.OPGG, row=2))
+            if self.summoners[i].name.lower() == self.summoner_name.lower():
+                self.current_summoner = self.summoners[i]
+        self.add_item(disnake.ui.Button(style=disnake.ButtonStyle.link, url=await self.team.opgg_url(), emoji=FS.Emotes.Lol.OPGG, row=2))
         await self.update(inter)
 
+    @async_property
     async def embeds(self) -> List[disnake.Embed]:
-        return [await self.current_player.embed(), await self.team.embed()]
+        return [await self.current_summoner.embed, await self.team.embed]
 
     async def update(self, inter: disnake.MessageInteraction):
         for button in self.buttons:
             button.disabled = (
-                self.current_player.name.lower().startswith(button.label.lower()))
+                self.current_summoner.name.lower().startswith(button.label.lower()))
         if inter.response.is_done():
-            await inter.edit_original_message(embeds=await self.embeds(), view=self)
+            await inter.edit_original_message(embeds=await self.embeds, view=self)
         else:
-            await inter.response.edit_message(embeds=await self.embeds(), view=self)
+            await inter.response.edit_message(embeds=await self.embeds, view=self)
 
     async def call_back(self, inter: disnake.MessageInteraction):
-        self.current_player = next((p for p in await self.team.players() if p.name.lower().startswith(inter.component.label.lower())), None)
+        self.current_player = next((s for s in self.summoners if s.name.lower().startswith(inter.component.label.lower())), None)
         await self.update(inter)

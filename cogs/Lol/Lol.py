@@ -1,4 +1,5 @@
 from math import ceil
+import os
 from random import shuffle
 from typing import Tuple
 import pickledb
@@ -20,14 +21,12 @@ class Lol(commands.Cog):
 
         Get the member dict for the lore from the "Members.json" file next to it.
         """
-        self.bot: commands.InteractionBot = bot
-        Watcher.init(bot.config["RIOT_APIKEY"])
+        self.bot: commands.InteractionBot = bot        
         self.summoners = pickledb.load("cogs/Lol/summoners.db", False)
         self.clash_channel = None
-        self.gameTrackers : List[Tuple[str,disnake.ApplicationCommandInteraction]] = []
 
         
-    @commands.Cog.listener('on_message')
+    """@commands.Cog.listener('on_message')
     async def on_message(self, message : disnake.Message):
         if message.author.bot and message.content.startswith("PoroWebhook"):
             temp :str = message.content[12:]
@@ -55,7 +54,7 @@ class Lol(commands.Cog):
                     except (SummonerNotFound):
                         await self.bot.log_channel.send(
                                 embed=FS.Embed(title=":x: Erreur",description=f"Je ne parvient pas à trouver le joueur correspondant à l'id suivant :{summoner_id}")
-                            )
+                            )"""
                 
   
 
@@ -69,19 +68,19 @@ class Lol(commands.Cog):
 
     async def set_summoner(self, inter: disnake.Interaction, target: disnake.User, invocateur: str):
         try:
-            summoner = await Summoner.by_name(invocateur)
-        except SummonerNotFound:
+            summoner = await Summoner(name=invocateur).get()
+        except NotFound:
             await inter.edit_original_message(embed=FS.Embed(title="Invocateur inconnu", description=f"Le nom d'invocateur ***{invocateur}*** ne correspond à aucun invocateur...", footer_text="Tu peux rejeter ce message pour le faire disparaitre"), view=None)
             return
 
-        confirm = await confirmation(inter, embeds = [await summoner.embed(force_update=True)], title="Valider l'invocateur", description=f"Est-ce bien ton compte ?")
+        confirm = await confirmation(inter, embeds = [await summoner.embed()], title="Valider l'invocateur", description=f"Est-ce bien ton compte ?")
 
         if not confirm:
             await inter.edit_original_message(embed=FS.Embed(title="Invocateur refusé.", description="Nom d'invocateur non changé.", footer_text="Tu peux rejeter ce message pour le faire disparaitre"), view=None)
             return
 
         if str(target.id) in self.summoners.getall():
-            confirm = await confirmation(inter, embeds = [await summoner.embed(force_update=True)], title="Invocateur déjà existant", description=("Tu as" if target == inter.author else f"{target.mention} a")+f" déjà le nom d'invocateur suivant enregistré : ***{self.summoners.get(str(target.id))}***\n Veux-tu le remplacer ?", timeout=120)
+            confirm = await confirmation(inter, embeds = [await summoner.embed()], title="Invocateur déjà existant", description=("Tu as" if target == inter.author else f"{target.mention} a")+f" déjà le nom d'invocateur suivant enregistré : ***{self.summoners.get(str(target.id))}***\n Veux-tu le remplacer ?", timeout=120)
             if not confirm:
                 await inter.edit_original_message(embed=FS.Embed(title="Invocteur inchangé", description="Nom d'invocateur non changé", footer_text="Tu peux rejeter ce message pour le faire disparaitre"), view=None)
                 return
@@ -109,28 +108,27 @@ class Lol(commands.Cog):
     async def summoner_set(self, inter: ApplicationCommandInteraction, target: disnake.User):
         await inter.response.send_modal(SimpleModal(f"Définir le nom d'invocateur de {target.display_name}", questions=[disnake.ui.TextInput(label="Nom d'invocateur", custom_id="summoner_name")], callback=self.modal_callback, callback_datas={'target': target}))
 
-    async def get_lol_classement(self, members_filter : List[disnake.Member]) -> Tuple[List[disnake.Member],List[Summoner]]:
+    """async def get_lol_classement(self, members_filter : List[disnake.Member]) -> Tuple[List[disnake.Member],List[Summoner]]:
         members: List[disnake.Member] = []
         summoners: List[Summoner] = []
         
         for member in members_filter:
             if str(member.id) in self.summoners.getall():
-                new_summoner = await Summoner.by_name(self.summoners.get(str(member.id)))
-                await new_summoner.leagues()
+                new_summoner = await Summoner(name=self.summoners.get(str(member.id))).get()
                 summoners.append(new_summoner)
                 members.append(member)
 
         sorted_summoners: List[Summoner] = sorted(
-            summoners, key=lambda x: x._leagues.first.absolut_score, reverse=True)
+            summoners, key=lambda x: (await x.league_entries.get()).sorting_score((await x.league_entries.get()).first), reverse=True)
         sorted_members: List[disnake.Member] = []
 
         for summoner in sorted_summoners:
             sorted_members.append(members[summoners.index(summoner)])
             
-        return (sorted_members,sorted_summoners)
+        return (sorted_members,sorted_summoners)"""
 
 
-    @lol.sub_command(
+    """@lol.sub_command(
         name="classement",
         description="Classement League of Legends des members du serveur"
     )
@@ -162,7 +160,8 @@ class Lol(commands.Cog):
         players = ""
 
         for i in range(len(sorted_members)):
-            ranks += f"{(await sorted_summoners[i].leagues()).first.tier_emote} **{(await sorted_summoners[i].leagues()).first.rank}**\n"
+            entries = await sorted_summoners[i].league_entries.get()
+            ranks += f"{FS.Emotes.Lol.Tier.get(entries.first.tier)}) **{entries.first.rank}**\n"
             players += f"**{sorted_members[i].display_name}** (`{sorted_summoners[i].name}`)\n"
 
         await inter.edit_original_message(
@@ -180,12 +179,12 @@ class Lol(commands.Cog):
                         'value': players,
                         "inline": True
                     }
-                ],
-                footer_text="""Tu n'es pas dans le classement ?\nLie ton compte League of Legends en utilisant "/lol account" !"""
-            )
-        )
+                ],"""
+    #            footer_text="""Tu n'es pas dans le classement ?\nLie ton compte League of Legends en utilisant "/lol account" !"""
+    #        )
+    #    )
 
-    @classement.autocomplete("filtre")
+    """@classement.autocomplete("filtre")
     def autocomple_filtre(self, inter: disnake.ApplicationCommandInteraction, user_input: str):
         filtres = []
         for role in inter.guild.roles:
@@ -196,24 +195,24 @@ class Lol(commands.Cog):
                 filtres.append(f"📅 {event.name}")
         if len(filtres) > 25:
             filtres = filtres[:25]
-        return filtres
+        return filtres"""
     
-    @lol.sub_command(
-        name="live",
-        description="Info sur une partie en cours"
-    )
-    async def live(self, inter: ApplicationCommandInteraction,
-                         invocateur: str = commands.Param(description="Le nom de l'invocateur à rechercher.",default=None)):
-        await inter.response.defer(ephemeral=False)
-        if invocateur == None:
-            if str(inter.author.id) in self.summoners.getall():
-                invocateur = self.summoners.get(str(inter.author.id))
-            else:
-                await inter.edit_original_message(embed=FS.Embed(description="""Spécifie un nom d'invocateur ou bien lie ton compte lol en utilisant "/lol account"."""))
-                return
+    #@lol.sub_command(
+    #    name="live",
+    #    description="Info sur une partie en cours"
+    #)
+    #async def live(self, inter: ApplicationCommandInteraction,
+    #                     invocateur: str = commands.Param(description="Le nom de l'invocateur à rechercher.",default=None)):
+    #    await inter.response.defer(ephemeral=False)
+    #    if invocateur == None:
+    #        if str(inter.author.id) in self.summoners.getall():
+    #            invocateur = self.summoners.get(str(inter.author.id))
+    #        else:
+    #            await inter.edit_original_message(embed=FS.Embed(description="""Spécifie un nom d'invocateur ou bien lie ton compte lol en utilisant "/lol account"."""))
+    #            return
 
-        view = CurrentGameView(invocateur)
-        await view.start(inter)
+    #    view = CurrentGameView(invocateur)
+    #    await view.start(inter)
 
             
     @lol.sub_command(
@@ -225,9 +224,9 @@ class Lol(commands.Cog):
         await inter.response.defer(ephemeral=False)
         
         try:
-            summoner = await Summoner.by_name(invocateur)
-            await inter.edit_original_message(embed=await summoner.embed(force_update=True))
-        except SummonerNotFound:
+            summoner = await Summoner(name=invocateur).get()
+            await inter.edit_original_message(embed=await summoner.embed())
+        except NotFound:
             await inter.edit_original_message(embed=FS.Embed(title="Invocateur inconnu", description=f"Le nom d'invocateur ***{invocateur}*** ne correspond à aucun invocateur...", footer_text="Tu peux rejeter ce message pour le faire disparaitre"), view=None)
             await inter.delete_original_message(delay = 3)
             
@@ -237,24 +236,27 @@ class Lol(commands.Cog):
         description="Info sur un champion"
     )
     async def champion(self, inter: ApplicationCommandInteraction,
-                         nom: str = commands.Param(description="Le nom du champion.")):
+                         nom: str = commands.Param(description="Le nom du champion."),
+                         sort : str = commands.Param(description="Choisir un sort en particulier pour avoir des informations detaillées", choices=["P","Q","W","E","R"], default=None)):
         await inter.response.defer(ephemeral=False)
-        for championItem in Watcher.CHAMPIONS.values():
-            if championItem.get('name') == nom:
-                champion = await Champion.by_id(championItem.get('id'))
-                await inter.edit_original_message(embeds=champion.embeds)
-                return
+
+        champion = await MerakiChampion(name=nom).get()
+        if sort:
+            await inter.edit_original_message(embeds=champion.ability_detailled_embed(sort))
+        else:
+            await inter.edit_original_message(embeds=champion.embeds)
+
         
     
     @champion.autocomplete("nom")
     async def autocomp_championt(self, inter: disnake.ApplicationCommandInteraction, user_input: str):
         champions = []
-        for champion in Watcher.CHAMPIONS.values():
-            if champion.get('name').lower().startswith(user_input.lower()):
-                champions.append(champion.get('name'))
+        for champion in (await champion_keys_cache.data)['name_by_id'].values():
+            if champion.lower().startswith(user_input.lower()):
+                champions.append(champion)
         if len(champions) > 25:
             champions = champions[:25]
-        return champions    
+        return champions
             
             
     def seeding_check(self, **kwargs) -> bool:
@@ -288,7 +290,8 @@ class Lol(commands.Cog):
             players = ""
 
             for i in range(len(sorted_members)):
-                ranks += f"{(await sorted_summoners[i].leagues()).first.tier_emote} **{(await sorted_summoners[i].leagues()).first.rank}**\n"
+                entries = await sorted_summoners[i].league_entries.get()
+                ranks += f"{FS.Emotes.Lol.Tier.get(entries.first.tier)} **{entries.first.rank}**\n"
                 players += f"**{sorted_members[i].mention}** (`{sorted_summoners[i].name}`)\n"
 
             await inter.channel.send(
@@ -334,8 +337,9 @@ class Lol(commands.Cog):
                     )
                     ):
         await inter.response.defer()
-        clashView = ClashTeamView(summoner)
-        await clashView.start(inter)
+        clashView : ClashTeamView = await ClashTeamView(summoner).get(inter)
+        if clashView:
+            await clashView.start(inter)
 
 
     @commands.slash_command(
