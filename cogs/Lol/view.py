@@ -150,10 +150,10 @@ class ClashTeamView(disnake.ui.View):
         
     async def get(self, inter : disnake.ApplicationCommandInteraction) -> Optional["ClashTeamView"]:
         try:
-            summoner = await lol.Summoner(name=self.summoner_name).get()
+            summoner = await Summoner(name=self.summoner_name).get()
             clashPlayers = await summoner.clash_players.get()
             if len(clashPlayers.players) > 0:
-                self.team = lol.ClashTeam(id=clashPlayers.players[0].team_id)
+                self.team = ClashTeam(id=clashPlayers.players[0].team_id)
                 self.summoners: List[Summoner] = [await player.summoner.get() for player in self.team.players]
                 return self
             else:
@@ -197,4 +197,76 @@ class ClashTeamView(disnake.ui.View):
 
     async def call_back(self, inter: disnake.MessageInteraction):
         self.current_player = next((s for s in self.summoners if s.name.lower().startswith(inter.component.label.lower())), None)
+        await self.update(inter)
+
+class ChampionView(disnake.ui.View):
+
+    def __init__(self, champion_name: str):
+        super().__init__(timeout=60*60)
+        self.champion_name : str = champion_name
+        self.champion: MerakiChampion = None
+        self.embeds : disnake.Embed = None
+        self.inter: disnake.MessageCommandInteraction = None
+        
+    async def get(self) -> Optional["ChampionView"]:
+        self.champion = await MerakiChampion(name=self.champion_name).get()
+        self.embeds = self.champion.embeds
+        return self
+
+    async def start(self, inter: disnake.ApplicationCommandInteraction):
+        self.inter = inter
+        await self.update(inter)
+
+    async def update(self, inter: disnake.MessageInteraction):
+        if inter.response.is_done():
+            await inter.edit_original_message(embeds=self.embeds, view=self)
+        else:
+            await inter.response.edit_message(embeds=self.embeds, view=self)
+
+    @disnake.ui.button(label="Overview", row = 1)
+    async def overview(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
+        self.embeds = self.champion.embeds
+        for other_button in self.children:
+            other_button.disabled = False
+        button.disabled = True
+        await self.update(inter)
+        
+    @disnake.ui.button(label="P", row = 2)
+    async def passive(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
+        self.embeds = self.champion.Pembeds
+        for other_button in self.children:
+            other_button.disabled = False
+        button.disabled = True
+        await self.update(inter)
+        
+    @disnake.ui.button(label="Q", row = 2)
+    async def QSpell(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
+        self.embeds = self.champion.Qembeds
+        for other_button in self.children:
+            other_button.disabled = False
+        button.disabled = True
+        await self.update(inter)
+        
+    @disnake.ui.button(label="W", row = 2)
+    async def WSpell(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
+        self.embeds = self.champion.Wembeds
+        for other_button in self.children:
+            other_button.disabled = False
+        button.disabled = True
+        await self.update(inter)
+        
+    @disnake.ui.button(label="E", row = 2)
+    async def ESpell(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
+        self.embeds = self.champion.Eembeds
+        for other_button in self.children:
+            other_button.disabled = False
+        button.disabled = True
+        await self.update(inter)
+        
+    @disnake.ui.button(label="R", row = 2)
+    async def RSpell(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
+        self.embeds = self.champion.Rembeds
+        for other_button in self.children:
+            other_button.disabled = False
+        button.disabled = True
         await self.update(inter)

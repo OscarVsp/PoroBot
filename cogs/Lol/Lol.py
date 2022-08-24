@@ -236,15 +236,11 @@ class Lol(commands.Cog):
         description="Info sur un champion"
     )
     async def champion(self, inter: ApplicationCommandInteraction,
-                         nom: str = commands.Param(description="Le nom du champion."),
-                         sort : str = commands.Param(description="Choisir un sort en particulier pour avoir des informations detaillées", choices=["P","Q","W","E","R"], default=None)):
+                         nom: str = commands.Param(description="Le nom du champion.")):
         await inter.response.defer(ephemeral=False)
 
-        champion = await MerakiChampion(name=nom).get()
-        if sort:
-            await inter.edit_original_message(embeds=champion.ability_detailled_embed(sort))
-        else:
-            await inter.edit_original_message(embeds=champion.embeds)
+        championView = await ChampionView(nom).get()
+        await championView.start(inter)
 
         
     

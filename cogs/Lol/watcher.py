@@ -1,3 +1,4 @@
+from bz2 import decompress
 import os
 from typing import Dict, List, Optional
 
@@ -431,17 +432,39 @@ class MerakiChampion(lol.MerakiChampion):
     @property
     def abilities_embeds(self) -> List[disnake.Embed]:
         return [self.ability_embed("p",p) for p in self.abilities.p]+[self.ability_embed("q",q) for q in self.abilities.q]+[self.ability_embed("w",w) for w in self.abilities.w]+[self.ability_embed("e",e) for e in self.abilities.e]+[self.ability_embed("r",r) for r in self.abilities.r]
+    
+    @property
+    def BaseEmbed(self) -> disnake.Embed:
+        return FS.Embed(
+            title=self.full_name if self.full_name else self.name,
+            description=f"*{self.title}*",
+            thumbnail=self.skins[0].tile_path
+            )
         
     @property
     def embeds(self) -> List[disnake.Embed]:
-        embeds = [FS.Embed(
-            title=self.full_name if self.full_name else self.name,
-            fields = {
-                'name':f"*{self.title}*",
-                'value':f"> *{self.lore}*"
-            },
-            thumbnail=self.skins[0].tile_path
-        )]
+        embeds = [self.BaseEmbed.add_field(name="➖",value=f"> *{self.lore}*", inline=False)]
         embeds.append(self.stats_embed)
         embeds += self.abilities_embeds
         return embeds
+    
+
+    @property
+    def Pembeds(self) -> List[disnake.Embed]:
+        return [self.BaseEmbed] + self.ability_detailled_embed("P")
+    
+    @property
+    def Qembeds(self) -> List[disnake.Embed]:
+        return [self.BaseEmbed] + self.ability_detailled_embed("Q")
+    
+    @property
+    def Wembeds(self) -> List[disnake.Embed]:
+        return [self.BaseEmbed] + self.ability_detailled_embed("W")
+    
+    @property
+    def Eembeds(self) -> List[disnake.Embed]:
+        return [self.BaseEmbed] + self.ability_detailled_embed("E")
+    
+    @property
+    def Rembeds(self) -> List[disnake.Embed]:
+        return [self.BaseEmbed] + self.ability_detailled_embed("R")
