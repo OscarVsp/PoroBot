@@ -88,12 +88,35 @@ class Emotes:
         RIFT : str = "<:rift:1007278042923671623>"
         ARAM : str = "<:aram:1007278045402517604>"
         
+        
         TROPHIES : List[str] = [
             "<:trophy:1007206322669879326>",
             "<:trophy4:1009763643312853063>",
             "<:trophy8:1009763639705751643>",
             "<:trophy16:1009763637499531264>"
         ]
+        
+        class TargetType:
+            
+            DIRECTION : str = "<:Missile:1012032303733674014>"
+            AOE : str = "<:Aoe:1012032302240501803>"
+            LOCATION : str = "<:Location:1012032299698753607>"
+            UNIT : str = "<:targetblue:1009110751404892211>"
+            SELF : str = "<:selftarget:1012034302176931912>"
+            
+            @classmethod
+            def get(cls, key : str):
+                if key in ["Unit", "Auto", "Varied", "Unit / Location", "Unit / Auto"]:
+                    return cls.UNIT
+                elif key in ["Location","Location / Auto", "Auto / Location","Direction / Auto / Location"] :
+                    return cls.LOCATION
+                elif key in ["Direction", "Direction / Auto", "Vector"]:
+                    return cls.DIRECTION
+                elif key in ["Passive"]:
+                    return cls.SELF
+                else:
+                    return "TargetType:"+key
+                
         
         class Honor:
             CHILL : str = "<:chill:1009759448367120405>"
@@ -368,9 +391,6 @@ class Emotes:
                     elif id == 9923:
                         return cls.HAILOFBLADES
                     return f"Perks:{id}"
-                
-            class SubPerk:
-                PRESENCEOFMIND : str = "<:presenceofmind:1009809738617335868>"
                     
         class Positions:
             UNSELECTED : str = "<:unselected:1007994502318923896>"
@@ -455,6 +475,25 @@ class Emotes:
             HEALTREGEN : str = "<:healtregen:1010137869836369960>"
             HEALT : str = "<:healt:1009809788194013334>"
             MANA : str = "💧"
+            
+            @classmethod
+            def Ressource(cls, id : str):
+                if id == "MANA" or id == "MANA_PER_SECOND":
+                    return cls.MANA
+                elif id == "GRIT":
+                    return cls.ARMOR
+                elif id == "OTHER":
+                    return cls.MANA
+                elif id == "CHARGE":
+                    return cls.ABILITYPOWER
+                elif id == "ENERGY":
+                    return cls.MANA
+                elif id == "CURRENT_HEALTH" or id == "HEALTH" or id == "MAXIMUM_HEALTH":
+                    return cls.HEALT
+                elif id == "FURY":
+                    return cls.ARMORPEN
+                else:
+                    return ""
             
         class SummonerSpells:
             NONE : str = "<:summonerSpell:1009110747214774402>"
@@ -889,7 +928,7 @@ class Emotes:
                 
         @classmethod
         def get(cls, position : str, rank : str) -> Optional[tuple[str,str]]:
-            return (cls.Positions.get(position),cls.Ranks.get(rank))
+            return (cls.Positions.get(position),cls.Tier.get(rank))
         
         BLUEESSENCE : str = "<:blueessence:1007206326742564895>"
         XP : str = "<:boost:1007206301144715284>"

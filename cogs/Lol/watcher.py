@@ -1,6 +1,7 @@
 from bz2 import decompress
 import os
 from typing import Dict, List, Optional
+from unittest.loader import VALID_MODULE_NAME
 
 import modules.FastSnake as FS
 import disnake
@@ -341,7 +342,7 @@ class MerakiChampion(lol.MerakiChampion):
             ]
         )
         
-    def ability_detailled_embed(self, letter : str) -> List[disnake.Embed]:     #TODO better formatage
+    def ability_detailled_embed(self, letter : str) -> List[disnake.Embed]: 
         if letter == "P":
             abilities = self.abilities.p
         elif letter == "Q":
@@ -358,65 +359,58 @@ class MerakiChampion(lol.MerakiChampion):
         embeds : List[disnake.Embed] = []
         
         for ability in abilities:
-        
-            block : str = ""
-            if ability.resource:
-                block += f"**Ressource type:** `{ability.resource}`"
-                if ability.cost:
-                    block += f" - {FS.Emotes.Lol.Stats.MANA} `"+"/".join([f"{value}" for value in ability.cost.modifiers[0].values])+"`"
-                block += "\n"
-            if ability.cooldown:
-                block += f"**Cooldown:** {FS.Emotes.Lol.Stats.ABILITYHASTE} `"+"/".join([f"{value}" for value in ability.cooldown.modifiers[0].values]) +("` *(reduced by cdr)*" if ability.cooldown.affected_by_cdr else "` *(not reduced by cdr)*")
-                block += "\n"
-            if ability.on_target_cd_static:
-                block += f"**Per target cd:** {FS.Emotes.Lol.Stats.ABILITYHASTE} `{ability.on_target_cd_static}`\n"
-            if ability.targeting:
-                block += f"**Target type:** `{ability.targeting}`"
-                if ability.target_range:
-                    block += f" - {FS.Emotes.Lol.Stats.RANGE} `{ability.target_range}`"
-                block += "\n"
-            if ability.spell_effects:
-                block += f"**Effect type:** `{ability.spell_effects}`\n"
-            if ability.width:
-                block += f"**Width:** `{ability.width}`\n"
-            if ability.effect_radius:
-                block += f"**Effect Radius:** {FS.Emotes.Lol.Stats.RANGE} `{ability.effect_radius}`\n"
-            if ability.tether_radius:
-                block += f"**Tether Radius:** {FS.Emotes.Lol.Stats.RANGE} `{ability.tether_radius}`\n"
-            if ability.inner_radius:
-                block += f"**Inner Radius:** {FS.Emotes.Lol.Stats.RANGE} `{ability.inner_radius}`\n"
-            if ability.collision_radius:
-                block += f"**Collision Radius:** {FS.Emotes.Lol.Stats.RANGE} `{ability.collision_radius}`\n"
-            if ability.damage_type:
-                block += f"**Damage type:** `{ability.damage_type}`\n"
-            if ability.affects:
-                block += f"**Affects:** `{ability.affects}`\n"
-            if ability.spellshieldable:
-                block += f"**Spellshieldable:** `{ability.spellshieldable}`\n"
-            if ability.projectile:
-                block += f"**Projectile:** `{ability.projectile}`"
-            if ability.missile_speed:
-                block += f"**Missile speed:** `{ability.missile_speed}`\n"
-            if ability.on_hit_effects:
-                block += f"**On hit effects:** `{ability.on_hit_effects}`\n"
-            if ability.occurrence:
-                block += f"**Occurence:** `{ability.occurrence}`\n"
-            if ability.cast_time:
-                block += f"**Cast time:** `{ability.cast_time}`\n"
-                
-            embed = FS.Embed(title=f"__**{letter.upper()} - {ability.name}**__")
-            for effect in ability.effects:
-                description = effect.description
+            
+            embed = FS.Embed(title=f"__**{letter.upper()} - {ability.name}**__",thumbnail=ability.icon)
+            embed.add_field(name="Cost",value=(f"{FS.Emotes.Lol.Stats.Ressource(ability.resource)} *"+ "/".join([f"{ability.cost.modifiers[0].values[i]}{ability.cost.modifiers[0].units[i]}" for i in range(len(ability.cost.modifiers[0].values))])+"*" if ability.resource else "*--*"))
+            embed.add_field(name="Cooldown",value=(f"{FS.Emotes.Lol.Stats.ABILITYHASTE} *"+ "/".join([f"{ability.cooldown.modifiers[0].values[i]}{ability.cooldown.modifiers[0].units[i]}" for i in range(len(ability.cooldown.modifiers[0].values))])+"*" if ability.resource else "*--*"))        #Add minition recharge ?
+            embed.add_field(name="Range",value=f"{FS.Emotes.Lol.TargetType.get(ability.targeting)} "+(f"*{ability.target_range}*" if ability.target_range else (f"*{ability.effect_radius}*" if ability.effect_radius else "*--*")))        #Add zone type ?            
+            
+            for effect in ability.effects:      #TODO Better modifier format for the case of constant value (only once)
+                description = f"**{effect.description}**"
                 for attr in effect.leveling:
-                    description += f"\n**{attr.attribute} "
+                    description += f"\n__{attr.attribute} :__\n"
                     if attr.modifiers and len(attr.modifiers) > 0:
                         for i in range(len(attr.modifiers[0].values)):
-                            description += "".join([f"({attr.modifiers[j].values[i]}{attr.modifiers[j].units[i]})" for j in range(len(attr.modifiers))]) + "/"
-                    description += "**\n"
-                embed.add_field(name="➖",value=description[:-1], inline=False)
+                            description += "`"+"".join([f"({attr.modifiers[j].values[i]}{attr.modifiers[j].units[i]})" for j in range(len(attr.modifiers))]) + "`**/**"
+                    description = description[:-5]
+                embed.add_field(name="➖",value=description, inline=False)
                 
-                
-            embeds.append(embed.add_field(name="**__DETAILS__**",value=block))
+            block : str = ""
+            if ability.on_target_cd_static:
+                block += f"> **Per target cd:** {FS.Emotes.Lol.Stats.ABILITYHASTE} `{ability.on_target_cd_static}`\n"
+            if ability.targeting:
+                block += f"> **Target type:** `{ability.targeting}`\n"
+            if ability.spell_effects:
+                block += f"> **Effect type:** `{ability.spell_effects}`\n"
+            if ability.width:
+                block += f"> **Width:** `{ability.width}`\n"
+            if ability.effect_radius:
+                block += f"> **Effect Radius:** {FS.Emotes.Lol.Stats.RANGE} `{ability.effect_radius}`\n"
+            if ability.tether_radius:
+                block += f"> **Tether Radius:** {FS.Emotes.Lol.Stats.RANGE} `{ability.tether_radius}`\n"
+            if ability.inner_radius:
+                block += f"> **Inner Radius:** {FS.Emotes.Lol.Stats.RANGE} `{ability.inner_radius}`\n"
+            if ability.collision_radius:
+                block += f"> **Collision Radius:** {FS.Emotes.Lol.Stats.RANGE} `{ability.collision_radius}`\n"
+            if ability.damage_type:
+                block += f"> **Damage type:** `{ability.damage_type}`\n"
+            if ability.affects:
+                block += f"> **Affects:** `{ability.affects}`\n"
+            if ability.spellshieldable:
+                block += f"> **Spellshieldable:** `{ability.spellshieldable}`\n"
+            if ability.projectile:
+                block += f"> **Projectile:** `{ability.projectile}`\n"
+            if ability.missile_speed:
+                block += f"> **Missile speed:** `{ability.missile_speed}`\n"
+            if ability.on_hit_effects:
+                block += f"> **On hit effects:** `{ability.on_hit_effects}`\n"
+            if ability.occurrence:
+                block += f"> **Occurence:** `{ability.occurrence}`\n"
+            if ability.cast_time:
+                block += f"> **Cast time:** `{ability.cast_time}`\n"
+            embed.add_field(name="**__DETAILS__**",value=block)
+            
+            embeds.append(embed)
         return embeds
 
     
