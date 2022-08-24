@@ -430,9 +430,9 @@ class MerakiChampion(lol.MerakiChampion):
     @property
     def BaseEmbed(self) -> disnake.Embed:
         return FS.Embed(
-            title=self.full_name if self.full_name else self.name,
-            description=f"*{self.title}*",
-            thumbnail=self.skins[0].tile_path
+            author_name=self.full_name if self.full_name else self.name,
+            title=f"*{self.title}*",
+            author_icon_url=self.skins[0].tile_path
             )
         
     @property
