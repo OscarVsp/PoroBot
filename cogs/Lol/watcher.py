@@ -1,16 +1,19 @@
 # -*- coding: utf-8 -*-
+import json
 import os
+from time import gmtime
+from time import strftime
 from typing import Dict
 from typing import List
 from typing import Optional
 
 import disnake
+import requests
 from pyot.conf.model import activate_model
 from pyot.conf.model import ModelConf
 from pyot.conf.pipeline import activate_pipeline
 from pyot.conf.pipeline import PipelineConf
 from pyot.core.exceptions import *
-from pyot.models import lol
 from pyot.utils.lol.champion import *
 
 import modules.FastSnake as FS
@@ -48,6 +51,13 @@ class LolPipeline(PipelineConf):
             "api_key": os.getenv("RIOT_APIKEY"),
         },
     ]
+
+
+from pyot.models import lol
+
+queuesData: List[dict] = json.loads(requests.get(f"https://static.developer.riotgames.com/docs/lol/queues.json").text)
+
+mapsData: List[dict] = json.loads(requests.get(f"https://static.developer.riotgames.com/docs/lol/maps.json").text)
 
 
 class SummonerLeague(lol.SummonerLeague):
@@ -110,7 +120,10 @@ class SummonerLeague(lol.SummonerLeague):
         return self.flex
 
     def league_to_line(self, league: lol.league.SummonerLeagueEntryData) -> str:
-        return f"{FS.Emotes.Lol.Tier.get(league.tier)} **{league.rank}** *({league.league_points} LP)*"
+        return f"{self.short(league)} *({league.league_points} LP)*"
+
+    def short(self, league: lol.league.SummonerLeagueEntryData) -> str:
+        return f"{FS.Emotes.Lol.Tier.get(league.tier)} **{league.rank}**"
 
     @property
     def field(self) -> dict:
@@ -533,3 +546,107 @@ class MerakiChampion(lol.MerakiChampion):
     @property
     def Rembeds(self) -> List[disnake.Embed]:
         return [self.BaseEmbed] + self.ability_detailled_embed("R")
+
+
+class CurrentGame(lol.spectator.CurrentGame):
+    class Meta(lol.spectator.CurrentGame.Meta):
+        pass
+
+    @property
+    def summoner(self) -> "Summoner":
+        return Summoner(id=self.summoner_id, platform=self.platform)
+
+    ######
+
+    @property
+    def map_name(self) -> str:
+        return next((mapData.get("mapName") for mapData in mapsData if mapData.get("mapID") == self.map_id), "UNKNOWN")
+
+    @property
+    def game_name(self) -> str:
+        return next(
+            (queueData.get("description") for queueData in queuesData if queueData.get("queueId") == self.queue_id),
+            "UNKNOWN------",
+        )[:-6]
+
+    @property
+    def map_image(self) -> str:
+        if self.map_name == "Summoner's Rift":
+            return FS.Images.Lol.RIFT
+        elif self.map_name == "Howling Abyss":
+            return FS.Images.Lol.ARAM
+        else:
+            return disnake.Embed.Empty
+
+    @property
+    def configEmbed(self) -> disnake.Embed:
+        return FS.Embed(
+            title=f"{FS.Emotes.Lol.LOGO} __**GAME EN COURS**__",
+            description=f"> **Map :** `{self.map_name}`\n> **Type :** `{self.game_name}`\n> **Durée :** `{strftime('%M:%S', gmtime(self.length_secs))}`",
+            color=disnake.Colour.blue(),
+            thumbnail=self.map_image,
+        )
+
+    @property
+    def team_embeds(self) -> List[disnake.Embed]:
+        embeds: List[disnake.Embed] = []
+        for team in self.teams:
+            participant_tuples = [await self.participant_lines(p) for p in team.participants]
+            embeds.append(
+                FS.Embed(
+                    title=f"__**TEAM {FS.Emotes.ALPHA[self.id//100 -1]}**__",
+                    color=disnake.Colour.blue(),
+                    fields=[
+                        {"name": "➖", "value": "\n".join([p[i] for p in participant_tuples]), "inline": True}
+                        for i in range(len(participant_tuples[0]))
+                    ],
+                )
+            )
+
+    async def participant_lines(self, participant: lol.spectator.CurrentGameParticipantData) -> str:
+        league: SummonerLeague = await (await participant.summoner.get()).league_entries.get()
+        championMastery: lol.ChampionMastery = await lol.ChampionMastery(
+            summoner_id=participant.summoner_id, champion_id=participant.champion_id
+        ).get()
+        return (
+            f"{league.short(league.first)} **{participant.summoner_name}**",
+            f"{FS.Emotes.Lol.Champions.get(participant.champion_id)} {FS.Emotes.Lol.MASTERIES[championMastery.champion_level]} ➖ {FS.Emotes.Lol.Runes.Perks.Get(participant.rune_ids[0])}{FS.Emotes.Lol.Runes.Styles.Get(participant.rune_sub_style)} ➖ {FS.Emotes.Lol.SummonerSpells.get(participant.spell_ids[0])}{FS.Emotes.Lol.SummonerSpells.get(participant.spell_ids[1])}",
+        )
+
+    def perks_field(self, perksId: List[int]) -> dict:
+        return {
+            "name": f"{FS.Emotes.Lol.Runes.Perks.NONE} **RUNES**",
+            "value": f"""> {FS.Emotes.Lol.Runes.Perks.Get(perksId[0])}{FS.Emotes.Lol.Runes.Perks.Get(perksId[4])}{FS.Emotes.Lol.Runes.Perks.Get(perksId[6])}
+        > {FS.Emotes.Lol.Runes.Perks.Get(perksId[1])}{FS.Emotes.Lol.Runes.Perks.Get(perksId[5])}{FS.Emotes.Lol.Runes.Perks.Get(perksId[7])}
+        > {FS.Emotes.Lol.Runes.Perks.Get(perksId[2])}⬛{FS.Emotes.Lol.Runes.Perks.Get(perksId[8])}
+        > {FS.Emotes.Lol.Runes.Perks.Get(perksId[3])}""",
+            "inline": True,
+        }
+
+    def spells_field(self, spellsId: List[int]) -> dict:
+        return (
+            {
+                "name": f"{FS.Emotes.FLAME} **SPELL**",
+                "value": f"> {FS.Emotes.Lol.SummonerSpells.get(spellsId[0])}{FS.Emotes.Lol.SummonerSpells.get(spellsId[1])}",
+                "inline": True,
+            },
+        )
+
+    async def participant_embed(self, participant: lol.spectator.CurrentGameParticipantData) -> List[disnake.Embed]:
+        embeds = [await (await Summoner(id=participant.summoner_id).get()).embed]
+        champion = await MerakiChampion(id=participant.champion_id).get()
+        summoner = await Summoner(id=participant.summoner_id).get()
+        embeds.append(
+            FS.Embed(
+                title=f"__**{champion.name.upper()}**__",
+                thumbnail=champion.skins[0].tile_path,
+                color=disnake.Colour.blue(),
+                fields=[
+                    self.perks_field(participant.rune_ids),
+                    self.spells_field(participant.spell_ids),
+                    await (await summoner.champion_masteries.get()).field(3),
+                ],
+            )
+        )
+
+        return embeds

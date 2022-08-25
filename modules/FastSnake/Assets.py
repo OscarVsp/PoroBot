@@ -744,7 +744,7 @@ class Emotes:
             XINZHAO: str = "<:XinZhao:1009842143143149609>"
 
             @classmethod
-            def get(cls, id: str):
+            def get(cls, id: Union[str, int]):
                 map = {
                     "266": cls.AATROX,
                     "103": cls.AHRI,
@@ -908,7 +908,7 @@ class Emotes:
                     "142": cls.ZOE,
                     "143": cls.ZYRA,
                 }
-
+                id = str(id)
                 return map.get(str(id), cls.NONE)
 
         @classmethod
