@@ -236,22 +236,26 @@ class Lol(commands.Cog):
             filtres = filtres[:25]
         return filtres"""
 
-    # @lol.sub_command(
-    #    name="live",
-    #    description="Info sur une partie en cours"
-    # )
-    # async def live(self, inter: ApplicationCommandInteraction,
-    #                     invocateur: str = commands.Param(description="Le nom de l'invocateur à rechercher.",default=None)):
-    #    await inter.response.defer(ephemeral=False)
-    #    if invocateur == None:
-    #        if str(inter.author.id) in self.summoners.getall():
-    #            invocateur = self.summoners.get(str(inter.author.id))
-    #        else:
-    #            await inter.edit_original_message(embed=FS.Embed(description="""Spécifie un nom d'invocateur ou bien lie ton compte lol en utilisant "/lol account"."""))
-    #            return
+    @lol.sub_command(name="live", description="Info sur une partie en cours")
+    async def live(
+        self,
+        inter: ApplicationCommandInteraction,
+        invocateur: str = commands.Param(description="Le nom de l'invocateur à rechercher.", default=None),
+    ):
+        await inter.response.defer(ephemeral=False)
+        if invocateur == None:
+            if str(inter.author.id) in self.summoners.getall():
+                invocateur = self.summoners.get(str(inter.author.id))
+            else:
+                await inter.edit_original_message(
+                    embed=FS.Embed(
+                        description="""Spécifie un nom d'invocateur ou bien lie ton compte lol en utilisant "/lol account"."""
+                    )
+                )
+                return
 
-    #    view = CurrentGameView(invocateur)
-    #    await view.start(inter)
+        view = CurrentGameView(invocateur)
+        await view.start(inter)
 
     @lol.sub_command(name="invocateur", description="Info sur un invocateur")
     async def invocateur(

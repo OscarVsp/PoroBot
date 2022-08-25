@@ -6,6 +6,7 @@ from time import strftime
 from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Tuple
 
 import disnake
 import requests
@@ -165,6 +166,7 @@ class ChampionMasteries(lol.ChampionMasteries):
                 if len(top) > 0
                 else f"{FS.Emotes.Lol.MASTERIES[0]} *Aucune maitrise*"
             ),
+            "inline": True,
         }
 
     def champion_to_line(self, champion: lol.ChampionMastery) -> str:
@@ -547,6 +549,10 @@ class MerakiChampion(lol.MerakiChampion):
     def Rembeds(self) -> List[disnake.Embed]:
         return [self.BaseEmbed] + self.ability_detailled_embed("R")
 
+    @property
+    def emote(self) -> str:
+        return FS.Emotes.Lol.Champions.get(self.id)
+
 
 class CurrentGame(lol.spectator.CurrentGame):
     class Meta(lol.spectator.CurrentGame.Meta):
@@ -587,14 +593,14 @@ class CurrentGame(lol.spectator.CurrentGame):
             thumbnail=self.map_image,
         )
 
-    @property
-    def team_embeds(self) -> List[disnake.Embed]:
+    @async_property
+    async def team_embeds(self) -> List[disnake.Embed]:
         embeds: List[disnake.Embed] = []
-        for team in self.teams:
+        for j, team in enumerate(self.teams):
             participant_tuples = [await self.participant_lines(p) for p in team.participants]
             embeds.append(
                 FS.Embed(
-                    title=f"__**TEAM {FS.Emotes.ALPHA[self.id//100 -1]}**__",
+                    title=f"__**TEAM {FS.Emotes.ALPHA[j]}**__",
                     color=disnake.Colour.blue(),
                     fields=[
                         {"name": "➖", "value": "\n".join([p[i] for p in participant_tuples]), "inline": True}
@@ -602,9 +608,10 @@ class CurrentGame(lol.spectator.CurrentGame):
                     ],
                 )
             )
+        return embeds
 
-    async def participant_lines(self, participant: lol.spectator.CurrentGameParticipantData) -> str:
-        league: SummonerLeague = await (await participant.summoner.get()).league_entries.get()
+    async def participant_lines(self, participant: lol.spectator.CurrentGameParticipantData) -> Tuple[str, str]:
+        league: SummonerLeague = await SummonerLeague(summoner_id=participant.summoner_id).get()
         championMastery: lol.ChampionMastery = await lol.ChampionMastery(
             summoner_id=participant.summoner_id, champion_id=participant.champion_id
         ).get()
@@ -624,13 +631,11 @@ class CurrentGame(lol.spectator.CurrentGame):
         }
 
     def spells_field(self, spellsId: List[int]) -> dict:
-        return (
-            {
-                "name": f"{FS.Emotes.FLAME} **SPELL**",
-                "value": f"> {FS.Emotes.Lol.SummonerSpells.get(spellsId[0])}{FS.Emotes.Lol.SummonerSpells.get(spellsId[1])}",
-                "inline": True,
-            },
-        )
+        return {
+            "name": f"{FS.Emotes.FLAME} **SPELL**",
+            "value": f"> {FS.Emotes.Lol.SummonerSpells.get(spellsId[0])}{FS.Emotes.Lol.SummonerSpells.get(spellsId[1])}",
+            "inline": True,
+        }
 
     async def participant_embed(self, participant: lol.spectator.CurrentGameParticipantData) -> List[disnake.Embed]:
         embeds = [await (await Summoner(id=participant.summoner_id).get()).embed]
@@ -644,7 +649,7 @@ class CurrentGame(lol.spectator.CurrentGame):
                 fields=[
                     self.perks_field(participant.rune_ids),
                     self.spells_field(participant.spell_ids),
-                    await (await summoner.champion_masteries.get()).field(3),
+                    (await summoner.champion_masteries.get()).field(3),
                 ],
             )
         )
