@@ -4,6 +4,7 @@ from disnake.ext import commands
 from disnake import ApplicationCommandInteraction
 from typing import List
 import modules.FastSnake as FS
+import os
 from .view import Locker
 from deep_translator import GoogleTranslator
 
