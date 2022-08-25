@@ -13,7 +13,7 @@ repos:
       rev: v1.4
       hooks:
       -   id: autoflake
-          args: ["--in-place","--remove-all-unused-imports","--remove-unused-variables"]
+          args: ["--in-place","--remove-all-unused-imports","--remove-unused-variables","--ignore-init-module-imports"]
 
   -   repo: https://github.com/asottile/reorder_python_imports
       rev: v3.8.2
