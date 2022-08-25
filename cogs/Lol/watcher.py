@@ -1,6 +1,5 @@
 from pyot.models import lol
 from bz2 import decompress
-
 import os
 from typing import Dict, List, Optional
 from unittest.loader import VALID_MODULE_NAME
@@ -35,7 +34,7 @@ class LolPipeline(PipelineConf):
                 "summoner_v4_by_name": 120,
                 "match_v4_match": 600,
                 "match_v4_timeline": 600,
-            }
+            },
         },
         {
             "backend": "pyot.stores.cdragon.CDragon",
@@ -46,19 +45,28 @@ class LolPipeline(PipelineConf):
         {
             "backend": "pyot.stores.riotapi.RiotAPI",
             "api_key": os.getenv("RIOT_APIKEY"),
-        }
+        },
     ]
 
 
 class SummonerLeague(lol.SummonerLeague):
-
     class Queue:
         RANKED_SOLO_5x5 = "RANKED_SOLO_5x5"
         RANKED_FLEX_SR = "RANKED_FLEX_SR"
 
-    TIERS = ['UNRANKED', 'IRON', 'BRONZE', 'SILVER', 'GOLD',
-             'PLATINUM', 'DIAMOND', 'MASTER', 'GRANDMASTER', 'CHALLENGER']
-    RANKS = ['-', 'IV', 'III', 'II', 'I']
+    TIERS = [
+        "UNRANKED",
+        "IRON",
+        "BRONZE",
+        "SILVER",
+        "GOLD",
+        "PLATINUM",
+        "DIAMOND",
+        "MASTER",
+        "GRANDMASTER",
+        "CHALLENGER",
+    ]
+    RANKS = ["-", "IV", "III", "II", "I"]
 
     class Meta(lol.SummonerLeague.Meta):
         pass
@@ -71,7 +79,11 @@ class SummonerLeague(lol.SummonerLeague):
 
     @staticmethod
     def sorting_score(entry: lol.league.SummonerLeagueEntryData):
-        return SummonerLeague.TIERS.index(entry.tier)*10000 + SummonerLeague.RANKS.index(entry.rank)*1000 + entry.league_points
+        return (
+            SummonerLeague.TIERS.index(entry.tier) * 10000
+            + SummonerLeague.RANKS.index(entry.rank) * 1000
+            + entry.league_points
+        )
 
     @property
     def solo(self) -> Optional[lol.league.SummonerLeagueEntryData]:
@@ -112,14 +124,10 @@ class SummonerLeague(lol.SummonerLeague):
             value += f"> **Flex :** {self.league_to_line(self.flex)}"
         if value == "":
             value = "*No Ranked Data*"
-        return {
-            'name': f'{FS.Emotes.Lol.Tier.NONE} **RANKED**',
-            'value': value
-        }
+        return {"name": f"{FS.Emotes.Lol.Tier.NONE} **RANKED**", "value": value}
 
 
 class ChampionMasteries(lol.ChampionMasteries):
-
     class Meta(lol.ChampionMasteries.Meta):
         pass
 
@@ -133,31 +141,33 @@ class ChampionMasteries(lol.ChampionMasteries):
         return next((mastery for mastery in self.masteries if mastery.champion.name == name))
 
     def top(self, n: int = 3) -> List[lol.ChampionMastery]:
-        self.masteries.sort(key=lambda m: (
-            m.champion_level, m.champion_points), reverse=True)
+        self.masteries.sort(key=lambda m: (m.champion_level, m.champion_points), reverse=True)
         return [self.masteries[i] for i in range(min(n, len(self.masteries)))]
 
     def field(self, n: int = 3) -> dict:
         top = self.top(n=n)
         return {
-            'name': f"{FS.Emotes.Lol.MASTERIES[0]} **MASTERIES**",
-            'value': ("\n".join([f"> {self.champion_to_line(champ)}" for champ in top]) if len(top) > 0 else f"{FS.Emotes.Lol.MASTERIES[0]} *Aucune maitrise*")
+            "name": f"{FS.Emotes.Lol.MASTERIES[0]} **MASTERIES**",
+            "value": (
+                "\n".join([f"> {self.champion_to_line(champ)}" for champ in top])
+                if len(top) > 0
+                else f"{FS.Emotes.Lol.MASTERIES[0]} *Aucune maitrise*"
+            ),
         }
 
     def champion_to_line(self, champion: lol.ChampionMastery) -> str:
         return f"{FS.Emotes.Lol.MASTERIES[champion.champion_level]} **{FS.Emotes.Lol.Champions.get(champion.champion_id)}** *{self.champion_points_formatted(champion)}*"
 
     def champion_points_formatted(self, champion: lol.ChampionMastery) -> str:
-        num = float('{:.3g}'.format(champion.champion_points))
+        num = float("{:.3g}".format(champion.champion_points))
         magnitude = 0
         while abs(num) >= 1000:
             magnitude += 1
             num /= 1000.0
-        return '{}{}'.format('{:f}'.format(num).rstrip('0').rstrip('.'), ['', 'K', 'M', 'B', 'T'][magnitude])
+        return "{}{}".format("{:f}".format(num).rstrip("0").rstrip("."), ["", "K", "M", "B", "T"][magnitude])
 
 
 class ClashPlayers(lol.ClashPlayers):
-
     class Meta(lol.ClashPlayers.Meta):
         pass
 
@@ -168,7 +178,9 @@ class ClashPlayers(lol.ClashPlayers):
 
 class ClashTeam(lol.ClashTeam):
 
-    _icon_url: str = "https://raw.communitydragon.org/pbe/plugins/rcp-be-lol-game-data/global/default/assets/clash/roster-logos/"
+    _icon_url: str = (
+        "https://raw.communitydragon.org/pbe/plugins/rcp-be-lol-game-data/global/default/assets/clash/roster-logos/"
+    )
     _opgg_url: str = "https://euw.op.gg/multi/query="
 
     class Meta(lol.ClashTeam.Meta):
@@ -186,25 +198,40 @@ class ClashTeam(lol.ClashTeam):
 
     @property
     def tierFormatted(self) -> str:
-        return 'I'*self.tier if self.tier != 4 else "IV"
+        return "I" * self.tier if self.tier != 4 else "IV"
 
     @property
     def sortedPlayers(self) -> List[lol.clash.ClashPlayerData]:
-        temp: Dict[List[lol.clash.ClashPlayerData]] = {"TOP": [], "JUNGLE": [], "MIDDLE": [
-        ], "BOTTOM": [], "UTILITY": [], "FILL": [], "UNSELECTED": []}
+        temp: Dict[List[lol.clash.ClashPlayerData]] = {
+            "TOP": [],
+            "JUNGLE": [],
+            "MIDDLE": [],
+            "BOTTOM": [],
+            "UTILITY": [],
+            "FILL": [],
+            "UNSELECTED": [],
+        }
         for player in self.players:
             temp[player.position].append(player)
-        return temp["TOP"] + temp["JUNGLE"] + temp["MIDDLE"] + \
-            temp["BOTTOM"] + temp["UTILITY"] + \
-            temp["FILL"] + temp["UNSELECTED"]
+        return (
+            temp["TOP"]
+            + temp["JUNGLE"]
+            + temp["MIDDLE"]
+            + temp["BOTTOM"]
+            + temp["UTILITY"]
+            + temp["FILL"]
+            + temp["UNSELECTED"]
+        )
 
     @property
     def icon_url(self) -> str:
-        return self._icon_url+self.icon_id+"/1.png"
+        return self._icon_url + self.icon_id + "/1.png"
 
     @async_property
     async def opgg_url(self) -> str:
-        return self._opgg_url+''.join([(await p.summoner.get()).name.replace(' ', '%20')+'%2C' for p in self.players])
+        return self._opgg_url + "".join(
+            [(await p.summoner.get()).name.replace(" ", "%20") + "%2C" for p in self.players]
+        )
 
     @async_property
     async def embed(self) -> disnake.Embed:
@@ -220,12 +247,11 @@ class ClashTeam(lol.ClashTeam):
             title=f"__**{self.name} [{self.abbreviation.upper()}]**__",
             description=description,
             thumbnail=self.icon_url,
-            color=disnake.Colour.blue()
+            color=disnake.Colour.blue(),
         )
 
 
 class ClashTournament(lol.ClashTournament):
-
     class Meta(lol.ClashTournament.Meta):
         pass
 
@@ -262,11 +288,11 @@ class Summoner(lol.Summoner):
 
     @property
     def icon_url(self) -> str:
-        return self._icon_url+str(self.profile_icon_id)+".jpg"
+        return self._icon_url + str(self.profile_icon_id) + ".jpg"
 
     @property
     def opgg_url(self) -> str:
-        return self._opgg_url+self.name.replace(' ', '%20')
+        return self._opgg_url + self.name.replace(" ", "%20")
 
     @async_property
     async def embed(self) -> disnake.Embed:
@@ -277,15 +303,11 @@ class Summoner(lol.Summoner):
             description=f"{FS.Emotes.Lol.XP} **LEVEL**\n> **{self.level}**",
             color=disnake.Colour.blue(),
             author_icon_url=self.icon_url,
-            fields=[
-                championMasteries.field(),
-                summonerLeague.field
-            ]
+            fields=[championMasteries.field(), summonerLeague.field],
         )
 
 
 class Champion(lol.Champion):
-
     class Meta(lol.Champion.Meta):
         pass
 
@@ -295,7 +317,6 @@ class Champion(lol.Champion):
 
 
 class MerakiChampion(lol.MerakiChampion):
-
     class Meta(lol.MerakiChampion.Meta):
         pass
 
@@ -323,28 +344,28 @@ class MerakiChampion(lol.MerakiChampion):
     def stats_embed(self) -> disnake.Embed:
         return FS.Embed(
             title="__**Stats**__",
-            description=f"**Dammage type:** `{self.adaptive_type.split('_')[0]}`\n**Attack type:** `{self.attack_type}`\n**Roles:** "+" ".join([
-                f"{FS.Emotes.Lol.Roles.get(role)}" for role in self.roles]),
+            description=f"**Dammage type:** `{self.adaptive_type.split('_')[0]}`\n**Attack type:** `{self.attack_type}`\n**Roles:** "
+            + " ".join([f"{FS.Emotes.Lol.Roles.get(role)}" for role in self.roles]),
             fields=[
                 {
-                    'name': "➖",
-                    'value': f"""{FS.Emotes.Lol.Stats.HEALT} ➖ {self.stat_to_line(self.stats.health)}
+                    "name": "➖",
+                    "value": f"""{FS.Emotes.Lol.Stats.HEALT} ➖ {self.stat_to_line(self.stats.health)}
                                 {FS.Emotes.Lol.Stats.MANA} ➖ {self.stat_to_line(self.stats.mana)}
                                 {FS.Emotes.Lol.Stats.ARMOR} ➖ {self.stat_to_line(self.stats.armor)}
                                 {FS.Emotes.Lol.Stats.ATTACKSPEED} ➖ {self.stat_to_line(self.stats.attack_speed)}
                                 {FS.Emotes.Lol.Stats.MOVESPEED} ➖ {self.stat_to_line(self.stats.movespeed)}""",
-                    'inline': True
+                    "inline": True,
                 },
                 {
-                    'name': "➖",
-                    'value': f"""{FS.Emotes.Lol.Stats.HEALTREGEN} ➖ {self.stat_to_line(self.stats.health_regen)}
+                    "name": "➖",
+                    "value": f"""{FS.Emotes.Lol.Stats.HEALTREGEN} ➖ {self.stat_to_line(self.stats.health_regen)}
                                 {FS.Emotes.Lol.Stats.MANAREGEN} ➖ {self.stat_to_line(self.stats.mana_regen)}
                                 {FS.Emotes.Lol.Stats.MAGICRESISTE} ➖ {self.stat_to_line(self.stats.magic_resistance)}
                                 {FS.Emotes.Lol.Stats.ATTACKDAMAGE} ➖ {self.stat_to_line(self.stats.attack_damage)}
                                 {FS.Emotes.Lol.Stats.RANGE} ➖ {self.stat_to_line(self.stats.attack_range)}""",
-                    'inline': True
-                }
-            ]
+                    "inline": True,
+                },
+            ],
         )
 
     def ability_detailled_embed(self, letter: str) -> List[disnake.Embed]:
@@ -365,14 +386,46 @@ class MerakiChampion(lol.MerakiChampion):
 
         for ability in abilities:
 
-            embed = FS.Embed(
-                title=f"__**{letter.upper()} - {ability.name}**__", thumbnail=ability.icon)
-            embed.add_field(name="Cost", value=(f"{FS.Emotes.Lol.Stats.Ressource(ability.resource)} *" + "/".join(
-                [f"{ability.cost.modifiers[0].values[i]}{ability.cost.modifiers[0].units[i]}" for i in range(len(ability.cost.modifiers[0].values))])+"*" if ability.resource else "*--*"))
-            embed.add_field(name="Cooldown", value=(f"{FS.Emotes.Lol.Stats.ABILITYHASTE} *" + "/".join([f"{ability.cooldown.modifiers[0].values[i]}{ability.cooldown.modifiers[0].units[i]}" for i in range(
-                len(ability.cooldown.modifiers[0].values))])+"*" if ability.resource else "*--*"))  # Add minition recharge ?
-            embed.add_field(name="Range", value=f"{FS.Emotes.Lol.TargetType.get(ability.targeting)} "+(
-                f"*{ability.target_range}*" if ability.target_range else (f"*{ability.effect_radius}*" if ability.effect_radius else "*--*")))  # Add zone type ?
+            embed = FS.Embed(title=f"__**{letter.upper()} - {ability.name}**__", thumbnail=ability.icon)
+            embed.add_field(
+                name="Cost",
+                value=(
+                    f"{FS.Emotes.Lol.Stats.Ressource(ability.resource)} *"
+                    + "/".join(
+                        [
+                            f"{ability.cost.modifiers[0].values[i]}{ability.cost.modifiers[0].units[i]}"
+                            for i in range(len(ability.cost.modifiers[0].values))
+                        ]
+                    )
+                    + "*"
+                    if ability.resource
+                    else "*--*"
+                ),
+            )
+            embed.add_field(
+                name="Cooldown",
+                value=(
+                    f"{FS.Emotes.Lol.Stats.ABILITYHASTE} *"
+                    + "/".join(
+                        [
+                            f"{ability.cooldown.modifiers[0].values[i]}{ability.cooldown.modifiers[0].units[i]}"
+                            for i in range(len(ability.cooldown.modifiers[0].values))
+                        ]
+                    )
+                    + "*"
+                    if ability.resource
+                    else "*--*"
+                ),
+            )  # Add minition recharge ?
+            embed.add_field(
+                name="Range",
+                value=f"{FS.Emotes.Lol.TargetType.get(ability.targeting)} "
+                + (
+                    f"*{ability.target_range}*"
+                    if ability.target_range
+                    else (f"*{ability.effect_radius}*" if ability.effect_radius else "*--*")
+                ),
+            )  # Add zone type ?
 
             # TODO Better modifier format for the case of constant value (only once)
             for effect in ability.effects:
@@ -381,9 +434,16 @@ class MerakiChampion(lol.MerakiChampion):
                     description += f"\n__{attr.attribute} :__\n"
                     if attr.modifiers and len(attr.modifiers) > 0:
                         for i in range(len(attr.modifiers[0].values)):
-                            description += "`" + \
-                                "".join([f"({attr.modifiers[j].values[i]}{attr.modifiers[j].units[i]})" for j in range(
-                                    len(attr.modifiers))]) + "`**/**"
+                            description += (
+                                "`"
+                                + "".join(
+                                    [
+                                        f"({attr.modifiers[j].values[i]}{attr.modifiers[j].units[i]})"
+                                        for j in range(len(attr.modifiers))
+                                    ]
+                                )
+                                + "`**/**"
+                            )
                     description = description[:-5]
                 embed.add_field(name="➖", value=description, inline=False)
 
@@ -427,27 +487,30 @@ class MerakiChampion(lol.MerakiChampion):
 
     def ability_embed(self, letter: str, ability: lol.merakichampion.MerakiChampionSpellData) -> disnake.Embed:
         return FS.Embed(
-            title=f"__**{letter.upper()} - {ability.name}**__",
-            description=f"> {ability.blurb}",
-            thumbnail=ability.icon
+            title=f"__**{letter.upper()} - {ability.name}**__", description=f"> {ability.blurb}", thumbnail=ability.icon
         )
 
     @property
     def abilities_embeds(self) -> List[disnake.Embed]:
-        return [self.ability_embed("p", p) for p in self.abilities.p]+[self.ability_embed("q", q) for q in self.abilities.q]+[self.ability_embed("w", w) for w in self.abilities.w]+[self.ability_embed("e", e) for e in self.abilities.e]+[self.ability_embed("r", r) for r in self.abilities.r]
+        return (
+            [self.ability_embed("p", p) for p in self.abilities.p]
+            + [self.ability_embed("q", q) for q in self.abilities.q]
+            + [self.ability_embed("w", w) for w in self.abilities.w]
+            + [self.ability_embed("e", e) for e in self.abilities.e]
+            + [self.ability_embed("r", r) for r in self.abilities.r]
+        )
 
     @property
     def BaseEmbed(self) -> disnake.Embed:
         return FS.Embed(
             author_name=self.full_name if self.full_name else self.name,
             title=f"*{self.title}*",
-            author_icon_url=self.skins[0].tile_path
+            author_icon_url=self.skins[0].tile_path,
         )
 
     @property
     def embeds(self) -> List[disnake.Embed]:
-        embeds = [self.BaseEmbed.add_field(
-            name="➖", value=f"> *{self.lore}*", inline=False)]
+        embeds = [self.BaseEmbed.add_field(name="➖", value=f"> *{self.lore}*", inline=False)]
         embeds.append(self.stats_embed)
         embeds += self.abilities_embeds
         return embeds
