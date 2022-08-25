@@ -1,5 +1,6 @@
 from pyot.models import lol
 from bz2 import decompress
+
 import os
 from typing import Dict, List, Optional
 from unittest.loader import VALID_MODULE_NAME
