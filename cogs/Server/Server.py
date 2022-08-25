@@ -1,11 +1,14 @@
+# -*- coding: utf-8 -*-
 import logging
-import disnake
-from disnake.ext import commands
-from disnake import ApplicationCommandInteraction
 from typing import List
+
+import disnake
+from deep_translator import GoogleTranslator
+from disnake import ApplicationCommandInteraction
+from disnake.ext import commands
+
 import modules.FastSnake as FS
 from .view import Locker
-from deep_translator import GoogleTranslator
 
 
 class Server(commands.Cog):

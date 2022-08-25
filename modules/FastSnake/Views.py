@@ -1,19 +1,23 @@
-from typing import List, Optional, Tuple, Union
-
-from modules.FastSnake.ChoicesView import (
-    ButtonChoice,
-    QCMReturnData,
-    QCMView,
-    QRMReturnData,
-    QRMView,
-    SelectionRow,
-    SelectionView,
-    SelectionViewReturnData,
-)
-from .ConfirmationView import ConfirmationReturnData, ConfirmationView, Target
-from .MemberSelectionView import MemberSelectionReturnData, MemberSelectionView
+# -*- coding: utf-8 -*-
+from typing import List
+from typing import Optional
+from typing import Union
 
 import disnake
+
+from .ConfirmationView import ConfirmationReturnData
+from .ConfirmationView import ConfirmationView
+from .ConfirmationView import Target
+from .MemberSelectionView import MemberSelectionReturnData
+from .MemberSelectionView import MemberSelectionView
+from modules.FastSnake.ChoicesView import ButtonChoice
+from modules.FastSnake.ChoicesView import QCMReturnData
+from modules.FastSnake.ChoicesView import QCMView
+from modules.FastSnake.ChoicesView import QRMReturnData
+from modules.FastSnake.ChoicesView import QRMView
+from modules.FastSnake.ChoicesView import SelectionRow
+from modules.FastSnake.ChoicesView import SelectionView
+from modules.FastSnake.ChoicesView import SelectionViewReturnData
 
 
 async def process(confirmationvView: ConfirmationView) -> ConfirmationView:

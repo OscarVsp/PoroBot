@@ -1,6 +1,8 @@
+# -*- coding: utf-8 -*-
 import disnake
-from disnake.ext import commands
 from disnake import ApplicationCommandInteraction
+from disnake.ext import commands
+
 import modules.FastSnake as FS
 from .view import *
 

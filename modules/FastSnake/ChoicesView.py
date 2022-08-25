@@ -1,7 +1,14 @@
-import enum
-from typing import List, Optional, Tuple, Union
+# -*- coding: utf-8 -*-
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
+
 import disnake
-from modules.FastSnake.ConfirmationView import ConfirmationReturnData, ConfirmationView, Target
+
+from modules.FastSnake.ConfirmationView import ConfirmationReturnData
+from modules.FastSnake.ConfirmationView import ConfirmationView
+from modules.FastSnake.ConfirmationView import Target
 
 
 class ButtonChoice:

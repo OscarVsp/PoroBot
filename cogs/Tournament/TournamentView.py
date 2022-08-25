@@ -1,10 +1,16 @@
-from lib2to3.pgen2.token import TILDE
+# -*- coding: utf-8 -*-
 from typing import List
+
 import disnake
-from cogs.Tournament.modal import NotificationModal
+
 import modules.FastSnake as FS
+from .classes import Match
+from .classes import Round
+from .classes import State
+from .classes import Team
+from .classes import TournamentData
+from cogs.Tournament.modal import NotificationModal
 from modules.FastSnake import *
-from .classes import Round, Match, State, Team, TournamentData
 
 
 class PlayerSelectionView(MemberSelectionView):

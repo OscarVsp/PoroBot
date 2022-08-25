@@ -1,8 +1,14 @@
+# -*- coding: utf-8 -*-
+from typing import List
+from typing import Optional
+from typing import Union
+
 import disnake
-from typing import List, Optional, Union
-from modules.FastSnake.ConfirmationView import ConfirmationReturnData, ConfirmationView, Target
 
 from .Assets import Emotes
+from modules.FastSnake.ConfirmationView import ConfirmationReturnData
+from modules.FastSnake.ConfirmationView import ConfirmationView
+from modules.FastSnake.ConfirmationView import Target
 
 
 class MemberSelectionView(ConfirmationView):

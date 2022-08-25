@@ -1,14 +1,18 @@
-import os
-import disnake
-from disnake.ext import commands, tasks
-from disnake import ApplicationCommandInteraction
-import modules.FastSnake as FS
-from .view import *
-from .scraper import Almanax_scraper
+# -*- coding: utf-8 -*-
 import asyncio
 import logging
+import os
 from datetime import datetime
+
 import asyncpg
+import disnake
+from disnake import ApplicationCommandInteraction
+from disnake.ext import commands
+from disnake.ext import tasks
+
+import modules.FastSnake as FS
+from .scraper import Almanax_scraper
+from .view import *
 
 
 class Dofus(commands.Cog):

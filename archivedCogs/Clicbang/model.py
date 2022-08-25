@@ -1,6 +1,9 @@
-import modules.FastSnake as FS
-import disnake
+# -*- coding: utf-8 -*-
 from math import ceil
+
+import disnake
+
+import modules.FastSnake as FS
 
 regles = FS.Embed(
     title=":scroll: __**REGLES DU BANG**__ :scroll:",

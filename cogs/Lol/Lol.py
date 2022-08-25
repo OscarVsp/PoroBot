@@ -1,16 +1,20 @@
+# -*- coding: utf-8 -*-
 from math import ceil
 from random import shuffle
 from typing import Tuple
-import pickledb
+
 import disnake
-from disnake.ext import commands
+import pickledb
 from disnake import ApplicationCommandInteraction
+from disnake.ext import commands
+
 import modules.FastSnake as FS
-from modules.FastSnake.SimpleModal import SimpleModal
-from modules.FastSnake.Views import confirmation, memberSelection
+from .exceptions import *
 from .view import *
 from .watcher import *
-from .exceptions import *
+from modules.FastSnake.SimpleModal import SimpleModal
+from modules.FastSnake.Views import confirmation
+from modules.FastSnake.Views import memberSelection
 
 
 class Lol(commands.Cog):
@@ -44,10 +48,10 @@ class Lol(commands.Cog):
                         else:
                             await self.log_channel.send(
                                 embeds=[FS.Embed(title=":x: Erreur",description="Je ne parvient pas à trouver la team clash du joueur suivant :"),(await summoner.embed())]
-                            )  
+                            )
                             await self.clash_channel.send(
                                 embeds=[FS.Embed(title=":x: Erreur",description="Je ne parvient pas à trouver la team clash du joueur suivant :"),(await summoner.embed())]
-                            )  
+                            )
                     except (SummonerNotFound):
                         await self.bot.log_channel.send(
                                 embed=FS.Embed(title=":x: Erreur",description=f"Je ne parvient pas à trouver le joueur correspondant à l'id suivant :{summoner_id}")
@@ -147,7 +151,7 @@ class Lol(commands.Cog):
     """async def get_lol_classement(self, members_filter : List[disnake.Member]) -> Tuple[List[disnake.Member],List[Summoner]]:
         members: List[disnake.Member] = []
         summoners: List[Summoner] = []
-        
+
         for member in members_filter:
             if str(member.id) in self.summoners.getall():
                 new_summoner = await Summoner(name=self.summoners.get(str(member.id))).get()
@@ -160,7 +164,7 @@ class Lol(commands.Cog):
 
         for summoner in sorted_summoners:
             sorted_members.append(members[summoners.index(summoner)])
-            
+
         return (sorted_members,sorted_summoners)"""
 
     """@lol.sub_command(
@@ -190,7 +194,7 @@ class Lol(commands.Cog):
             filtre_members = inter.guild.members
 
         (sorted_members,sorted_summoners) = await self.get_lol_classement(filtre_members)
-        
+
         ranks = ""
         players = ""
 

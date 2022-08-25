@@ -1,17 +1,16 @@
+# -*- coding: utf-8 -*-
 from typing import List
+
 import disnake
-from disnake.ext import commands
 from disnake import ApplicationCommandInteraction
+from disnake.ext import commands
 from disnake.ext.commands import InteractionBot
 
-from cogs.Tournament.TournamentMutliView import phaseCreation
-from .classes import TournamentData
-
-from modules.FastSnake import confirmation
-from modules.FastSnake.ChoicesView import SelectionRow
-from modules.FastSnake.Views import Selection
-from .TournamentManager import Tournament2v2Roll
 import modules.FastSnake as FS
+from .classes import TournamentData
+from .TournamentManager import Tournament2v2Roll
+from cogs.Tournament.TournamentMutliView import phaseCreation
+from modules.FastSnake import confirmation
 
 
 class Tournament(commands.Cog):

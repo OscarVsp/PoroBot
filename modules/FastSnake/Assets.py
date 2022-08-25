@@ -1,5 +1,7 @@
-from multiprocessing.sharedctypes import Value
-from typing import List, Optional, Union
+# -*- coding: utf-8 -*-
+from typing import List
+from typing import Optional
+from typing import Union
 
 
 class Emotes:

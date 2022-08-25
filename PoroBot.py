@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """"
 Discord bot written in python using disnake library.
 Copyright (C) 2022 - Oscar Van Slijpe
@@ -15,20 +16,17 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-
-from dotenv import load_dotenv
+import logging.handlers
 import os
 import platform
-import logging
-import logging.handlers
+import traceback
 
 import disnake
 from disnake import ApplicationCommandInteraction
 from disnake.ext.commands import InteractionBot
+from dotenv import load_dotenv
 
 import modules.FastSnake as FS
-
-import traceback
 
 
 class PoroBot(InteractionBot):

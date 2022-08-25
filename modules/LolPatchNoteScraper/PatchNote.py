@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 A simple python scraper to get League of Legends patchnote informations.
 Copyright (C) 2022 - Oscar Van Slijpe
@@ -15,12 +16,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
-
+import logging
 
 import requests
 from bs4 import BeautifulSoup
 from markdownify import markdownify
-import logging
 
 
 class PatchNote:

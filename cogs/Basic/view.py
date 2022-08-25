@@ -1,9 +1,11 @@
-import disnake
-from disnake import ApplicationCommandInteraction
-import modules.FastSnake as FS
-import asyncio
-import pickledb
+# -*- coding: utf-8 -*-
 import logging
+
+import disnake
+import pickledb
+from disnake import ApplicationCommandInteraction
+
+import modules.FastSnake as FS
 
 loredb = pickledb.load("cogs/Basic/lore.db", False)
 

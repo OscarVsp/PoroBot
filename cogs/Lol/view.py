@@ -1,9 +1,11 @@
-from pickle import TRUE
+# -*- coding: utf-8 -*-
 from typing import List
+
 import disnake
+
 import modules.FastSnake as FS
-from modules.LolPatchNoteScraper import PatchNote
 from .watcher import *
+from modules.LolPatchNoteScraper import PatchNote
 
 drink_embed = FS.Embed(
     title="__**:underage: RÈGLES DE L'ARAM À BOIRE ! :beers:**__",

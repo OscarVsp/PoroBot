@@ -1,17 +1,23 @@
+# -*- coding: utf-8 -*-
+import asyncio
+import json
 import logging
 import time
-from typing import Dict, List, Optional, Tuple
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
 from urllib.error import HTTPError
 
-from .exceptions import LeagueNotFound, MasteriesNotFound, SummonerNotFound, TeamNotFound, WatcherNotInit
-import modules.FastSnake as FS
 import disnake
-import asyncio
 import requests
-import json
 
-import asyncio
-from typing import List
+import modules.FastSnake as FS
+from .exceptions import LeagueNotFound
+from .exceptions import MasteriesNotFound
+from .exceptions import SummonerNotFound
+from .exceptions import TeamNotFound
+from .exceptions import WatcherNotInit
 
 
 class Watcher:

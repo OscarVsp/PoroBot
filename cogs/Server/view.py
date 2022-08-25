@@ -1,10 +1,12 @@
+# -*- coding: utf-8 -*-
+import asyncio
+import logging
+from typing import List
+
 import disnake
 from disnake.ext import commands
-import modules.FastSnake as FS
-import asyncio
-from typing import List
-import logging
 
+import modules.FastSnake as FS
 from modules.FastSnake.Views import confirmation
 
 

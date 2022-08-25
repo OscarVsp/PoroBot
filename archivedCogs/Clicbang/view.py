@@ -1,11 +1,17 @@
+# -*- coding: utf-8 -*-
+from itertools import cycle
+from operator import attrgetter
+from random import choice
+from random import shuffle
+from typing import List
+
 import disnake
 from disnake import ApplicationCommandInteraction
+
 import modules.FastSnake as FS
-from random import shuffle, choice
-from itertools import cycle
-from .model import Player, Carte, regles
-from typing import List
-from operator import attrgetter
+from .model import Carte
+from .model import Player
+from .model import regles
 
 
 class BangMenu(disnake.ui.View):

@@ -1,10 +1,13 @@
+# -*- coding: utf-8 -*-
+import asyncio
 import logging
+from asyncio.exceptions import TimeoutError
 from typing import List
+
 import disnake
 from disnake.ext import commands
+
 import modules.FastSnake as FS
-import asyncio
-from asyncio.exceptions import TimeoutError
 
 
 class Admin(commands.Cog):

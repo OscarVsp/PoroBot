@@ -1,6 +1,9 @@
+# -*- coding: utf-8 -*-
 from typing import List
+
 from .classes import *
-from .TournamentView import PlayerSelectionView, AdminView
+from .TournamentView import AdminView
+from .TournamentView import PlayerSelectionView
 
 
 class Tournament(TournamentData):

@@ -1,16 +1,19 @@
-from pyot.models import lol
-
+# -*- coding: utf-8 -*-
 import os
-from typing import Dict, List, Optional
+from typing import Dict
+from typing import List
+from typing import Optional
+
+import disnake
+from pyot.conf.model import activate_model
+from pyot.conf.model import ModelConf
+from pyot.conf.pipeline import activate_pipeline
+from pyot.conf.pipeline import PipelineConf
+from pyot.core.exceptions import *
+from pyot.models import lol
+from pyot.utils.lol.champion import *
 
 import modules.FastSnake as FS
-import disnake
-
-from pyot.conf.model import activate_model, ModelConf
-from pyot.conf.pipeline import activate_pipeline, PipelineConf
-from pyot.core.exceptions import *
-
-from pyot.utils.lol.champion import *
 
 
 @activate_model("lol")

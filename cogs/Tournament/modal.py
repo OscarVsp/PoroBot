@@ -1,6 +1,8 @@
+# -*- coding: utf-8 -*-
 import disnake
-from modules import FastSnake as FS
+
 from .classes import TournamentData
+from modules import FastSnake as FS
 
 
 class NotificationModal(disnake.ui.Modal):

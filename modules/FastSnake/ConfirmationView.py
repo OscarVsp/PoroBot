@@ -1,10 +1,12 @@
-import asyncio
-from typing import List, Union
+# -*- coding: utf-8 -*-
+from enum import Enum
+from typing import List
+from typing import Union
+
 import disnake
 
-from modules.FastSnake.Assets import Emotes
 from .Embed import Embed
-from enum import Enum
+from modules.FastSnake.Assets import Emotes
 
 
 class ViewState(Enum):

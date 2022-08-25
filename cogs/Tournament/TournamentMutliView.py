@@ -1,8 +1,11 @@
+# -*- coding: utf-8 -*-
 from typing import List
+
 import disnake
+
 import modules.FastSnake as FS
-from modules.FastSnake import *
 from .TournamentManager import *
+from modules.FastSnake import *
 
 
 class PhaseCreationView(ConfirmationView):

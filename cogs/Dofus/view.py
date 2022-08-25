@@ -1,8 +1,8 @@
+# -*- coding: utf-8 -*-
 import disnake
-from disnake import ApplicationCommandInteraction
+
 import modules.FastSnake as FS
 from .scraper import Almanax_scraper
-import asyncio
 
 
 class AlmanaxView(disnake.ui.View):
@@ -42,7 +42,7 @@ class AlmanaxView(disnake.ui.View):
         if type(data) == list:
             max_embed_size = 4000
             offrandes = "\n".join([f"{d['date']} : **{d['item_quantity']}x** {d['item']}" for d in data])
-            size = len(offrandes)
+            len(offrandes)
             offrandes = [offrandes[i : i + max_embed_size] for i in range(0, len(offrandes), max_embed_size)]
             embed = FS.Embed(
                 title=f":calendar_spiral:__**Almanax des {len(data)} prochains jours**__:calendar_spiral:",

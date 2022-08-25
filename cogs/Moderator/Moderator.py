@@ -1,9 +1,11 @@
+# -*- coding: utf-8 -*-
 from enum import Enum
 from typing import Union
+
 import disnake
 from disnake.ext import commands
+
 import modules.FastSnake as FS
-from modules.FastSnake.Views import memberSelection
 
 
 class ColorEnum(disnake.Colour, Enum):

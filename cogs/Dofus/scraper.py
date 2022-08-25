@@ -1,11 +1,15 @@
-import cfscrape
-from datetime import date, timedelta
-from bs4 import BeautifulSoup
-import logging
-import requests
+# -*- coding: utf-8 -*-
 import asyncio
-import modules.FastSnake as FS
+import logging
+from datetime import date
+from datetime import timedelta
+
+import cfscrape
 import pickledb
+import requests
+from bs4 import BeautifulSoup
+
+import modules.FastSnake as FS
 
 
 class Almanax_scraper:

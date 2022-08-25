@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 class SummonerNotFound(Exception):
     def __init__(self):
         self.message = "Summoner Datas Not Found"

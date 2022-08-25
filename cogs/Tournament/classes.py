@@ -1,10 +1,19 @@
-from enum import Enum
-import random
-import disnake
-import modules.FastSnake as FS
-from modules.FastSnake.ShadowMember import ShadowMember, VocalGuildChannel, Components
+# -*- coding: utf-8 -*-
 import logging
-from typing import List, Tuple, Union, Optional, Sequence, overload
+import random
+from enum import Enum
+from typing import List
+from typing import Optional
+from typing import overload
+from typing import Sequence
+from typing import Union
+
+import disnake
+
+import modules.FastSnake as FS
+from modules.FastSnake.ShadowMember import Components
+from modules.FastSnake.ShadowMember import ShadowMember
+from modules.FastSnake.ShadowMember import VocalGuildChannel
 
 
 class State(Enum):
