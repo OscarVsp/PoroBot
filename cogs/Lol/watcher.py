@@ -1,9 +1,7 @@
 from pyot.models import lol
-from bz2 import decompress
 
 import os
 from typing import Dict, List, Optional
-from unittest.loader import VALID_MODULE_NAME
 
 import modules.FastSnake as FS
 import disnake
@@ -11,7 +9,6 @@ import disnake
 from pyot.conf.model import activate_model, ModelConf
 from pyot.conf.pipeline import activate_pipeline, PipelineConf
 from pyot.core.exceptions import *
-from pyot.core.queue import Queue
 
 from pyot.utils.lol.champion import *
 
@@ -75,8 +72,6 @@ class SummonerLeague(lol.SummonerLeague):
     @property
     def summoner(self) -> "Summoner":
         return Summoner(id=self.summoner_id, platform=self.platform)
-
-    # ""
 
     @staticmethod
     def sorting_score(entry: lol.league.SummonerLeagueEntryData):

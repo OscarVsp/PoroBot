@@ -1,5 +1,4 @@
 from math import ceil
-import os
 from random import shuffle
 from typing import Tuple
 import pickledb
