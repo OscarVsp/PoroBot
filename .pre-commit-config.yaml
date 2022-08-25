@@ -18,4 +18,4 @@ repos:
       rev: v1.4
       hooks:
       -   id: autoflake
-          args: ["--remove-all-unused-imports","--remove-unused-variables"]
+          args: ["--in-place","--remove-all-unused-imports","--remove-unused-variables"]
