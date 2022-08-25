@@ -57,69 +57,51 @@ class Embed(disnake.Embed):
         to denote that the value or attribute is empty.
     """
 
-    def __init__(self,
-                 *,
-                 title: str = disnake.Embed.Empty,
-                 description: str = disnake.Embed.Empty,
-                 color: int = disnake.Embed.Empty,
-                 url: str = disnake.Embed.Empty,
-
-                 fields: Union[List[dict], dict] = None,
-
-                 author_name: str = None,
-                 author_url: str = disnake.Embed.Empty,
-                 author_icon_url: str = disnake.Embed.Empty,
-
-                 thumbnail: Union[str, disnake.File] = disnake.Embed.Empty,
-
-                 image: Union[str, disnake.File] = disnake.Embed.Empty,
-
-                 footer_text: str = disnake.Embed.Empty,
-                 footer_icon_url: str = disnake.Embed.Empty
-                 ):
+    def __init__(
+        self,
+        *,
+        title: str = disnake.Embed.Empty,
+        description: str = disnake.Embed.Empty,
+        color: int = disnake.Embed.Empty,
+        url: str = disnake.Embed.Empty,
+        fields: Union[List[dict], dict] = None,
+        author_name: str = None,
+        author_url: str = disnake.Embed.Empty,
+        author_icon_url: str = disnake.Embed.Empty,
+        thumbnail: Union[str, disnake.File] = disnake.Embed.Empty,
+        image: Union[str, disnake.File] = disnake.Embed.Empty,
+        footer_text: str = disnake.Embed.Empty,
+        footer_icon_url: str = disnake.Embed.Empty,
+    ):
         if len(description) > 4096:
-            logging.warn(
-                "Embed description length is higher than 4096 and will be truncated to avoid error.")
+            logging.warn("Embed description length is higher than 4096 and will be truncated to avoid error.")
             description = description[:4096]
-        super().__init__(
-            title=title,
-            description=description,
-            color=color,
-            url=url)
+        super().__init__(title=title, description=description, color=color, url=url)
 
         if fields != None:
 
             if type(fields) == list:
                 for i, field in enumerate(fields):
-                    value = field.get('value', f"Field value")
+                    value = field.get("value", f"Field value")
                     if value == "":
                         value = "Field value"
                     self.add_field(
-                        name=field.get('name', f"Field name {i+1}"),
-                        value=value,
-                        inline=field.get('inline', False)
+                        name=field.get("name", f"Field name {i+1}"), value=value, inline=field.get("inline", False)
                     )
 
             elif type(fields) == dict:
-                value = fields.get('value', f"Field value")
+                value = fields.get("value", f"Field value")
                 if value == "":
                     value = "Field value"
-                self.add_field(
-                    name=fields.get('name', f"Field name"),
-                    value=value,
-                    inline=fields.get('inline', False)
-                )
+                self.add_field(name=fields.get("name", f"Field name"), value=value, inline=fields.get("inline", False))
 
             else:
                 raise TypeError(
-                    f'Argument "fields" should be type "list" or "dict" but {type(fields)} has been provided.')
+                    f'Argument "fields" should be type "list" or "dict" but {type(fields)} has been provided.'
+                )
 
         if author_name != None:
-            self.set_author(
-                name=author_name,
-                url=author_url,
-                icon_url=author_icon_url
-            )
+            self.set_author(name=author_name, url=author_url, icon_url=author_icon_url)
 
         if thumbnail != Embed.Empty:
             if type(thumbnail) == str:
@@ -128,7 +110,8 @@ class Embed(disnake.Embed):
                 self.set_thumbnail(file=thumbnail)
             else:
                 raise TypeError(
-                    f'Argument "thumbnail" should be type "str" or "disnake.File" but {type(fields)} has been provided.')
+                    f'Argument "thumbnail" should be type "str" or "disnake.File" but {type(fields)} has been provided.'
+                )
 
         if image != Embed.Empty:
             if type(image) == str:
@@ -137,24 +120,25 @@ class Embed(disnake.Embed):
                 self.set_image(file=image)
             else:
                 raise TypeError(
-                    f'Argument "thumbnail" should be type "str" or "disnake.File" but {type(fields)} has been provided.')
+                    f'Argument "thumbnail" should be type "str" or "disnake.File" but {type(fields)} has been provided.'
+                )
 
-        self.set_footer(
-            text=footer_text,
-            icon_url=footer_icon_url
-        )
+        self.set_footer(text=footer_text, icon_url=footer_icon_url)
 
     def __str__(self):
-        author = f"Author:\n\tname: '{self.author.name}'\n\turl: '{self.author.url}'\n\ticon_url: '{self.author.icon_url}'"
+        author = (
+            f"Author:\n\tname: '{self.author.name}'\n\turl: '{self.author.url}'\n\ticon_url: '{self.author.icon_url}'"
+        )
         base = f"Title:\n\t'{self.title}'\nDescription:\n\t'{self.description}\n'Color:\n\t'{self.color}'"
-        fields = "Fields:\n" + \
-            "\n".join(f"\tField {i}:\n\t\tTitle: '{f.name}'\n\t\tValue: '{f.value}'\n\t\tInline: '{f.inline}'" for i, f in enumerate(
-                self.fields))
+        fields = "Fields:\n" + "\n".join(
+            f"\tField {i}:\n\t\tTitle: '{f.name}'\n\t\tValue: '{f.value}'\n\t\tInline: '{f.inline}'"
+            for i, f in enumerate(self.fields)
+        )
         thumbnail = f"Thumbnail:\n\t'{self.thumbnail.url}'"
         image = f"Image:\n\t'{self.image.url}'"
         footer = f"Footer:\n\tText: '{self.footer.text}'\n\tUrl: '{self.footer.icon_url}'"
         return f"{author}\n{base}\n{fields}\n{thumbnail}\n{image}\n{footer}"
-    
+
     def check_limits(self) -> None:
         """
         Checks if this embed fits within the limits dictated by Discord.
@@ -203,17 +187,13 @@ class Embed(disnake.Embed):
             for field_index, field in enumerate(self._fields):
                 if field != disnake.Embed.Empty:
                     if len(field["name"].strip()) > 256:
-                        raise ValueError(
-                            f"Embed field {field_index} name cannot be longer than 256 characters"
-                        )
+                        raise ValueError(f"Embed field {field_index} name cannot be longer than 256 characters")
                     if len(field["value"].strip()) > 1024:
-                        raise ValueError(
-                            f"Embed field {field_index} value cannot be longer than 1024 characters"
-                        )
+                        raise ValueError(f"Embed field {field_index} value cannot be longer than 1024 characters")
 
         if len(self) > 6000:
             raise ValueError("Embed total size cannot be longer than 6000 characters")
-    
+
     @property
     def remaining_space(self) -> int:
         space = 6000
@@ -222,40 +202,76 @@ class Embed(disnake.Embed):
         if self.description:
             space -= len(self.description.strip())
         if self.footer and self.footer != disnake.Embed.Empty:
-            space -= len(self._footer.get("text","").strip())
+            space -= len(self._footer.get("text", "").strip())
         if self.author and self.author != disnake.Embed.Empty:
-            space -= len(self._author.get("name", "").strip())    
+            space -= len(self._author.get("name", "").strip())
 
         if self.fields:
 
             for field in self._fields:
                 if field != disnake.Embed.Empty:
-                    space -= len(field["name"].strip()) 
-                    space -= len(field["value"].strip()) 
+                    space -= len(field["name"].strip())
+                    space -= len(field["value"].strip())
         return space
-    
-    
 
     @staticmethod
-    def flex(title: str = disnake.Embed.Empty, description: str = disnake.Embed.Empty, color: int = disnake.Embed.Empty, url: str = disnake.Embed.Empty, fields: Union[List[dict], dict] = None, author_name: str = None, author_url: str = disnake.Embed.Empty, author_icon_url: str = disnake.Embed.Empty, thumbnail: Union[str, disnake.File] = disnake.Embed.Empty, image: Union[str, disnake.File] = disnake.Embed.Empty, footer_text: str = disnake.Embed.Empty, footer_icon_url: str = disnake.Embed.Empty) -> List[disnake.Embed]:
-        embeds = [Embed(title=title, description="", color=color, url=url, author_name=author_name,
-                        author_url=author_url, author_icon_url=author_icon_url, thumbnail=thumbnail)]
-        for line in description.split('\n'):
-            if len((line+"\n").strip()) > embeds[-1].remaining_space or len((line+"\n").strip()) + len(embeds[-1].description.strip()) > 4096:
-                embeds.append(Embed(color=color,description=""))
-            embeds[-1].description += line+"\n"
+    def flex(
+        title: str = disnake.Embed.Empty,
+        description: str = disnake.Embed.Empty,
+        color: int = disnake.Embed.Empty,
+        url: str = disnake.Embed.Empty,
+        fields: Union[List[dict], dict] = None,
+        author_name: str = None,
+        author_url: str = disnake.Embed.Empty,
+        author_icon_url: str = disnake.Embed.Empty,
+        thumbnail: Union[str, disnake.File] = disnake.Embed.Empty,
+        image: Union[str, disnake.File] = disnake.Embed.Empty,
+        footer_text: str = disnake.Embed.Empty,
+        footer_icon_url: str = disnake.Embed.Empty,
+    ) -> List[disnake.Embed]:
+        embeds = [
+            Embed(
+                title=title,
+                description="",
+                color=color,
+                url=url,
+                author_name=author_name,
+                author_url=author_url,
+                author_icon_url=author_icon_url,
+                thumbnail=thumbnail,
+            )
+        ]
+        for line in description.split("\n"):
+            if (
+                len((line + "\n").strip()) > embeds[-1].remaining_space
+                or len((line + "\n").strip()) + len(embeds[-1].description.strip()) > 4096
+            ):
+                embeds.append(Embed(color=color, description=""))
+            embeds[-1].description += line + "\n"
 
         if isinstance(fields, dict):
-            if len(fields.get("name","field name").strip()) + len(fields.get('value','field value').strip()) > embeds[-1].remaining_space:
+            if (
+                len(fields.get("name", "field name").strip()) + len(fields.get("value", "field value").strip())
+                > embeds[-1].remaining_space
+            ):
                 embeds.append(Embed(color=""))
-            embeds[-1].add_field(name=fields.get("name", "field name"), value=fields.get(
-                "value", "field value"), inline=fields.get("inline", False))
+            embeds[-1].add_field(
+                name=fields.get("name", "field name"),
+                value=fields.get("value", "field value"),
+                inline=fields.get("inline", False),
+            )
         elif isinstance(fields, list):
             for field in fields:
-                if len(field.get("name","field name").strip()) + len(field.get('value','field value').strip()) > embeds[-1].remaining_space:
+                if (
+                    len(field.get("name", "field name").strip()) + len(field.get("value", "field value").strip())
+                    > embeds[-1].remaining_space
+                ):
                     embeds.append(Embed(color=""))
-                embeds[-1].add_field(name=field.get("name", "field name"), value=field.get(
-                    "value", "field value"), inline=field.get("inline", False))
+                embeds[-1].add_field(
+                    name=field.get("name", "field name"),
+                    value=field.get("value", "field value"),
+                    inline=field.get("inline", False),
+                )
         if footer_text != disnake.Embed.Empty and len(footer_text.strip()) > embeds[-1].remaining_space:
             embeds.append(Embed(color=color))
         embeds[-1].set_footer(text=footer_text, icon_url=footer_icon_url)

@@ -15,7 +15,7 @@ from typing import (
 )
 
 
-#__all__ = ("ActionRow",)
+# __all__ = ("ActionRow",)
 
 from disnake.abc import Snowflake
 import disnake
@@ -33,6 +33,7 @@ Components = Union[
     Sequence[Union[ActionRowT, WrappedComponent, Sequence[WrappedComponent]]],
 ]
 
+
 class _MissingSentinel:
     def __eq__(self, other):
         return False
@@ -43,13 +44,14 @@ class _MissingSentinel:
     def __repr__(self):
         return "..."
 
+
 MISSING: Any = _MissingSentinel()
 
+
 class ShadowMember:
-    
-    def __init__(self, member : disnake.Member):
+    def __init__(self, member: disnake.Member):
         self.member = member
-        
+
     ####### PROPERTIES #######
 
     @property
@@ -65,7 +67,7 @@ class ShadowMember:
             This information is only available via :meth:`Client.fetch_user`.
         """
         return self.member.accent_colour
-    
+
     @property
     def accent_colour(self) -> Optional[disnake.Colour]:
         """Optional[:class:`Colour`]: Returns the user's accent colour, if applicable.
@@ -96,9 +98,9 @@ class ShadowMember:
             A user may have multiple activities, these can be accessed under :attr:`activities`.
         """
         return self.member.activity
-    
+
     @property
-    def activities(self) -> Tuple[Union[disnake.BaseActivity,disnake.Spotify]]:
+    def activities(self) -> Tuple[Union[disnake.BaseActivity, disnake.Spotify]]:
         """The activities that the user is currently doing."""
         return self.member.activities
 
@@ -119,7 +121,7 @@ class ShadowMember:
 
     @property
     def bot(self) -> bool:
-        return self.member.bot 
+        return self.member.bot
 
     @property
     def color(self) -> disnake.Colour:
@@ -157,12 +159,12 @@ class ShadowMember:
     def default_avatar(self) -> disnake.Asset:
         """:class:`Asset`: Returns the default avatar for a given user. This is calculated by the user's discriminator."""
         return self.member.default_avatar
-    
+
     @property
     def desktop_status(self) -> disnake.Status:
         """:class:`Status`: The member's status on the desktop client, if applicable."""
         return self.member.desktop_status
-    
+
     @property
     def display_avatar(self) -> disnake.Asset:
         """:class:`Asset`: Returns the member's display avatar.
@@ -173,8 +175,8 @@ class ShadowMember:
 
         .. versionadded:: 2.0
         """
-        return self.member.display_avatar    
-      
+        return self.member.display_avatar
+
     @property
     def display_name(self) -> str:
         """:class:`str`: Returns the user's display name.
@@ -183,8 +185,8 @@ class ShadowMember:
         if they have a guild specific nickname then that
         is returned instead.
         """
-        return self.member.display_name  
-        
+        return self.member.display_name
+
     @property
     def dm_channel(self) -> Optional[disnake.DMChannel]:
         """Optional[:class:`DMChannel`]: Returns the channel associated with this user if it exists.
@@ -250,28 +252,28 @@ class ShadowMember:
         .. versionadded:: 1.7
         """
         return self.member.mutual_guilds
-    
+
     @property
     def name(self) -> str:
         return self.member.name
-    
+
     @property
     def nick(self) -> str:
         return self.member.nick
-    
+
     @property
     def pending(self) -> bool:
         return self.member.pending
-    
+
     @property
     def premiun_since(self) -> datetime.datetime:
         return self.member.premium_since
-         
+
     @property
     def public_flags(self) -> disnake.PublicUserFlags:
         """:class:`PublicUserFlags`: The publicly available flags the user has."""
         return self.member.public_flags
-    
+
     @property
     def raw_status(self) -> str:
         """:class:`str`: The member's overall status as a string value.
@@ -279,7 +281,7 @@ class ShadowMember:
         .. versionadded:: 1.5
         """
         return self.member.raw_status
-    
+
     @property
     def role_icon(self) -> Optional[Union[disnake.Asset, disnake.PartialEmoji]]:
         """Optional[Union[:class:`Asset`, :class:`PartialEmoji`]]: Returns the member's displayed role icon, if any.
@@ -287,7 +289,7 @@ class ShadowMember:
         .. versionadded:: 2.5
         """
         return self.member.role_icon
-    
+
     @property
     def roles(self) -> List[disnake.Role]:
         """List[:class:`Role`]: A :class:`list` of :class:`Role` that the member belongs to. Note
@@ -297,16 +299,16 @@ class ShadowMember:
         These roles are sorted by their position in the role hierarchy.
         """
         return self.member.roles
-    
+
     @property
     def status(self) -> disnake.Status:
         """:class:`Status`: The member's overall status. If the value is unknown, then it will be a :class:`str` instead."""
         return self.member.status
-    
+
     @property
     def system(self) -> bool:
         return self.member.system
-    
+
     @property
     def top_role(self) -> disnake.Role:
         """:class:`Role`: Returns the member's highest role.
@@ -315,23 +317,20 @@ class ShadowMember:
         hierarchy chain.
         """
         return self.member.top_role
-    
+
     @property
     def voice(self) -> Optional[disnake.VoiceState]:
         """Optional[:class:`VoiceState`]: Returns the member's current voice state."""
         return self.member.voice
-    
+
     @property
     def web_status(self) -> disnake.Status:
         """:class:`Status`: The member's status on the web client, if applicable."""
         return self.member.web_status
 
-      
     ###### METHODS ######
-        
-    async def add_roles(
-        self, *roles: Snowflake, reason: Optional[str] = None, atomic: bool = True
-    ) -> None:
+
+    async def add_roles(self, *roles: Snowflake, reason: Optional[str] = None, atomic: bool = True) -> None:
         """
         |coro|
 
@@ -361,14 +360,14 @@ class ShadowMember:
             Adding roles failed.
         """
         return await self.member.add_roles(*roles, reason=reason, atomic=atomic)
-       
+
     async def ban(self, *, delete_message_days=1, reason=None) -> None:
         """|coro|
 
         Bans this member. Equivalent to :meth:`Guild.ban`.
         """
-        await self.member.ban(delete_message_days=delete_message_days, reason=reason)    
-        
+        await self.member.ban(delete_message_days=delete_message_days, reason=reason)
+
     async def create_dm(self) -> disnake.DMChannel:
         """|coro|
 
@@ -467,9 +466,18 @@ class ShadowMember:
             The newly updated member, if applicable. This is only returned
             when certain fields are updated.
         """
-        await self.member.edit(nick=nick,mute=mute,deafen=deafen,suppress=suppress,roles=roles,voice_channel=voice_channel,timeout=timeout,reason=reason)
+        await self.member.edit(
+            nick=nick,
+            mute=mute,
+            deafen=deafen,
+            suppress=suppress,
+            roles=roles,
+            voice_channel=voice_channel,
+            timeout=timeout,
+            reason=reason,
+        )
 
-    async def fetch_message(self, id : int) -> disnake.Message:
+    async def fetch_message(self, id: int) -> disnake.Message:
         """|coro|
 
         Retrieves a single :class:`.Message` from the destination.
@@ -495,7 +503,7 @@ class ShadowMember:
         """
         return await self.member.fetch_message(id)
 
-    def get_role(self, role_id : int) -> Optional[disnake.Role]:
+    def get_role(self, role_id: int) -> Optional[disnake.Role]:
         """Returns a role with the given ID from roles which the member has.
 
         .. versionadded:: 2.0
@@ -578,7 +586,7 @@ class ShadowMember:
         :class:`.Message`
             The message with the message data parsed.
         """
-        return self.member.history(limit=limit, before=before,after=after, around=around, oldest_first=oldest_first)
+        return self.member.history(limit=limit, before=before, after=after, around=around, oldest_first=oldest_first)
 
     def is_on_mobile(self) -> bool:
         """Whether the member is active on a mobile device.
@@ -586,14 +594,14 @@ class ShadowMember:
         :return type: :class:`bool`
         """
         return self.member.is_on_mobile()
-    
-    async def kick(self, *, reason = None) -> None:
+
+    async def kick(self, *, reason=None) -> None:
         """|coro|
 
         Kicks this member. Equivalent to :meth:`Guild.kick`.
         """
         await self.member.kick(reason=reason)
-    
+
     def mentioned_in(self, message: disnake.Message) -> bool:
         """Whether the member is mentioned in the specified message.
 
@@ -608,7 +616,7 @@ class ShadowMember:
             Indicates if the member is mentioned in the message.
         """
         return self.member.mentioned_in(message=message)
-    
+
     async def move_to(self, channel: VocalGuildChannel, *, reason: Optional[str] = None) -> None:
         """|coro|
 
@@ -631,7 +639,7 @@ class ShadowMember:
             The reason for doing this action. Shows up on the audit log.
         """
         await self.member.move_to(channel, reason=reason)
-    
+
     async def pins(self) -> List[disnake.Message]:
         """|coro|
 
@@ -654,7 +662,7 @@ class ShadowMember:
             The messages that are currently pinned.
         """
         return await self.member.pins()
-    
+
     async def remove_roles(self, *roles: Snowflake, reason: Optional[str] = None, atomic: bool = True) -> None:
         """
         |coro|
@@ -685,7 +693,7 @@ class ShadowMember:
             Removing the roles failed.
         """
         await self.member.remove_roles(roles=roles, reason=reason, atomic=atomic)
-    
+
     async def request_to_speak(self) -> None:
         """|coro|
 
@@ -708,7 +716,7 @@ class ShadowMember:
             The operation failed.
         """
         await self.member.request_to_speak()
-    
+
     @overload
     async def send(
         self,
@@ -918,7 +926,8 @@ class ShadowMember:
         """
         await self.member.send(
             content=content,
-            tts=tts, embed=embed,
+            tts=tts,
+            embed=embed,
             embeds=embeds,
             file=file,
             files=files,
@@ -930,8 +939,9 @@ class ShadowMember:
             reference=reference,
             mention_author=mention_author,
             view=view,
-            components=components)
-    
+            components=components,
+        )
+
     @overload
     async def timeout(
         self,
@@ -993,7 +1003,7 @@ class ShadowMember:
             The newly updated member.
         """
         return await self.member.timeout(duration=duration, until=until, reason=reason)
-    
+
     async def trigger_typing(self) -> None:
         """|coro|
 
@@ -1002,7 +1012,7 @@ class ShadowMember:
         *Typing* indicator will go away after 10 seconds, or after a message is sent.
         """
         await self.member.trigger_typing()
-    
+
     def typing(self) -> Typing:
         """Returns a context manager that allows you to type for an indefinite period of time.
 
@@ -1023,11 +1033,10 @@ class ShadowMember:
 
         """
         return self.member.typing()
-    
-    async def unban(self, *, reason = None) -> None:
+
+    async def unban(self, *, reason=None) -> None:
         """|coro|
 
         Unbans this member. Equivalent to :meth:`Guild.unban`.
         """
         await self.member.unban(reason=reason)
-        
