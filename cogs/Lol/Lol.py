@@ -261,9 +261,19 @@ class Lol(commands.Cog):
     async def invocateur(
         self,
         inter: ApplicationCommandInteraction,
-        invocateur: str = commands.Param(description="Le nom de l'invocateur."),
+        invocateur: str = commands.Param(description="Le nom de l'invocateur.", default=None),
     ):
         await inter.response.defer(ephemeral=False)
+        if invocateur == None:
+            if str(inter.author.id) in self.summoners.getall():
+                invocateur = self.summoners.get(str(inter.author.id))
+            else:
+                await inter.edit_original_message(
+                    embed=FS.Embed(
+                        description="""Spécifie un nom d'invocateur ou bien lie ton compte lol en utilisant "/lol account"."""
+                    )
+                )
+                return
 
         try:
             summoner = await Summoner(name=invocateur).get()
