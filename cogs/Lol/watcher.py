@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+import logging
 import os
 from time import gmtime
 from time import strftime
@@ -345,47 +346,92 @@ class MerakiChampion(lol.MerakiChampion):
 
     ###############
 
-    def stat_to_line(self, stat: lol.merakichampion.MerakiChampionStatDetailData):
+    def stat_to_line(self, stat: lol.merakichampion.MerakiChampionStatDetailData) -> Tuple[str, str]:
         if stat.flat:
             if stat.per_level:
-                return f"**{stat.flat}** + *{stat.per_level}/lvl* ➖ **{round(stat.flat+stat.per_level*18)}** at lvl. 18"
+                return [f"**{stat.flat}**", f"+*{stat.per_level}*", f"**{round(stat.flat+stat.per_level*18)}**"]
             else:
-                return f"**{stat.flat}**"
+                return [f"**{stat.flat}**", "\n", f"**{stat.flat}**"]
         elif stat.percent:
             if stat.percent_per_level:
-                return f"**{stat.percent}%** + *{stat.percent_per_level}%/lvl* ➖ **{round(stat.percent+stat.percent_per_level*18)}%** at lvl. 18"
+                return [
+                    f"**{stat.percent}%**",
+                    f"+*{stat.percent_per_level}%*",
+                    f"**{round(stat.percent+stat.percent_per_level*18)}%**",
+                ]
             else:
-                return f"**{stat.percent}%**"
+                return [f"**{stat.percent}%**", "\n", f"**{stat.percent}%**"]
         else:
-            return "*N/A*"
+            return ["*N/A*", "\n", "\n"]
 
     @property
-    def stats_embed(self) -> disnake.Embed:
-        return FS.Embed(
-            title="__**Stats**__",
-            description=f"**Dammage type:** `{self.adaptive_type.split('_')[0]}`\n**Attack type:** `{self.attack_type}`\n**Roles:** "  # TODO Emote for damage type and attack type, and groupe lore with state (lower lore ? or not at all ? With button to the lore website)
-            + " ".join([f"{FS.Emotes.Lol.Roles.get(role)}" for role in self.roles]),
-            fields=[
-                {
-                    "name": "➖",
-                    "value": f"""{FS.Emotes.Lol.Stats.HEALT} ➖ {self.stat_to_line(self.stats.health)}
-                                {FS.Emotes.Lol.Stats.MANA} ➖ {self.stat_to_line(self.stats.mana)}
-                                {FS.Emotes.Lol.Stats.ARMOR} ➖ {self.stat_to_line(self.stats.armor)}
-                                {FS.Emotes.Lol.Stats.ATTACKSPEED} ➖ {self.stat_to_line(self.stats.attack_speed)}
-                                {FS.Emotes.Lol.Stats.MOVESPEED} ➖ {self.stat_to_line(self.stats.movespeed)}""",
-                    "inline": True,
-                },
-                {
-                    "name": "➖",
-                    "value": f"""{FS.Emotes.Lol.Stats.HEALTREGEN} ➖ {self.stat_to_line(self.stats.health_regen)}
-                                {FS.Emotes.Lol.Stats.MANAREGEN} ➖ {self.stat_to_line(self.stats.mana_regen)}
-                                {FS.Emotes.Lol.Stats.MAGICRESISTE} ➖ {self.stat_to_line(self.stats.magic_resistance)}
-                                {FS.Emotes.Lol.Stats.ATTACKDAMAGE} ➖ {self.stat_to_line(self.stats.attack_damage)}
-                                {FS.Emotes.Lol.Stats.RANGE} ➖ {self.stat_to_line(self.stats.attack_range)}""",
-                    "inline": True,
-                },
-            ],
-        )
+    def stat_fields(self) -> List[dict]:
+        return [
+            {
+                "name": "__**STATS**__",
+                "value": f"{FS.Emotes.Lol.AttackType.get(self.adaptive_type.split('_')[0])} {FS.Emotes.Lol.AttackType.get(self.attack_type)} "
+                + " ".join([f"{FS.Emotes.Lol.Roles.get(role)}" for role in self.roles]),
+                "inline": False,
+            },
+            {
+                "name": f"➖ ➖ __**Base**__",
+                "value": f"""{FS.Emotes.Lol.Stats.HEALT} ➖ {self.stat_to_line(self.stats.health)[0]}
+                            {FS.Emotes.Lol.Stats.HEALTREGEN} ➖ {self.stat_to_line(self.stats.health_regen)[0]}
+                            {FS.Emotes.Lol.Stats.MANA} ➖ {self.stat_to_line(self.stats.mana)[0]}
+                            {FS.Emotes.Lol.Stats.MANAREGEN} ➖ {self.stat_to_line(self.stats.mana_regen)[0]}
+                            {FS.Emotes.Lol.Stats.ARMOR} ➖ {self.stat_to_line(self.stats.armor)[0]}
+                            {FS.Emotes.Lol.Stats.MAGICRESISTE} ➖ {self.stat_to_line(self.stats.magic_resistance)[0]}
+                            {FS.Emotes.Lol.Stats.ATTACKDAMAGE} ➖ {self.stat_to_line(self.stats.attack_damage)[0]}
+                            {FS.Emotes.Lol.Stats.ATTACKSPEED} ➖ {self.stat_to_line(self.stats.attack_speed)[0]}
+                            {FS.Emotes.Lol.Stats.RANGE} ➖ {self.stat_to_line(self.stats.attack_range)[0]}
+                            {FS.Emotes.Lol.Stats.MOVESPEED} ➖ {self.stat_to_line(self.stats.movespeed)[0]}""",
+                "inline": True,
+            },
+            {
+                "name": f"**/**{FS.Emotes.Lol.XP}",
+                "value": f"""{self.stat_to_line(self.stats.health)[1]}
+                            {self.stat_to_line(self.stats.health_regen)[1]}
+                            {self.stat_to_line(self.stats.mana)[1]}
+                            {self.stat_to_line(self.stats.mana_regen)[1]}
+                            {self.stat_to_line(self.stats.armor)[1]}
+                            {self.stat_to_line(self.stats.magic_resistance)[1]}
+                            {self.stat_to_line(self.stats.attack_damage)[1]}
+                            {self.stat_to_line(self.stats.attack_speed)[1]}
+                            {self.stat_to_line(self.stats.attack_range)[1]}
+                            {self.stat_to_line(self.stats.movespeed)[1]}""",
+                "inline": True,
+            },
+            {
+                "name": f"__**18**__{FS.Emotes.Lol.XP}",
+                "value": f"""{self.stat_to_line(self.stats.health)[2]}
+                            {self.stat_to_line(self.stats.health_regen)[2]}
+                            {self.stat_to_line(self.stats.mana)[2]}
+                            {self.stat_to_line(self.stats.mana_regen)[2]}
+                            {self.stat_to_line(self.stats.armor)[2]}
+                            {self.stat_to_line(self.stats.magic_resistance)[2]}
+                            {self.stat_to_line(self.stats.attack_damage)[2]}
+                            {self.stat_to_line(self.stats.attack_speed)[2]}
+                            {self.stat_to_line(self.stats.attack_range)[2]}
+                            {self.stat_to_line(self.stats.movespeed)[2]}""",
+                "inline": True,
+            },
+        ]
+
+    @staticmethod
+    def modifiers_to_line(modifiers: List[lol.merakichampion.MerakiChampionSpellModifierData]) -> str:
+        sequences: List[str] = []
+        end: str = ""
+        for modifier in modifiers:
+            if len(modifier.values) > 0 and modifier.values[0] != modifier.values[-1]:
+                for j, value in enumerate(modifier.values):
+                    if len(sequences) <= j:
+                        sequences.append("")
+                    sequences[
+                        j
+                    ] += f"+ {value}{modifier.units[j]}"  # TODO remove the + but care there can be multiple end
+            else:
+                end += f"{modifier.values[0]}{modifier.units[0]}"
+        return "`" + f"{'/'.join(sequences)} {'+' if sequences != [] and end != '' else ''}{end}".strip() + "`"
 
     def ability_detailled_embed(
         self, letter: str
@@ -411,61 +457,36 @@ class MerakiChampion(lol.MerakiChampion):
             embed.add_field(
                 name="Cost",
                 value=(
-                    f"{FS.Emotes.Lol.Stats.Ressource(ability.resource)} *"
-                    + "/".join(
-                        [
-                            f"{ability.cost.modifiers[0].values[i]}{ability.cost.modifiers[0].units[i]}"
-                            for i in range(len(ability.cost.modifiers[0].values))
-                        ]
-                    )
-                    + "*"
+                    f"{FS.Emotes.Lol.Stats.Ressource(ability.resource)} {self.modifiers_to_line(ability.cost.modifiers)}"
                     if ability.resource
-                    else "*--*"
+                    else "`--`"
                 ),
             )
             embed.add_field(
                 name="Cooldown",
                 value=(
-                    f"{FS.Emotes.Lol.Stats.ABILITYHASTE} *"
-                    + "/".join(
-                        [
-                            f"{ability.cooldown.modifiers[0].values[i]}{ability.cooldown.modifiers[0].units[i]}"
-                            for i in range(len(ability.cooldown.modifiers[0].values))
-                        ]
-                    )
-                    + "*"
+                    f"{FS.Emotes.Lol.Stats.ABILITYHASTE} {self.modifiers_to_line(ability.cooldown.modifiers)}"
                     if ability.resource
-                    else "*--*"
+                    else "`--`"
                 ),
             )  # TODO Add minition recharge ?
             embed.add_field(
                 name="Range",
                 value=f"{FS.Emotes.Lol.TargetType.get(ability.targeting)} "  # TODO Don't display emote if no range
                 + (
-                    f"*{ability.target_range}*"
+                    f"`{ability.target_range}`"
                     if ability.target_range
-                    else (f"*{ability.effect_radius}*" if ability.effect_radius else "*--*")
+                    else (f"`{ability.effect_radius}`" if ability.effect_radius else "`--`")
                 ),
             )  # TODO Add zone type ?
 
             # TODO Better modifier format for the case of constant value (only once)
             for effect in ability.effects:
-                description = f"**{effect.description}**"
+                description = f"{effect.description}"
                 for attr in effect.leveling:
-                    description += f"\n__{attr.attribute} :__\n"
+                    description += f"\n**{attr.attribute} :**\n"
                     if attr.modifiers and len(attr.modifiers) > 0:
-                        for i in range(len(attr.modifiers[0].values)):  # TODO blockcode for modifier
-                            description += (
-                                "`"
-                                + "".join(
-                                    [
-                                        f"({attr.modifiers[j].values[i]}{attr.modifiers[j].units[i]})"
-                                        for j in range(len(attr.modifiers))
-                                    ]
-                                )
-                                + "`**/**"
-                            )
-                    description = description[:-5]
+                        description += f"{self.modifiers_to_line(attr.modifiers)}"
                 embed.add_field(name="➖", value=description, inline=False)
 
             block: str = ""
@@ -526,13 +547,16 @@ class MerakiChampion(lol.MerakiChampion):
         return FS.Embed(
             author_name=self.full_name if self.full_name else self.name,
             title=f"*{self.title}*",
+            description=f"> *{self.lore}*",
             author_icon_url=self.skins[0].tile_path,
+            thumbnail=self.skins[0].splash_path,
         )
 
     @property
     def embeds(self) -> List[disnake.Embed]:
-        embeds = [self.BaseEmbed.add_field(name="➖", value=f"> *{self.lore}*", inline=False)]
-        embeds.append(self.stats_embed)
+        embeds = [self.BaseEmbed]
+        for field in self.stat_fields:
+            embeds[0].add_field(name=field.get("name"), value=field.get("value"), inline=field.get("inline", True))
         embeds += self.abilities_embeds
         return embeds
 
@@ -589,6 +613,7 @@ class CurrentGame(lol.spectator.CurrentGame):
         elif self.map_name == "Howling Abyss":
             return FS.Images.Lol.ARAM
         else:
+            logging.info(f"Map image not found for the {self.map_name = }")
             return disnake.Embed.Empty
 
     @property

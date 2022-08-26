@@ -79,6 +79,24 @@ class Emotes:
         CS: str = "<:cs:1009757238254120983>"
         RIFT: str = "<:rift:1007278042923671623>"
         ARAM: str = "<:aram:1007278045402517604>"
+        WHEEL: str = "<:wheel:1012810451219910786>"
+
+        class AttackType:
+            MELEE: str = "<:melee:1012810452956348486>"
+            RANGE: str = "<:range:1012810455015751710>"
+            ABILITYPOWER: str = "<:abilitypower:1010137865545592912>"
+            ATTACKDAMAGE: str = "<:attackdamage:1010137867256873040>"
+
+            @classmethod
+            def get(cls, key: str):
+                if key == "MELEE":
+                    return cls.MELEE
+                elif key == "PHYSICAL":
+                    return cls.ATTACKDAMAGE
+                elif key == "RANGED":
+                    return cls.RANGE
+                elif key == "MAGIC":
+                    return cls.ABILITYPOWER
 
         TROPHIES: List[str] = [
             "<:trophy:1007206322669879326>",
