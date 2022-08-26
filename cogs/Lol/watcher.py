@@ -616,7 +616,7 @@ class CurrentGame(lol.spectator.CurrentGame):
             summoner_id=participant.summoner_id, champion_id=participant.champion_id
         ).get()
         return (
-            f"{league.short(league.first)} **{participant.summoner_name}**",
+            f"{league.short(league.first) if league else FS.Emotes.Lol.Tier.UNRANKED} **{participant.summoner_name}**",
             f"{FS.Emotes.Lol.Champions.get(participant.champion_id)} {FS.Emotes.Lol.MASTERIES[championMastery.champion_level]} ➖ {FS.Emotes.Lol.Runes.Perks.Get(participant.rune_ids[0])}{FS.Emotes.Lol.Runes.Styles.Get(participant.rune_sub_style)} ➖ {FS.Emotes.Lol.SummonerSpells.get(participant.spell_ids[0])}{FS.Emotes.Lol.SummonerSpells.get(participant.spell_ids[1])}",
         )
 
@@ -649,7 +649,7 @@ class CurrentGame(lol.spectator.CurrentGame):
                 fields=[
                     self.perks_field(participant.rune_ids),
                     self.spells_field(participant.spell_ids),
-                    (await summoner.champion_masteries.get()).field(3),
+                    (await summoner.champion_masteries.get()).field(3),  # TODO mastery for the current champion
                 ],
             )
         )

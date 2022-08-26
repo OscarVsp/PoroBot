@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import logging
 from typing import List
 
 import disnake
@@ -81,8 +82,11 @@ class CurrentGameView(disnake.ui.View):
         super().__init__(timeout=60 * 60)
         self.summoner_name: str = summoner_name
         self.live_game: CurrentGame = None
-        self.current_participant: lol.spectator.CurrentGameParticipantData = None
+        self.embeds_cached: List[List[List[disnake.Embed]]] = None
+        self.current_participant_index: Tuple[int, int] = None
         self.inter: disnake.MessageCommandInteraction = None
+        self.configEmbed: disnake.Embed = None
+        self.teamEmbeds: List[disnake.Embed] = None
 
     async def start(self, inter: disnake.ApplicationCommandInteraction):
         self.inter = inter
@@ -116,11 +120,14 @@ class CurrentGameView(disnake.ui.View):
         )
 
         self.buttons: List[disnake.ui.Button] = []
+        self.embeds_cached = []
         for i, team in enumerate(self.live_game.teams):
+            self.embeds_cached.append([])
             for j, participant in enumerate(team.participants):
+                self.embeds_cached[i].append(None)
                 name = participant.summoner_name
-                if len(name) > 8:
-                    name = name[:8]
+                if len(name) > 7:
+                    name = name[:7]
                 button = disnake.ui.Button(
                     label=name,
                     custom_id=f"{i}:{j}",
@@ -129,20 +136,33 @@ class CurrentGameView(disnake.ui.View):
                 button.callback = self.call_back
                 self.add_item(button)
                 self.buttons.append(button)
-                if participant.summoner_name == self.summoner_name:
-                    self.current_participant = participant
+                if participant.summoner_name == summoner.name:
+                    self.current_participant_index = (i, j)
+                    button.disabled = True
         await self.update(inter)
 
     async def embeds(self) -> List[disnake.Embed]:
+        if self.embeds_cached[self.current_participant_index[0]][self.current_participant_index[1]] == None:
+            logging.info(f"Embed not cached for {self.current_participant_index = }.")
+            self.embeds_cached[self.current_participant_index[0]][
+                self.current_participant_index[1]
+            ] = await self.live_game.participant_embed(
+                self.live_game.teams[self.current_participant_index[0]].participants[self.current_participant_index[1]]
+            )
+            logging.info(f"Cache entry added")
+        if self.configEmbed == None:
+            self.configEmbed = self.live_game.configEmbed
+        if self.teamEmbeds == None:
+            self.teamEmbeds = await self.live_game.team_embeds
         return (
-            [self.live_game.configEmbed]
-            + (await self.live_game.participant_embed(self.current_participant))
-            + (await self.live_game.team_embeds)
+            [self.configEmbed]
+            + self.embeds_cached[self.current_participant_index[0]][self.current_participant_index[1]]
+            + self.teamEmbeds
         )
 
     async def update(self, inter: disnake.MessageInteraction):
         for button in self.buttons:
-            button.disabled = self.current_participant.summoner_name.lower().startswith(button.label.lower())
+            button.disabled = [int(i) for i in button.custom_id.split(":")] == self.current_participant_index
         if inter.response.is_done():
             await inter.edit_original_message(embeds=await self.embeds(), view=self)
         else:
@@ -150,14 +170,7 @@ class CurrentGameView(disnake.ui.View):
 
     async def call_back(self, inter: disnake.MessageInteraction):
         await inter.response.defer()
-        self.current_participant = next(
-            (
-                p
-                for p in self.live_game.participants
-                if p.summoner_name.lower().startswith(inter.component.label.lower())
-            ),
-            None,
-        )
+        self.current_participant_index = [int(i) for i in inter.component.custom_id.split(":")]
         await self.update(inter)
 
 

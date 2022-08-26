@@ -20,6 +20,9 @@ import logging.handlers
 import os
 import platform
 import traceback
+import tracemalloc
+
+tracemalloc.start()
 
 import disnake
 from disnake import ApplicationCommandInteraction

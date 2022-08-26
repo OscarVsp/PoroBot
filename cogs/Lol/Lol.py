@@ -267,7 +267,7 @@ class Lol(commands.Cog):
 
         try:
             summoner = await Summoner(name=invocateur).get()
-            await inter.edit_original_message(embed=await summoner.embed())
+            await inter.edit_original_message(embed=await summoner.embed)
         except NotFound:
             await inter.edit_original_message(
                 embed=FS.Embed(
