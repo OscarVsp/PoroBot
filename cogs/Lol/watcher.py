@@ -137,7 +137,7 @@ class SummonerLeague(lol.SummonerLeague):
             value += f"> **Flex :** {self.league_to_line(self.flex)}"
         if value == "":
             value = "*No Ranked Data*"
-        return {"name": f"{FS.Emotes.Lol.Tier.NONE} **RANKED**", "value": value}
+        return {"name": f"{FS.Emotes.Lol.Tier.NONE} **RANKED**", "value": value, "inline": True}
 
 
 class ChampionMasteries(lol.ChampionMasteries):
@@ -169,10 +169,12 @@ class ChampionMasteries(lol.ChampionMasteries):
             "inline": True,
         }
 
-    def champion_to_line(self, champion: lol.ChampionMastery) -> str:
-        return f"{FS.Emotes.Lol.MASTERIES[champion.champion_level]} **{FS.Emotes.Lol.Champions.get(champion.champion_id)}** *{self.champion_points_formatted(champion)}*"
+    @classmethod
+    def champion_to_line(cls, champion: lol.ChampionMastery) -> str:
+        return f"{FS.Emotes.Lol.MASTERIES[champion.champion_level]} **{FS.Emotes.Lol.Champions.get(champion.champion_id)}** *{cls.champion_points_formatted(champion)}*"
 
-    def champion_points_formatted(self, champion: lol.ChampionMastery) -> str:
+    @staticmethod
+    def champion_points_formatted(champion: lol.ChampionMastery) -> str:
         num = float("{:.3g}".format(champion.champion_points))
         magnitude = 0
         while abs(num) >= 1000:
@@ -314,10 +316,13 @@ class Summoner(lol.Summoner):
         summonerLeague = await self.league_entries.get()
         return FS.Embed(
             author_name=f"{self.name.upper()}",
-            description=f"{FS.Emotes.Lol.XP} **LEVEL**\n> **{self.level}**",
             color=disnake.Colour.blue(),
             author_icon_url=self.icon_url,
-            fields=[championMasteries.field(), summonerLeague.field],
+            fields=[
+                championMasteries.field(),
+                summonerLeague.field,
+                {"name": f"{FS.Emotes.Lol.XP} **LEVEL**", "value": f"> **{self.level}**", "inline": True},
+            ],
         )
 
 
@@ -358,7 +363,7 @@ class MerakiChampion(lol.MerakiChampion):
     def stats_embed(self) -> disnake.Embed:
         return FS.Embed(
             title="__**Stats**__",
-            description=f"**Dammage type:** `{self.adaptive_type.split('_')[0]}`\n**Attack type:** `{self.attack_type}`\n**Roles:** "
+            description=f"**Dammage type:** `{self.adaptive_type.split('_')[0]}`\n**Attack type:** `{self.attack_type}`\n**Roles:** "  # TODO Emote for damage type and attack type, and groupe lore with state (lower lore ? or not at all ? With button to the lore website)
             + " ".join([f"{FS.Emotes.Lol.Roles.get(role)}" for role in self.roles]),
             fields=[
                 {
@@ -382,7 +387,9 @@ class MerakiChampion(lol.MerakiChampion):
             ],
         )
 
-    def ability_detailled_embed(self, letter: str) -> List[disnake.Embed]:
+    def ability_detailled_embed(
+        self, letter: str
+    ) -> List[disnake.Embed]:  # TODO replace "Active","Passive","Innate" with emote
         if letter == "P":
             abilities = self.abilities.p
         elif letter == "Q":
@@ -430,16 +437,16 @@ class MerakiChampion(lol.MerakiChampion):
                     if ability.resource
                     else "*--*"
                 ),
-            )  # Add minition recharge ?
+            )  # TODO Add minition recharge ?
             embed.add_field(
                 name="Range",
-                value=f"{FS.Emotes.Lol.TargetType.get(ability.targeting)} "
+                value=f"{FS.Emotes.Lol.TargetType.get(ability.targeting)} "  # TODO Don't display emote if no range
                 + (
                     f"*{ability.target_range}*"
                     if ability.target_range
                     else (f"*{ability.effect_radius}*" if ability.effect_radius else "*--*")
                 ),
-            )  # Add zone type ?
+            )  # TODO Add zone type ?
 
             # TODO Better modifier format for the case of constant value (only once)
             for effect in ability.effects:
@@ -447,7 +454,7 @@ class MerakiChampion(lol.MerakiChampion):
                 for attr in effect.leveling:
                     description += f"\n__{attr.attribute} :__\n"
                     if attr.modifiers and len(attr.modifiers) > 0:
-                        for i in range(len(attr.modifiers[0].values)):
+                        for i in range(len(attr.modifiers[0].values)):  # TODO blockcode for modifier
                             description += (
                                 "`"
                                 + "".join(
@@ -594,30 +601,29 @@ class CurrentGame(lol.spectator.CurrentGame):
         )
 
     @async_property
-    async def team_embeds(self) -> List[disnake.Embed]:
-        embeds: List[disnake.Embed] = []
+    async def team_fields(self) -> List[dict]:
+        ret: List[dict] = []
         for j, team in enumerate(self.teams):
             participant_tuples = [await self.participant_lines(p) for p in team.participants]
-            embeds.append(
-                FS.Embed(
-                    title=f"__**TEAM {FS.Emotes.ALPHA[j]}**__",
-                    color=disnake.Colour.blue(),
-                    fields=[
-                        {"name": "➖", "value": "\n".join([p[i] for p in participant_tuples]), "inline": True}
-                        for i in range(len(participant_tuples[0]))
-                    ],
+            for i in range(len(participant_tuples[0])):
+                ret.append(
+                    {
+                        "name": (f"**TEAM {FS.Emotes.ALPHA[j]}**" if not i else "➖"),
+                        "value": "\n".join([p[i] for p in participant_tuples]),
+                        "inline": True,
+                    }
                 )
-            )
-        return embeds
+        return ret
 
-    async def participant_lines(self, participant: lol.spectator.CurrentGameParticipantData) -> Tuple[str, str]:
+    async def participant_lines(self, participant: lol.spectator.CurrentGameParticipantData) -> Tuple[str, str, str]:
         league: SummonerLeague = await SummonerLeague(summoner_id=participant.summoner_id).get()
         championMastery: lol.ChampionMastery = await lol.ChampionMastery(
             summoner_id=participant.summoner_id, champion_id=participant.champion_id
         ).get()
         return (
             f"{league.short(league.first) if league else FS.Emotes.Lol.Tier.UNRANKED} **{participant.summoner_name}**",
-            f"{FS.Emotes.Lol.Champions.get(participant.champion_id)} {FS.Emotes.Lol.MASTERIES[championMastery.champion_level]} ➖ {FS.Emotes.Lol.Runes.Perks.Get(participant.rune_ids[0])}{FS.Emotes.Lol.Runes.Styles.Get(participant.rune_sub_style)} ➖ {FS.Emotes.Lol.SummonerSpells.get(participant.spell_ids[0])}{FS.Emotes.Lol.SummonerSpells.get(participant.spell_ids[1])}",
+            f"{FS.Emotes.Lol.Champions.get(participant.champion_id)} {FS.Emotes.Lol.MASTERIES[championMastery.champion_level]} ➖ {FS.Emotes.Lol.Runes.Perks.Get(participant.rune_ids[0])}{FS.Emotes.Lol.Runes.Styles.Get(participant.rune_sub_style)}",
+            f"➖ {FS.Emotes.Lol.SummonerSpells.get(participant.spell_ids[0])}{FS.Emotes.Lol.SummonerSpells.get(participant.spell_ids[1])}",
         )
 
     def perks_field(self, perksId: List[int]) -> dict:
@@ -637,21 +643,19 @@ class CurrentGame(lol.spectator.CurrentGame):
             "inline": True,
         }
 
-    async def participant_embed(self, participant: lol.spectator.CurrentGameParticipantData) -> List[disnake.Embed]:
-        embeds = [await (await Summoner(id=participant.summoner_id).get()).embed]
+    async def participant_embed(self, participant: lol.spectator.CurrentGameParticipantData) -> disnake.Embed:
+        embed = await (await Summoner(id=participant.summoner_id).get()).embed
         champion = await MerakiChampion(id=participant.champion_id).get()
-        summoner = await Summoner(id=participant.summoner_id).get()
-        embeds.append(
-            FS.Embed(
-                title=f"__**{champion.name.upper()}**__",
-                thumbnail=champion.skins[0].tile_path,
-                color=disnake.Colour.blue(),
-                fields=[
-                    self.perks_field(participant.rune_ids),
-                    self.spells_field(participant.spell_ids),
-                    (await summoner.champion_masteries.get()).field(3),  # TODO mastery for the current champion
-                ],
-            )
-        )
+        championMastery = await lol.ChampionMastery(
+            summoner_id=participant.summoner_id, champion_id=participant.champion_id
+        ).get()
+        embed.set_thumbnail(url=champion.skins[0].tile_path)
+        masteryField: dict = {
+            "name": f"{FS.Emotes.Lol.MASTERIES[0]} **MASTERY**",
+            "value": f"> {ChampionMasteries.champion_to_line(championMastery)}",
+            "inline": True,
+        }
+        for field in [self.perks_field(participant.rune_ids), self.spells_field(participant.spell_ids), masteryField]:
+            embed.add_field(name=field.get("name"), value=field.get("value"))
 
-        return embeds
+        return embed

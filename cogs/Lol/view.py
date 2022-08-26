@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import logging
 from typing import List
 
 import disnake
@@ -82,10 +81,10 @@ class CurrentGameView(disnake.ui.View):
         super().__init__(timeout=60 * 60)
         self.summoner_name: str = summoner_name
         self.live_game: CurrentGame = None
-        self.embeds_cached: List[List[List[disnake.Embed]]] = None
+        self.embeds_cached: List[List[disnake.Embed]] = None
         self.current_participant_index: Tuple[int, int] = None
         self.inter: disnake.MessageCommandInteraction = None
-        self.configEmbed: disnake.Embed = None
+        self.gameEmbed: disnake.Embed = None
         self.teamEmbeds: List[disnake.Embed] = None
 
     async def start(self, inter: disnake.ApplicationCommandInteraction):
@@ -129,7 +128,7 @@ class CurrentGameView(disnake.ui.View):
                 if len(name) > 7:
                     name = name[:7]
                 button = disnake.ui.Button(
-                    label=name,
+                    # label=name,
                     custom_id=f"{i}:{j}",
                     emoji=(await MerakiChampion(id=participant.champion_id).get()).emote,
                 )
@@ -143,22 +142,19 @@ class CurrentGameView(disnake.ui.View):
 
     async def embeds(self) -> List[disnake.Embed]:
         if self.embeds_cached[self.current_participant_index[0]][self.current_participant_index[1]] == None:
-            logging.info(f"Embed not cached for {self.current_participant_index = }.")
             self.embeds_cached[self.current_participant_index[0]][
                 self.current_participant_index[1]
             ] = await self.live_game.participant_embed(
                 self.live_game.teams[self.current_participant_index[0]].participants[self.current_participant_index[1]]
             )
-            logging.info(f"Cache entry added")
-        if self.configEmbed == None:
-            self.configEmbed = self.live_game.configEmbed
-        if self.teamEmbeds == None:
-            self.teamEmbeds = await self.live_game.team_embeds
-        return (
-            [self.configEmbed]
-            + self.embeds_cached[self.current_participant_index[0]][self.current_participant_index[1]]
-            + self.teamEmbeds
-        )
+        if self.gameEmbed == None:
+            self.gameEmbed = self.live_game.configEmbed
+            for field in await self.live_game.team_fields:
+                self.gameEmbed.add_field(name=field.get("name"), value=field.get("value"))
+        return [
+            self.embeds_cached[self.current_participant_index[0]][self.current_participant_index[1]],
+            self.gameEmbed,
+        ]
 
     async def update(self, inter: disnake.MessageInteraction):
         for button in self.buttons:
@@ -268,6 +264,7 @@ class ChampionView(disnake.ui.View):
 
     async def start(self, inter: disnake.ApplicationCommandInteraction):
         self.inter = inter
+        self.overview.disabled = True
         await self.update(inter)
 
     async def update(self, inter: disnake.MessageInteraction):
