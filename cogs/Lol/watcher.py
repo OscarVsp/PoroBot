@@ -351,7 +351,7 @@ class MerakiChampion(lol.MerakiChampion):
             if stat.per_level:
                 return [f"**{stat.flat}**", f"+*{stat.per_level}*", f"**{round(stat.flat+stat.per_level*18)}**"]
             else:
-                return [f"**{stat.flat}**", "\n", f"**{stat.flat}**"]
+                return [f"**{stat.flat}**", "", f"**{stat.flat}**"]
         elif stat.percent:
             if stat.percent_per_level:
                 return [
@@ -360,9 +360,9 @@ class MerakiChampion(lol.MerakiChampion):
                     f"**{round(stat.percent+stat.percent_per_level*18)}%**",
                 ]
             else:
-                return [f"**{stat.percent}%**", "\n", f"**{stat.percent}%**"]
+                return [f"**{stat.percent}%**", "", f"**{stat.percent}%**"]
         else:
-            return ["*N/A*", "\n", "\n"]
+            return ["*N/A*", "", ""]
 
     @property
     def stat_fields(self) -> List[dict]:
@@ -420,22 +420,29 @@ class MerakiChampion(lol.MerakiChampion):
     @staticmethod
     def modifiers_to_line(modifiers: List[lol.merakichampion.MerakiChampionSpellModifierData]) -> str:
         sequences: List[str] = []
-        end: str = ""
+        end: List[str] = []
         for modifier in modifiers:
             if len(modifier.values) > 0 and modifier.values[0] != modifier.values[-1]:
                 for j, value in enumerate(modifier.values):
                     if len(sequences) <= j:
                         sequences.append("")
-                    sequences[
-                        j
-                    ] += f"+ {value}{modifier.units[j]}"  # TODO remove the + but care there can be multiple end
+                    sequences[j] += f"{value}{modifier.units[j]}"
             else:
-                end += f"{modifier.values[0]}{modifier.units[0]}"
-        return "`" + f"{'/'.join(sequences)} {'+' if sequences != [] and end != '' else ''}{end}".strip() + "`"
+                end.append(f"{modifier.values[0]}{modifier.units[0]}")
+        return "`" + f"{'/'.join(sequences)}{' +' if len(end) else ''}{' +'.join(end)}".strip() + "`"
 
-    def ability_detailled_embed(
-        self, letter: str
-    ) -> List[disnake.Embed]:  # TODO replace "Active","Passive","Innate" with emote
+    @staticmethod
+    def spellType_to_color(type: str) -> disnake.Colour:
+        if type == "Innate":
+            return disnake.Colour.dark_purple()
+        if type == "Active":
+            return disnake.Colour.dark_orange()
+        if type == "Passive":
+            return disnake.Colour.dark_blue()
+        else:
+            return disnake.Colour.dark_orange()
+
+    def ability_detailled_embed(self, letter: str) -> List[disnake.Embed]:
         if letter == "P":
             abilities = self.abilities.p
         elif letter == "Q":
@@ -452,8 +459,11 @@ class MerakiChampion(lol.MerakiChampion):
         embeds: List[disnake.Embed] = []
 
         for ability in abilities:
-
-            embed = FS.Embed(title=f"__**{letter.upper()} - {ability.name}**__", thumbnail=ability.icon)
+            embed = FS.Embed(
+                title=f"__**{letter.upper()} - {ability.name}**__",
+                thumbnail=ability.icon,
+                color=self.spellType_to_color(ability.blurb.split(":")[0]),
+            )
             embed.add_field(
                 name="Cost",
                 value=(
@@ -472,19 +482,18 @@ class MerakiChampion(lol.MerakiChampion):
             )  # TODO Add minition recharge ?
             embed.add_field(
                 name="Range",
-                value=f"{FS.Emotes.Lol.TargetType.get(ability.targeting)} "  # TODO Don't display emote if no range
-                + (
-                    f"`{ability.target_range}`"
-                    if ability.target_range
-                    else (f"`{ability.effect_radius}`" if ability.effect_radius else "`--`")
+                value=f"{FS.Emotes.Lol.TargetType.get(ability.targeting)} `{ability.target_range}`"
+                if ability.target_range
+                else (
+                    f"{FS.Emotes.Lol.TargetType.get(ability.targeting)} `{ability.effect_radius}`"
+                    if ability.effect_radius
+                    else "`--`"
                 ),
             )  # TODO Add zone type ?
-
-            # TODO Better modifier format for the case of constant value (only once)
             for effect in ability.effects:
-                description = f"{effect.description}"
+                description = "> " + "\n> ".join(effect.description.split("\n"))
                 for attr in effect.leveling:
-                    description += f"\n**{attr.attribute} :**\n"
+                    description += f"\n**{attr.attribute} :** "
                     if attr.modifiers and len(attr.modifiers) > 0:
                         description += f"{self.modifiers_to_line(attr.modifiers)}"
                 embed.add_field(name="➖", value=description, inline=False)
@@ -529,7 +538,16 @@ class MerakiChampion(lol.MerakiChampion):
 
     def ability_embed(self, letter: str, ability: lol.merakichampion.MerakiChampionSpellData) -> disnake.Embed:
         return FS.Embed(
-            title=f"__**{letter.upper()} - {ability.name}**__", description=f"> {ability.blurb}", thumbnail=ability.icon
+            title=f"__**{letter.upper()} - {ability.name}**__",
+            description="\n➖\n".join(
+                [
+                    "> " + "\n> ".join(effect.description.split("\n"))
+                    for effect in ability.effects
+                    if effect.description.split(":")[0] in ["Innate", "Active", "Passive"]
+                ]
+            ),
+            thumbnail=ability.icon,
+            color=self.spellType_to_color(ability.blurb.split(":")[0]),
         )
 
     @property
@@ -544,19 +562,20 @@ class MerakiChampion(lol.MerakiChampion):
 
     @property
     def BaseEmbed(self) -> disnake.Embed:
-        return FS.Embed(
+        embed = FS.Embed(
             author_name=self.full_name if self.full_name else self.name,
             title=f"*{self.title}*",
-            description=f"> *{self.lore}*",
             author_icon_url=self.skins[0].tile_path,
+            color=disnake.Colour.dark_blue(),
             thumbnail=self.skins[0].splash_path,
         )
+        for field in self.stat_fields:
+            embed.add_field(name=field.get("name"), value=field.get("value"), inline=field.get("inline", True))
+        return embed
 
     @property
     def embeds(self) -> List[disnake.Embed]:
         embeds = [self.BaseEmbed]
-        for field in self.stat_fields:
-            embeds[0].add_field(name=field.get("name"), value=field.get("value"), inline=field.get("inline", True))
         embeds += self.abilities_embeds
         return embeds
 

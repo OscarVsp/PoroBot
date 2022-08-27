@@ -148,7 +148,9 @@ class Lol(commands.Cog):
             )
         )
 
-    """async def get_lol_classement(self, members_filter : List[disnake.Member]) -> Tuple[List[disnake.Member],List[Summoner]]:
+    async def get_lol_classement(
+        self, members_filter: List[disnake.Member]
+    ) -> Tuple[List[disnake.Member], List[Summoner]]:
         members: List[disnake.Member] = []
         summoners: List[Summoner] = []
 
@@ -158,27 +160,38 @@ class Lol(commands.Cog):
                 summoners.append(new_summoner)
                 members.append(member)
 
-        sorted_summoners: List[Summoner] = sorted(
-            summoners, key=lambda x: (await x.league_entries.get()).sorting_score((await x.league_entries.get()).first), reverse=True)
+        leagues = [
+            (await s.league_entries.get()).sorting_score((await s.league_entries.get()).first) for s in summoners
+        ]
+        sorted_leagues = sorted(leagues, reverse=True)
+        sorted_summoners: List[Summoner] = []
         sorted_members: List[disnake.Member] = []
+        for league in sorted_leagues:
+            sorted_summoners.append(summoners[leagues.index(league)])
+            sorted_members.append(members[leagues.index(league)])
 
-        for summoner in sorted_summoners:
-            sorted_members.append(members[summoners.index(summoner)])
+        return (sorted_members, sorted_summoners)
 
-        return (sorted_members,sorted_summoners)"""
-
-    """@lol.sub_command(
-        name="classement",
-        description="Classement League of Legends des members du serveur"
-    )
-    async def classement(self, inter: ApplicationCommandInteraction,
-                         filtre: str = commands.Param(description="Filtrer les membres à afficher par un role ou un évenement.", default=None)):
-        await inter.response.send_message(embed=FS.Embed(title=f"{FS.Emotes.Lol.LOGO} __**CLASSEMENT LOL**__",description=f"{FS.Emotes.LOADING} Création du classement en cours..."),ephemeral=False)
+    @lol.sub_command(name="classement", description="Classement League of Legends des members du serveur")
+    async def classement(
+        self,
+        inter: ApplicationCommandInteraction,
+        filtre: str = commands.Param(
+            description="Filtrer les membres à afficher par un role ou un évenement.", default=None
+        ),
+    ):
+        await inter.response.send_message(
+            embed=FS.Embed(
+                title=f"{FS.Emotes.Lol.LOGO} __**CLASSEMENT LOL**__",
+                description=f"{FS.Emotes.LOADING} Création du classement en cours...",
+            ),
+            ephemeral=False,
+        )
 
         filtre_members: List[disnake.Member] = None
 
         if filtre:
-            filtre_clean = filtre.split(' ')[1]
+            filtre_clean = filtre.split(" ")[1]
             for role in inter.guild.roles:
                 if role.name == filtre_clean:
                     filtre_members = role.members
@@ -193,14 +206,14 @@ class Lol(commands.Cog):
         if filtre_members == None or filtre == None:
             filtre_members = inter.guild.members
 
-        (sorted_members,sorted_summoners) = await self.get_lol_classement(filtre_members)
+        (sorted_members, sorted_summoners) = await self.get_lol_classement(filtre_members)
 
         ranks = ""
         players = ""
 
         for i in range(len(sorted_members)):
             entries = await sorted_summoners[i].league_entries.get()
-            ranks += f"{FS.Emotes.Lol.Tier.get(entries.first.tier)}) **{entries.first.rank}**\n"
+            ranks += f"{FS.Emotes.Lol.Tier.get(entries.first.tier)} **{entries.first.rank}**\n"
             players += f"**{sorted_members[i].display_name}** (`{sorted_summoners[i].name}`)\n"
 
         await inter.edit_original_message(
@@ -208,22 +221,14 @@ class Lol(commands.Cog):
                 title=f"{FS.Emotes.Lol.LOGO} __**CLASSEMENT LOL**__",
                 description=(f"> *Filtre : {filtre}*" if filtre else ""),
                 fields=[
-                    {
-                        'name': "◾",
-                        'value': ranks,
-                        "inline": True
-                    },
-                    {
-                        'name': "◾◾◾◾◾◾◾◾◾◾",
-                        'value': players,
-                        "inline": True
-                    }
-                ],"""
-    #            footer_text="""Tu n'es pas dans le classement ?\nLie ton compte League of Legends en utilisant "/lol account" !"""
-    #        )
-    #    )
+                    {"name": "◾", "value": ranks, "inline": True},
+                    {"name": "◾◾◾◾◾◾◾◾◾◾", "value": players, "inline": True},
+                ],
+                footer_text="""Tu n'es pas dans le classement ?\nLie ton compte League of Legends en utilisant "/lol account" !""",
+            )
+        )
 
-    """@classement.autocomplete("filtre")
+    @classement.autocomplete("filtre")
     def autocomple_filtre(self, inter: disnake.ApplicationCommandInteraction, user_input: str):
         filtres = []
         for role in inter.guild.roles:
@@ -234,7 +239,7 @@ class Lol(commands.Cog):
                 filtres.append(f"📅 {event.name}")
         if len(filtres) > 25:
             filtres = filtres[:25]
-        return filtres"""
+        return filtres
 
     @lol.sub_command(name="live", description="Info sur une partie en cours")
     async def live(
