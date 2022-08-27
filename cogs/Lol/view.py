@@ -128,7 +128,6 @@ class CurrentGameView(disnake.ui.View):
                 if len(name) > 7:
                     name = name[:7]
                 button = disnake.ui.Button(
-                    # label=name,
                     custom_id=f"{i}:{j}",
                     emoji=(await MerakiChampion(id=participant.champion_id).get()).emote,
                 )
@@ -137,7 +136,6 @@ class CurrentGameView(disnake.ui.View):
                 self.buttons.append(button)
                 if participant.summoner_name == summoner.name:
                     self.current_participant_index = (i, j)
-                    button.disabled = True
         await self.update(inter)
 
     async def embeds(self) -> List[disnake.Embed]:

@@ -123,10 +123,14 @@ class SummonerLeague(lol.SummonerLeague):
         return self.flex
 
     def league_to_line(self, league: lol.league.SummonerLeagueEntryData) -> str:
-        return f"{self.short(league)} *({league.league_points} LP)*"
+        if league:
+            return f"{self.short(league)} *({league.league_points} LP)*"
+        return f"{FS.Emotes.Lol.Tier.get('UNRANKED')}*"
 
     def short(self, league: lol.league.SummonerLeagueEntryData) -> str:
-        return f"{FS.Emotes.Lol.Tier.get(league.tier)} **{league.rank}**"
+        if league:
+            return f"{FS.Emotes.Lol.Tier.get(league.tier)} **{league.rank}**"
+        return f"{FS.Emotes.Lol.Tier.get('UNRANKED')}"
 
     @property
     def field(self) -> dict:
@@ -138,7 +142,7 @@ class SummonerLeague(lol.SummonerLeague):
         if self.flex:
             value += f"> **Flex :** {self.league_to_line(self.flex)}"
         if value == "":
-            value = "*No Ranked Data*"
+            value = f"{FS.Emotes.Lol.Tier.get('UNRANKED')} Unranked"
         return {"name": f"{FS.Emotes.Lol.Tier.NONE} **RANKED**", "value": value, "inline": True}
 
 
@@ -576,9 +580,11 @@ class MerakiChampion(lol.MerakiChampion):
         embed = FS.Embed(
             author_name=self.full_name if self.full_name else self.name,
             title=f"*{self.title}*",
+            description=self.lore[:100] + "[...]" if len(self.lore) > 100 else self.lore,
             author_icon_url=self.skins[0].tile_path,
             color=disnake.Colour.dark_blue(),
-            thumbnail=self.skins[0].splash_path,
+            thumbnail=self.skins[0].load_screen_path,
+            footer_text=f"Last changed in patch {self.patch_last_changed}",
         )
         for field in self.stat_fields:
             embed.add_field(name=field.get("name"), value=field.get("value"), inline=field.get("inline", True))
@@ -663,7 +669,7 @@ class CurrentGame(lol.spectator.CurrentGame):
             for i in range(len(participant_tuples[0])):
                 ret.append(
                     {
-                        "name": (f"**TEAM {FS.Emotes.ALPHA[j]}**" if not i else "➖"),
+                        "name": (f"__**TEAM**__ {FS.Emotes.ALPHA[j]}" if not i else "➖"),
                         "value": "\n".join([p[i] for p in participant_tuples]),
                         "inline": True,
                     }

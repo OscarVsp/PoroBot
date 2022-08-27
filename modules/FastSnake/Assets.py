@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import logging
 from typing import List
 from typing import Optional
 from typing import Union
@@ -573,7 +574,7 @@ class Emotes:
                 if key == "NONE":
                     return cls.NONE
                 elif key == "UNRANKED":
-                    return cls.IRON
+                    return cls.UNRANKED
                 elif key == "IRON":
                     return cls.IRON
                 elif key == "BRONZE":
@@ -593,6 +594,7 @@ class Emotes:
                 elif key == "CHALLENGER":
                     return cls.CHALLENGER
                 else:
+                    logging.warning(f"Tier not found for {key = }")
                     return None
 
         class Champions:
