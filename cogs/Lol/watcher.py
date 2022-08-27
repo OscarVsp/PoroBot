@@ -2,6 +2,7 @@
 import json
 import logging
 import os
+from math import ceil
 from time import gmtime
 from time import strftime
 from typing import Dict
@@ -375,16 +376,16 @@ class MerakiChampion(lol.MerakiChampion):
             },
             {
                 "name": f"➖ ➖ __**Base**__",
-                "value": f"""{FS.Emotes.Lol.Stats.HEALT} ➖ {self.stat_to_line(self.stats.health)[0]}
-                            {FS.Emotes.Lol.Stats.HEALTREGEN} ➖ {self.stat_to_line(self.stats.health_regen)[0]}
-                            {FS.Emotes.Lol.Stats.MANA} ➖ {self.stat_to_line(self.stats.mana)[0]}
-                            {FS.Emotes.Lol.Stats.MANAREGEN} ➖ {self.stat_to_line(self.stats.mana_regen)[0]}
-                            {FS.Emotes.Lol.Stats.ARMOR} ➖ {self.stat_to_line(self.stats.armor)[0]}
-                            {FS.Emotes.Lol.Stats.MAGICRESISTE} ➖ {self.stat_to_line(self.stats.magic_resistance)[0]}
-                            {FS.Emotes.Lol.Stats.ATTACKDAMAGE} ➖ {self.stat_to_line(self.stats.attack_damage)[0]}
-                            {FS.Emotes.Lol.Stats.ATTACKSPEED} ➖ {self.stat_to_line(self.stats.attack_speed)[0]}
-                            {FS.Emotes.Lol.Stats.RANGE} ➖ {self.stat_to_line(self.stats.attack_range)[0]}
-                            {FS.Emotes.Lol.Stats.MOVESPEED} ➖ {self.stat_to_line(self.stats.movespeed)[0]}""",
+                "value": f"""{FS.Emotes.Lol.Stats.HEALT} ➖ {self.stat_to_line(self.stats.health)[0]} Hp
+                            {FS.Emotes.Lol.Stats.HEALTREGEN} ➖ {self.stat_to_line(self.stats.health_regen)[0]} Hp/s
+                            {FS.Emotes.Lol.Stats.MANA} ➖ {self.stat_to_line(self.stats.mana)[0]} Mana
+                            {FS.Emotes.Lol.Stats.MANAREGEN} ➖ {self.stat_to_line(self.stats.mana_regen)[0]} Mana/s
+                            {FS.Emotes.Lol.Stats.ARMOR} ➖ {self.stat_to_line(self.stats.armor)[0]} Armor
+                            {FS.Emotes.Lol.Stats.MAGICRESISTE} ➖ {self.stat_to_line(self.stats.magic_resistance)[0]} Magic Resistance
+                            {FS.Emotes.Lol.Stats.ATTACKDAMAGE} ➖ {self.stat_to_line(self.stats.attack_damage)[0]} Attack damage
+                            {FS.Emotes.Lol.Stats.ATTACKSPEED} ➖ {self.stat_to_line(self.stats.attack_speed)[0]} Attack speed
+                            {FS.Emotes.Lol.Stats.RANGE} ➖ {self.stat_to_line(self.stats.attack_range)[0]} Attack range
+                            {FS.Emotes.Lol.Stats.MOVESPEED} ➖ {self.stat_to_line(self.stats.movespeed)[0]} Movement speed""",
                 "inline": True,
             },
             {
@@ -403,16 +404,16 @@ class MerakiChampion(lol.MerakiChampion):
             },
             {
                 "name": f"__**18**__{FS.Emotes.Lol.XP}",
-                "value": f"""{self.stat_to_line(self.stats.health)[2]}
-                            {self.stat_to_line(self.stats.health_regen)[2]}
-                            {self.stat_to_line(self.stats.mana)[2]}
-                            {self.stat_to_line(self.stats.mana_regen)[2]}
-                            {self.stat_to_line(self.stats.armor)[2]}
-                            {self.stat_to_line(self.stats.magic_resistance)[2]}
-                            {self.stat_to_line(self.stats.attack_damage)[2]}
-                            {self.stat_to_line(self.stats.attack_speed)[2]}
-                            {self.stat_to_line(self.stats.attack_range)[2]}
-                            {self.stat_to_line(self.stats.movespeed)[2]}""",
+                "value": f"""{self.stat_to_line(self.stats.health)[2]} Hp
+                            {self.stat_to_line(self.stats.health_regen)[2]} Hp/s
+                            {self.stat_to_line(self.stats.mana)[2]} Mana
+                            {self.stat_to_line(self.stats.mana_regen)[2]} Mana/s
+                            {self.stat_to_line(self.stats.armor)[2]} Armor
+                            {self.stat_to_line(self.stats.magic_resistance)[2]} Magic Resistance
+                            {self.stat_to_line(self.stats.attack_damage)[2]} Attack damage
+                            {self.stat_to_line(self.stats.attack_speed)[2]} Attack speed
+                            {self.stat_to_line(self.stats.attack_range)[2]} Attack range
+                            {self.stat_to_line(self.stats.movespeed)[2]} Movement speed""",
                 "inline": True,
             },
         ]
@@ -429,18 +430,19 @@ class MerakiChampion(lol.MerakiChampion):
                     sequences[j] += f"{value}{modifier.units[j]}"
             else:
                 end.append(f"{modifier.values[0]}{modifier.units[0]}")
-        return "`" + f"{'/'.join(sequences)}{' +' if len(end) else ''}{' +'.join(end)}".strip() + "`"
+        return "`" + f"{'/'.join(sequences)}{' +' if len(end) and len(sequences) else ''}{' +'.join(end)}".strip() + "`"
 
     @staticmethod
-    def spellType_to_color(type: str) -> disnake.Colour:
-        if type == "Innate":
-            return disnake.Colour.dark_purple()
-        if type == "Active":
-            return disnake.Colour.dark_orange()
-        if type == "Passive":
-            return disnake.Colour.dark_blue()
-        else:
-            return disnake.Colour.dark_orange()
+    def spellType_to_color(abilitiy: lol.merakichampion.MerakiChampionSpellData) -> disnake.Colour:
+        ret = None
+        for effect in abilitiy.effects:
+            if effect.description.startswith("Active"):
+                return disnake.Colour.dark_red()
+            elif effect.description.startswith("Passive"):
+                ret = disnake.Colour.dark_blue()
+            elif effect.description.startswith("Innate") and ret == None:
+                ret = disnake.Colour.dark_purple()
+        return ret
 
     def ability_detailled_embed(self, letter: str) -> List[disnake.Embed]:
         if letter == "P":
@@ -462,7 +464,7 @@ class MerakiChampion(lol.MerakiChampion):
             embed = FS.Embed(
                 title=f"__**{letter.upper()} - {ability.name}**__",
                 thumbnail=ability.icon,
-                color=self.spellType_to_color(ability.blurb.split(":")[0]),
+                color=self.spellType_to_color(ability),
             )
             embed.add_field(
                 name="Cost",
@@ -498,40 +500,45 @@ class MerakiChampion(lol.MerakiChampion):
                         description += f"{self.modifiers_to_line(attr.modifiers)}"
                 embed.add_field(name="➖", value=description, inline=False)
 
-            block: str = ""
-            if ability.on_target_cd_static:
-                block += f"> **Per target cd:** {FS.Emotes.Lol.Stats.ABILITYHASTE} `{ability.on_target_cd_static}`\n"
-            if ability.targeting:
-                block += f"> **Target type:** `{ability.targeting}`\n"
-            if ability.spell_effects:
-                block += f"> **Effect type:** `{ability.spell_effects}`\n"
-            if ability.width:
-                block += f"> **Width:** `{ability.width}`\n"
-            if ability.effect_radius:
-                block += f"> **Effect Radius:** {FS.Emotes.Lol.Stats.RANGE} `{ability.effect_radius}`\n"
-            if ability.tether_radius:
-                block += f"> **Tether Radius:** {FS.Emotes.Lol.Stats.RANGE} `{ability.tether_radius}`\n"
-            if ability.inner_radius:
-                block += f"> **Inner Radius:** {FS.Emotes.Lol.Stats.RANGE} `{ability.inner_radius}`\n"
-            if ability.collision_radius:
-                block += f"> **Collision Radius:** {FS.Emotes.Lol.Stats.RANGE} `{ability.collision_radius}`\n"
-            if ability.damage_type:
-                block += f"> **Damage type:** `{ability.damage_type}`\n"
-            if ability.affects:
-                block += f"> **Affects:** `{ability.affects}`\n"
-            if ability.spellshieldable:
-                block += f"> **Spellshieldable:** `{ability.spellshieldable}`\n"
-            if ability.projectile:
-                block += f"> **Projectile:** `{ability.projectile}`\n"
-            if ability.missile_speed:
-                block += f"> **Missile speed:** `{ability.missile_speed}`\n"
-            if ability.on_hit_effects:
-                block += f"> **On hit effects:** `{ability.on_hit_effects}`\n"
-            if ability.occurrence:
-                block += f"> **Occurence:** `{ability.occurrence}`\n"
-            if ability.cast_time:
-                block += f"> **Cast time:** `{ability.cast_time}`\n"
-            embed.add_field(name="**__DETAILS__**", value=block)
+            details: List[str] = []
+            if ability.on_target_cd_static and ability.on_target_cd_static.lower() != "none":
+                details.append(
+                    f"> **Per target cd:** {FS.Emotes.Lol.Stats.ABILITYHASTE} `{ability.on_target_cd_static}`"
+                )
+            if ability.targeting and ability.targeting.lower() != "none":
+                details.append(f"> **Target type:** `{ability.targeting}`")
+            if ability.spell_effects and ability.spell_effects.lower() != "none":
+                details.append(f"> **Effect type:** `{ability.spell_effects}`")
+            if ability.width and ability.width.lower() != "none":
+                details.append(f"> **Width:** `{ability.width}`")
+            if ability.effect_radius and ability.effect_radius.lower() != "none":
+                details.append(f"> **Effect Radius:** {FS.Emotes.Lol.Stats.RANGE} `{ability.effect_radius}`")
+            if ability.tether_radius and ability.tether_radius.lower() != "none":
+                details.append(f"> **Tether Radius:** {FS.Emotes.Lol.Stats.RANGE} `{ability.tether_radius}`")
+            if ability.inner_radius and ability.inner_radius.lower() != "none":
+                details.append(f"> **Inner Radius:** {FS.Emotes.Lol.Stats.RANGE} `{ability.inner_radius}`")
+            if ability.collision_radius and ability.collision_radius.lower() != "none":
+                details.append(f"> **Collision Radius:** {FS.Emotes.Lol.Stats.RANGE} `{ability.collision_radius}`")
+            if ability.damage_type and ability.damage_type.lower() != "none":
+                details.append(f"> **Damage type:** `{ability.damage_type}`")
+            if ability.affects and ability.affects.lower() != "none":
+                details.append(f"> **Affects:** `{ability.affects}`")
+            if ability.spellshieldable and ability.spellshieldable.lower() != "none":
+                details.append(f"> **Spellshieldable:** `{ability.spellshieldable}`")
+            if ability.projectile and ability.projectile.lower() != "none":
+                details.append(f"> **Projectile:** `{ability.projectile}`")
+            if ability.missile_speed and ability.missile_speed.lower() != "none":
+                details.append(f"> **Missile speed:** `{ability.missile_speed}`")
+            if ability.on_hit_effects and ability.on_hit_effects.lower() != "none":
+                details.append(f"> **On hit effects:** `{ability.on_hit_effects}`")
+            if ability.occurrence and ability.occurrence.lower() != "none":
+                details.append(f"> **Occurence:** `{ability.occurrence}`")
+            if ability.cast_time and ability.cast_time.lower() != "none":
+                details.append(f"> **Cast time:** `{ability.cast_time}`")
+            if len(details):
+                embed.add_field(name="**__DETAILS__**", value="\n".join(details[: ceil(len(details) / 2)]))
+                if len(details) > 1:
+                    embed.add_field(name="➖", value="\n".join(details[ceil(len(details) / 2) :]))
 
             embeds.append(embed)
         return embeds
@@ -543,11 +550,15 @@ class MerakiChampion(lol.MerakiChampion):
                 [
                     "> " + "\n> ".join(effect.description.split("\n"))
                     for effect in ability.effects
-                    if effect.description.split(":")[0] in ["Innate", "Active", "Passive"]
+                    if (
+                        effect.description.startswith("Innate")
+                        or effect.description.startswith("Active")
+                        or effect.description.startswith("Passive")
+                    )
                 ]
             ),
             thumbnail=ability.icon,
-            color=self.spellType_to_color(ability.blurb.split(":")[0]),
+            color=self.spellType_to_color(ability),
         )
 
     @property
