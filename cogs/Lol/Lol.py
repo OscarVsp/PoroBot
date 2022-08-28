@@ -77,7 +77,7 @@ class Lol(commands.Cog):
 
         confirm = await confirmation(
             inter,
-            embeds=[await summoner.embed()],
+            embeds=[await summoner.embed],
             title="Valider l'invocateur",
             description=f"Est-ce bien ton compte ?",
         )
@@ -96,7 +96,7 @@ class Lol(commands.Cog):
         if str(target.id) in self.summoners.getall():
             confirm = await confirmation(
                 inter,
-                embeds=[await summoner.embed()],
+                embeds=[await summoner.embed],
                 title="Invocateur déjà existant",
                 description=("Tu as" if target == inter.author else f"{target.mention} a")
                 + f" déjà le nom d'invocateur suivant enregistré : ***{self.summoners.get(str(target.id))}***\n Veux-tu le remplacer ?",
@@ -156,9 +156,12 @@ class Lol(commands.Cog):
 
         for member in members_filter:
             if str(member.id) in self.summoners.getall():
-                new_summoner = await Summoner(name=self.summoners.get(str(member.id))).get()
-                summoners.append(new_summoner)
-                members.append(member)
+                try:
+                    new_summoner = await Summoner(name=self.summoners.get(str(member.id))).get()
+                    summoners.append(new_summoner)
+                    members.append(member)
+                except NotFound:
+                    pass
 
         leagues = [
             (await s.league_entries.get()).sorting_score((await s.league_entries.get()).first) for s in summoners
