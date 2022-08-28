@@ -34,7 +34,7 @@ class Admin(commands.Cog):
                         description=f"```{stderr.decode().strip()}```",
                     )
                 )
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             await inter.edit_original_message(
                 embed=FS.Embed(
                     title=f"❌ Update failed due to *FileNotFoundError*",
@@ -54,7 +54,7 @@ class Admin(commands.Cog):
 
             stdout, stderr = await process.communicate()
 
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             embeds.append(
                 FS.Embed(
                     title=f"❌ Restart failed due to *FileNotFoundError*",
@@ -122,7 +122,7 @@ class Admin(commands.Cog):
                     )
             except TimeoutError:
                 await inter.edit_original_message(embed=FS.Embed(title=f"❌ Command timeout"))
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             await inter.edit_original_message(
                 embed=FS.Embed(
                     title=f"❌ Command error due to *FileNotFoundError*",
@@ -150,7 +150,7 @@ class Admin(commands.Cog):
             for i in range(1, previous):
                 try:
                     files.append(disnake.File(f"logs/{level}.log.{i}"))
-                except FileNotFoundError as ex:
+                except FileNotFoundError:
                     logging.debug(f"logsCmd: file 'logs/{level}.log.{i}' skipped because not found")
             await inter.author.send(files=files)
         await inter.edit_original_message(embed=FS.Embed(description="Logs sent on private !"))
