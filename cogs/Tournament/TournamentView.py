@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from typing import Dict
 from typing import List
 
 import disnake
@@ -219,3 +220,75 @@ class AdminView(disnake.ui.View):
         self.update_button.disabled = False
         self.discard_button.disabled = False
         await self.update(interaction)
+
+
+class DraftView(disnake.ui.View):
+    def __init__(self, draftManager):
+        super().__init__(timeout=None)
+        self.draftManager = draftManager
+
+    @disnake.ui.button(label="Reset")
+    async def reset(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
+        await interaction.response.defer()
+        await self.draftManager.reset(interaction)
+
+
+class DraftManager:
+    def __init__(self, channels: Tuple[disnake.VoiceChannel, disnake.VoiceChannel], labels: List[str]):
+        self.channels: Tuple[disnake.VoiceChannel, disnake.VoiceChannel] = channels
+        self.messages: Dict[disnake.VoiceChannel, disnake.Message] = {channels[0]: None, channels[1]: None}
+        self.labels: List[str] = labels
+        self.selections: List[Dict[disnake.VoiceChannel, str]] = [
+            {channels[0]: None, channels[1]: None} for _ in range(len(labels))
+        ]
+        self.level: int = 0
+        self.view: DraftView = DraftView(self)
+
+    def embed(self, channel: disnake.VoiceChannel):
+        tup: List[List[str]] = [[], [], []]
+        for i in range(self.level):
+            tup[0].append(f"**{self.labels[i]}:**")
+            tup[1].append(f"`{self.selections[i][channel]}`")
+            tup[2].append(f"`{self.selections[i][self.other_channel(channel)]}`")
+        if self.level != len(self.labels):
+            tup[0].append(f"**{self.labels[self.level]}:**")
+            if self.selections[self.level][channel]:
+                tup[1].append(f"`{self.selections[self.level][channel]}`")
+        return FS.Embed(
+            title="__**DRAFT**__",
+            description="> Just type in the chat the name of the champion to ban/pick. You will see the ban/pick enemy only when both teams have chosen (and vice versa).\n> ⚠️ You cannot modify your choices !",
+            fields=[
+                {"name": "➖", "value": "\n".join(tup[0]), "inline": True},
+                {"name": "__**You**__", "value": "\n".join(tup[1]) if len(tup[1]) else "` `", "inline": True},
+                {"name": "__**Enemy**__", "value": "\n".join(tup[2]) if len(tup[2]) else "` `", "inline": True},
+            ],
+        )
+
+    def other_channel(self, channel: disnake.VoiceChannel) -> disnake.VoiceChannel:
+        return self.channels[(self.channels.index(channel) + 1) % 2]
+
+    async def start(self) -> "DraftManager":
+        for channel in self.channels:
+            self.messages[channel] = await channel.send(embed=self.embed(channel), view=self.view)
+        return self
+
+    async def update(self) -> None:
+        for channel, message in self.messages.items():
+            await message.edit(embed=self.embed(channel), view=self.view if self.level == len(self.labels) else None)
+
+    async def on_message(self, message: disnake.Message):
+        if message.channel in self.channels:
+            if self.level < len(self.labels):
+                if not self.selections[self.level][message.channel]:
+                    self.selections[self.level][message.channel] = message.content
+                    if self.selections[self.level][self.other_channel(message.channel)]:
+                        self.level += 1
+                    await message.delete()
+                    await self.update()
+                    return
+            await message.delete()
+
+    async def reset(self, interaction: disnake.MessageInteraction):
+        self.level = 0
+        self.selections = [{self.channels[0]: None, self.channels[1]: None} for _ in range(len(self.labels))]
+        await self.update()

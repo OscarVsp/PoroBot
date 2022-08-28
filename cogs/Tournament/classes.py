@@ -992,6 +992,7 @@ class TournamentData(Container):
         self.notif_messages: List[disnake.Message] = []
         self.classement_message: disnake.Message = None
         self.rounds_message: disnake.Message = None
+        self.draftManagers: list = []
         self.rules_message: disnake.Message = None
         self.admin_message: disnake.Message = None
 

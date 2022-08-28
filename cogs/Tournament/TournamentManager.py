@@ -3,6 +3,7 @@ from typing import List
 
 from .classes import *
 from .TournamentView import AdminView
+from .TournamentView import DraftManager
 from .TournamentView import PlayerSelectionView
 from .TournamentView import RoundView
 
@@ -85,6 +86,10 @@ class Tournament(TournamentData):
         self.admin_view = AdminView(self)
         self.admin_message = await self.admin_channel.send(embeds=self.admin_embeds, view=self.admin_view)
         await self.update()
+        for matchChannels in self.voice_channels:
+            self.draftManagers.append(
+                await DraftManager(matchChannels, ["⛔ Ban 1", "✅ Pick 1", "⛔ Ban 2", "✅ Pick 2"]).start()
+            )
 
     def generate_round(self) -> None:
         pass
@@ -136,6 +141,9 @@ class Tournament(TournamentData):
                 await team_voice.delete()
         await self.admin_channel.delete()
         await self.category.delete()
+
+    async def on_message(self, message: disnake.Message):
+        pass
 
 
 class Tournament2v2Roll(Tournament):
@@ -404,3 +412,7 @@ class Tournament2v2Roll(Tournament):
         )
         embeds += [round.embed_detailled for round in self.rounds]
         return embeds
+
+    async def on_message(self, message: disnake.Message):
+        for draftManager in self.draftManagers:
+            await draftManager.on_message(message)

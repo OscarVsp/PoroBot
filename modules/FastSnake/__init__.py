@@ -6,5 +6,6 @@ from .ChoicesView import *
 from .ConfirmationView import *
 from .Embed import *
 from .MemberSelectionView import *
+from .Modals import *
 from .ShadowMember import *
 from .Views import *

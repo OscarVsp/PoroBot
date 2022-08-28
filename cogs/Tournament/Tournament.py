@@ -7,7 +7,9 @@ from disnake.ext import commands
 from disnake.ext.commands import InteractionBot
 
 import modules.FastSnake as FS
+from .classes import State
 from .classes import TournamentData
+from .TournamentManager import Tournament as TournamentClass
 from .TournamentManager import Tournament2v2Roll
 from cogs.Tournament.TournamentMutliView import phaseCreation
 from modules.FastSnake import confirmation
@@ -17,6 +19,7 @@ class Tournament(commands.Cog):
     def __init__(self, bot):
         """Initialize the cog"""
         self.bot: InteractionBot = bot
+        self.tournaments: List[TournamentClass] = []
 
     @commands.slash_command(
         name="tournament",
@@ -39,6 +42,7 @@ class Tournament(commands.Cog):
             embed=FS.Embed(description=f"{FS.Emotes.LOADING} Création du tournoi..."), ephemeral=True
         )
         tournament = Tournament2v2Roll(inter.guild, taille, name=nom)
+        self.tournaments.append(tournament)
         await tournament.build()
         await inter.edit_original_message(
             embed=FS.Embed(description=f"Tournois [{tournament.name}]({tournament.admin_message.jump_url}) créé !")
@@ -111,6 +115,13 @@ class Tournament(commands.Cog):
             await inter.response.send_message(embed=Tournament2v2Roll.generic_rules())
         else:
             await inter.response.send_message(embed=FS.warning(f"Aucun format correspondant à `{format}`"))
+
+    @commands.Cog.listener("on_message")
+    async def on_message(self, message: disnake.Message):
+        if not message.author.bot:
+            for tournament in self.tournaments:
+                if tournament.state != State.ENDED:
+                    await tournament.on_message(message)
 
 
 def setup(bot: InteractionBot):
