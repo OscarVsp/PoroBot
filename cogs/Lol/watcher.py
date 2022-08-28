@@ -351,23 +351,31 @@ class MerakiChampion(lol.MerakiChampion):
 
     ###############
 
-    def stat_to_line(self, stat: lol.merakichampion.MerakiChampionStatDetailData) -> Tuple[str, str]:
+    def stats_to_tuple(self, stat: lol.merakichampion.MerakiChampionStatDetailData) -> Tuple[str, str, str]:
         if stat.flat:
             if stat.per_level:
-                return [f"**{stat.flat}**", f"+*{stat.per_level}*", f"**{round(stat.flat+stat.per_level*18)}**"]
+                return [
+                    f"**{round(stat.flat,2)}**",
+                    f"+*{stat.per_level}*",
+                    f"**{round(stat.flat+stat.per_level*18,2)}**",
+                ]
             else:
-                return [f"**{stat.flat}**", "", f"**{stat.flat}**"]
+                return [f"**{round(stat.flat,2)}**", "", f"**{round(stat.flat,2)}**"]
         elif stat.percent:
             if stat.percent_per_level:
                 return [
-                    f"**{stat.percent}%**",
+                    f"**{round(stat.percent,2)}%**",
                     f"+*{stat.percent_per_level}%*",
                     f"**{round(stat.percent+stat.percent_per_level*18)}%**",
                 ]
             else:
-                return [f"**{stat.percent}%**", "", f"**{stat.percent}%**"]
+                return [f"**{round(stat.percent,2)}%**", "", f"**{stat.percent}%**"]
         else:
             return ["*N/A*", "", ""]
+
+    def stat_to_line(self, stat: lol.merakichampion.MerakiChampionStatDetailData) -> str:
+        tup = self.stats_to_tuple(stat)
+        return f"{tup[0]}" + (f" *+ {tup[1]}/lvl ({tup[2]} at lvl 18)*" if tup[1] != "" else "")
 
     @property
     def stat_fields(self) -> List[dict]:
@@ -380,61 +388,65 @@ class MerakiChampion(lol.MerakiChampion):
             },
             {
                 "name": f"➖ ➖ __**Base**__",
-                "value": f"""{FS.Emotes.Lol.Stats.HEALT} ➖ {self.stat_to_line(self.stats.health)[0]} Hp
-                            {FS.Emotes.Lol.Stats.HEALTREGEN} ➖ {self.stat_to_line(self.stats.health_regen)[0]} Hp/s
-                            {FS.Emotes.Lol.Stats.MANA} ➖ {self.stat_to_line(self.stats.mana)[0]} Mana
-                            {FS.Emotes.Lol.Stats.MANAREGEN} ➖ {self.stat_to_line(self.stats.mana_regen)[0]} Mana/s
-                            {FS.Emotes.Lol.Stats.ARMOR} ➖ {self.stat_to_line(self.stats.armor)[0]} Armor
-                            {FS.Emotes.Lol.Stats.MAGICRESISTE} ➖ {self.stat_to_line(self.stats.magic_resistance)[0]} Magic Resistance
-                            {FS.Emotes.Lol.Stats.ATTACKDAMAGE} ➖ {self.stat_to_line(self.stats.attack_damage)[0]} Attack damage
-                            {FS.Emotes.Lol.Stats.ATTACKSPEED} ➖ {self.stat_to_line(self.stats.attack_speed)[0]} Attack speed
-                            {FS.Emotes.Lol.Stats.RANGE} ➖ {self.stat_to_line(self.stats.attack_range)[0]} Attack range
-                            {FS.Emotes.Lol.Stats.MOVESPEED} ➖ {self.stat_to_line(self.stats.movespeed)[0]} Movement speed""",
+                "value": f"""{FS.Emotes.Lol.Stats.HEALT} ➖ {self.stats_to_tuple(self.stats.health)[0]} Hp
+                            {FS.Emotes.Lol.Stats.HEALTREGEN} ➖ {self.stats_to_tuple(self.stats.health_regen)[0]} Hp/s
+                            {FS.Emotes.Lol.Stats.MANA} ➖ {self.stats_to_tuple(self.stats.mana)[0]} Mana
+                            {FS.Emotes.Lol.Stats.MANAREGEN} ➖ {self.stats_to_tuple(self.stats.mana_regen)[0]} Mana/s
+                            {FS.Emotes.Lol.Stats.ARMOR} ➖ {self.stats_to_tuple(self.stats.armor)[0]} Armor
+                            {FS.Emotes.Lol.Stats.MAGICRESISTE} ➖ {self.stats_to_tuple(self.stats.magic_resistance)[0]} Magic Resistance
+                            {FS.Emotes.Lol.Stats.ATTACKDAMAGE} ➖ {self.stats_to_tuple(self.stats.attack_damage)[0]} Attack damage
+                            {FS.Emotes.Lol.Stats.ATTACKSPEED} ➖ {self.stats_to_tuple(self.stats.attack_speed)[0]} Attack speed
+                            {FS.Emotes.Lol.Stats.RANGE} ➖ {self.stats_to_tuple(self.stats.attack_range)[0]} Attack range
+                            {FS.Emotes.Lol.Stats.MOVESPEED} ➖ {self.stats_to_tuple(self.stats.movespeed)[0]} Movement speed""",
                 "inline": True,
             },
             {
                 "name": f"**/**{FS.Emotes.Lol.XP}",
-                "value": f"""{self.stat_to_line(self.stats.health)[1]}
-                            {self.stat_to_line(self.stats.health_regen)[1]}
-                            {self.stat_to_line(self.stats.mana)[1]}
-                            {self.stat_to_line(self.stats.mana_regen)[1]}
-                            {self.stat_to_line(self.stats.armor)[1]}
-                            {self.stat_to_line(self.stats.magic_resistance)[1]}
-                            {self.stat_to_line(self.stats.attack_damage)[1]}
-                            {self.stat_to_line(self.stats.attack_speed)[1]}
-                            {self.stat_to_line(self.stats.attack_range)[1]}
-                            {self.stat_to_line(self.stats.movespeed)[1]}""",
+                "value": f"""{self.stats_to_tuple(self.stats.health)[1]}
+                            {self.stats_to_tuple(self.stats.health_regen)[1]}
+                            {self.stats_to_tuple(self.stats.mana)[1]}
+                            {self.stats_to_tuple(self.stats.mana_regen)[1]}
+                            {self.stats_to_tuple(self.stats.armor)[1]}
+                            {self.stats_to_tuple(self.stats.magic_resistance)[1]}
+                            {self.stats_to_tuple(self.stats.attack_damage)[1]}
+                            {self.stats_to_tuple(self.stats.attack_speed)[1]}
+                            {self.stats_to_tuple(self.stats.attack_range)[1]}
+                            {self.stats_to_tuple(self.stats.movespeed)[1]}""",
                 "inline": True,
             },
             {
                 "name": f"__**18**__{FS.Emotes.Lol.XP}",
-                "value": f"""{self.stat_to_line(self.stats.health)[2]} Hp
-                            {self.stat_to_line(self.stats.health_regen)[2]} Hp/s
-                            {self.stat_to_line(self.stats.mana)[2]} Mana
-                            {self.stat_to_line(self.stats.mana_regen)[2]} Mana/s
-                            {self.stat_to_line(self.stats.armor)[2]} Armor
-                            {self.stat_to_line(self.stats.magic_resistance)[2]} Magic Resistance
-                            {self.stat_to_line(self.stats.attack_damage)[2]} Attack damage
-                            {self.stat_to_line(self.stats.attack_speed)[2]} Attack speed
-                            {self.stat_to_line(self.stats.attack_range)[2]} Attack range
-                            {self.stat_to_line(self.stats.movespeed)[2]} Movement speed""",
+                "value": f"""{self.stats_to_tuple(self.stats.health)[2]} Hp
+                            {self.stats_to_tuple(self.stats.health_regen)[2]} Hp/s
+                            {self.stats_to_tuple(self.stats.mana)[2]} Mana
+                            {self.stats_to_tuple(self.stats.mana_regen)[2]} Mana/s
+                            {self.stats_to_tuple(self.stats.armor)[2]} Armor
+                            {self.stats_to_tuple(self.stats.magic_resistance)[2]} Magic Resistance
+                            {self.stats_to_tuple(self.stats.attack_damage)[2]} Attack damage
+                            {self.stats_to_tuple(self.stats.attack_speed)[2]} Attack speed
+                            {self.stats_to_tuple(self.stats.attack_range)[2]} Attack range
+                            {self.stats_to_tuple(self.stats.movespeed)[2]} Movement speed""",
                 "inline": True,
             },
         ]
 
     @staticmethod
     def modifiers_to_line(modifiers: List[lol.merakichampion.MerakiChampionSpellModifierData]) -> str:
-        sequences: List[str] = []
+        sequences: List[List[str]] = []
         end: List[str] = []
         for modifier in modifiers:
             if len(modifier.values) > 0 and modifier.values[0] != modifier.values[-1]:
                 for j, value in enumerate(modifier.values):
                     if len(sequences) <= j:
-                        sequences.append("")
-                    sequences[j] += f"{value}{modifier.units[j]}"
+                        sequences.append([])
+                    sequences[j].append(f"{value}{modifier.units[j]}")
             else:
                 end.append(f"{modifier.values[0]}{modifier.units[0]}")
-        return "`" + f"{'/'.join(sequences)}{' +' if len(end) and len(sequences) else ''}{' +'.join(end)}".strip() + "`"
+        return (
+            "`"
+            + f"{'/'.join(' +'.join(seq) for seq in sequences)}{' +' if len(end) and len(sequences) else ''}{' +'.join(end)}".strip()
+            + "`"
+        )
 
     @staticmethod
     def spellType_to_color(abilitiy: lol.merakichampion.MerakiChampionSpellData) -> disnake.Colour:
@@ -478,13 +490,18 @@ class MerakiChampion(lol.MerakiChampion):
                     else "`--`"
                 ),
             )
+            text = (
+                f"{FS.Emotes.Lol.Stats.ABILITYHASTE} {self.modifiers_to_line(ability.cooldown.modifiers)}"
+                if ability.cooldown
+                else "`--`"
+            )
+            try:
+                text += f"{ability.recharge_rate}" if ability.recharge_rate else ""
+            except (RuntimeError, AttributeError):
+                pass
             embed.add_field(
                 name="Cooldown",
-                value=(
-                    f"{FS.Emotes.Lol.Stats.ABILITYHASTE} {self.modifiers_to_line(ability.cooldown.modifiers)}"
-                    if ability.resource
-                    else "`--`"
-                ),
+                value=text,
             )  # TODO Add minition recharge ?
             embed.add_field(
                 name="Range",
@@ -574,6 +591,51 @@ class MerakiChampion(lol.MerakiChampion):
             + [self.ability_embed("e", e) for e in self.abilities.e]
             + [self.ability_embed("r", r) for r in self.abilities.r]
         )
+
+    @property
+    def advanced_stats(self) -> List[disnake.Embed]:
+        embed = FS.Embed(title="__**ADVANCED STATS**__")
+        stats: List[str] = []
+        if self.stats.acquisition_radius:
+            stats.append("Acquisition radius: **" + self.stat_to_line(self.stats.acquisition_radius) + "**")
+        if self.stats.selection_radius:
+            stats.append("Selection radius: **" + self.stat_to_line(self.stats.selection_radius) + "**")
+        if self.stats.pathing_radius:
+            stats.append("Pathing radius: **" + self.stat_to_line(self.stats.pathing_radius) + "**")
+        if self.stats.gameplay_radius:
+            stats.append("Gameplay radius: **" + self.stat_to_line(self.stats.gameplay_radius) + "**")
+        if self.stats.attack_speed_ratio:
+            stats.append("attack speed ratio: **" + self.stat_to_line(self.stats.attack_speed_ratio) + "**")
+        if self.stats.attack_cast_time:
+            stats.append("attack cast time: **" + self.stat_to_line(self.stats.attack_cast_time) + "**")
+        if self.stats.attack_speed_ratio:
+            stats.append("attack speed ratio: **" + self.stat_to_line(self.stats.attack_speed_ratio) + "**")
+        if self.stats.attack_total_time:
+            stats.append("attack total time: **" + self.stat_to_line(self.stats.attack_total_time) + "**")
+        if self.stats.attack_delay_offset:
+            stats.append("attack delay offset: **" + self.stat_to_line(self.stats.attack_delay_offset) + "**")
+        embed.add_field(name="**ADVANCED**", value="\n".join(stats))
+        stats: List[str] = []
+        if self.stats.aram_damage_taken:
+            stats.append("Damage taken: **" + self.stat_to_line(self.stats.aram_damage_taken) + "**")
+        if self.stats.aram_damage_dealt:
+            stats.append("Damage dealt: **" + self.stat_to_line(self.stats.aram_damage_dealt) + "**")
+        if self.stats.aram_healing:
+            stats.append("Healing: **" + self.stat_to_line(self.stats.aram_healing) + "**")
+        if self.stats.aram_shielding:
+            stats.append("Shield: **" + self.stat_to_line(self.stats.aram_shielding) + "**")
+        embed.add_field(name="**ARAM**", value="\n".join(stats))
+        stats: List[str] = []
+        if self.stats.urf_damage_taken:
+            stats.append("Damage taken: **" + self.stat_to_line(self.stats.urf_damage_taken) + "**")
+        if self.stats.urf_damage_dealt:
+            stats.append("Damage dealt: **" + self.stat_to_line(self.stats.urf_damage_dealt) + "**")
+        if self.stats.urf_healing:
+            stats.append("Healing: **" + self.stat_to_line(self.stats.urf_healing) + "**")
+        if self.stats.urf_shielding:
+            stats.append("Shield: **" + self.stat_to_line(self.stats.urf_shielding) + "**")
+        embed.add_field(name="**URF**", value="\n".join(stats))
+        return [self.BaseEmbed, embed]
 
     @property
     def BaseEmbed(self) -> disnake.Embed:

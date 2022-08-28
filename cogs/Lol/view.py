@@ -279,6 +279,14 @@ class ChampionView(disnake.ui.View):
         button.disabled = True
         await self.update(inter)
 
+    @disnake.ui.button(label="Advanced stats", row=1)
+    async def advanced(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
+        self.embeds = self.champion.advanced_stats
+        for other_button in self.children:
+            other_button.disabled = False
+        button.disabled = True
+        await self.update(inter)
+
     @disnake.ui.button(label="P", row=2)
     async def passive(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
         self.embeds = self.champion.Pembeds

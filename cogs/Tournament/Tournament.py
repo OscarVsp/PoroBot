@@ -21,7 +21,7 @@ class Tournament(commands.Cog):
     @commands.slash_command(
         name="tournament",
         default_member_permissions=disnake.Permissions.all(),
-        guild_ids=[533360564878180382, 1008343697097760800],
+        guild_ids=[533360564878180382, 281403075506339840],
         dm_permission=False,
     )
     async def tournament(self, inter):
