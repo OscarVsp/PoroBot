@@ -125,12 +125,12 @@ class SummonerLeague(lol.SummonerLeague):
     def league_to_line(self, league: lol.league.SummonerLeagueEntryData) -> str:
         if league:
             return f"{self.short(league)} *({league.league_points} LP)*"
-        return f"{FS.Emotes.Lol.Tier.get('UNRANKED')}*"
+        return f"{FS.Emotes.Lol.Tier.get('UNRANKED')}{FS.Emotes.Lol.Rank.NONE}"
 
     def short(self, league: lol.league.SummonerLeagueEntryData) -> str:
         if league:
-            return f"{FS.Emotes.Lol.Tier.get(league.tier)} **{league.rank}**"
-        return f"{FS.Emotes.Lol.Tier.get('UNRANKED')}"
+            return f"{FS.Emotes.Lol.Tier.get(league.tier)}{FS.Emotes.Lol.Rank.get(league.rank)}"
+        return f"{FS.Emotes.Lol.Tier.get('UNRANKED')}{FS.Emotes.Lol.Rank.NONE}"
 
     @property
     def field(self) -> dict:
@@ -752,7 +752,7 @@ class CurrentGame(lol.spectator.CurrentGame):
             summoner_id=participant.summoner_id, champion_id=participant.champion_id
         ).get()
         return (
-            f"{league.short(league.first) if league else FS.Emotes.Lol.Tier.UNRANKED} **{participant.summoner_name}**",
+            f"{league.short(league.first) if league else FS.Emotes.Lol.Tier.UNRANKED+FS.Emotes.Lol.Rank.NONE} **{participant.summoner_name}**",
             f"{FS.Emotes.Lol.Champions.get(participant.champion_id)} {FS.Emotes.Lol.MASTERIES[championMastery.champion_level]} ➖ {FS.Emotes.Lol.Runes.Perks.Get(participant.rune_ids[0])}{FS.Emotes.Lol.Runes.Styles.Get(participant.rune_sub_style)}",
             f"➖ {FS.Emotes.Lol.SummonerSpells.get(participant.spell_ids[0])}{FS.Emotes.Lol.SummonerSpells.get(participant.spell_ids[1])}",
         )

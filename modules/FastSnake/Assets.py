@@ -63,6 +63,9 @@ class Emotes:
     SPECTATOR: str = "<:spectator:1009809802995712010>"
     FLAME: str = "<:eternal:1009809808955809803>"
     BAN: str = "<:ban:1009809814563594281>"
+    CARD: str = "<:Card:1013484275494043749>"
+    REDO: str = "<:redo:1013484276668444794>"
+    UP_BLUE: str = "<:up_blue:1013484282938929204>"
 
     class Lol:
 
@@ -155,6 +158,35 @@ class Emotes:
             "<:tokengrandmaster:1009110727358939248>",
             "<:tokenchallenger:1009110722657132615>",
         ]
+
+        class Rank:
+            NONE: str = "<:RankNone:1013487278624092201>"
+            RANKI: str = "<:TierI:1013484277943500851>"
+            RANKII: str = "<:TierII:1013484279239540786>"
+            RANKIII: str = "<:TierIII:1013484280363622470>"
+            RANKIV: str = "<:TierIV:1013484281613533184>"
+
+            @classmethod
+            def get(cls, rank: Union[int, str]):
+                if isinstance(rank, int):
+                    if rank == 1:
+                        return cls.RANKI
+                    if rank == 2:
+                        return cls.RANKII
+                    if rank == 3:
+                        return cls.RANKIII
+                    if rank == 4:
+                        return cls.RANKIV
+                elif isinstance(rank, str):
+                    if rank == "I":
+                        return cls.RANKI
+                    if rank == "II":
+                        return cls.RANKII
+                    if rank == "III":
+                        return cls.RANKIII
+                    if rank == "IV":
+                        return cls.RANKIV
+                return cls.NONE
 
         class Runes:
             class Styles:
