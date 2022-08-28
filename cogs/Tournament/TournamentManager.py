@@ -4,6 +4,7 @@ from typing import List
 from .classes import *
 from .TournamentView import AdminView
 from .TournamentView import PlayerSelectionView
+from .TournamentView import RoundView
 
 
 class Tournament(TournamentData):
@@ -62,7 +63,7 @@ class Tournament(TournamentData):
                 self.voice_channels[i].append(await self.category.create_voice_channel(name=name))
 
         self.classement_message = await self.classement_channel.send(embed=self.classement_embed)
-        self.rounds_message = await self.rounds_channel.send(embeds=self.rounds_embeds)
+        self.roundsView = await RoundView(self).start()
         self.rules_message = await self.rules_channel.send(embed=self.rules_embed)
         playerSelectionView = PlayerSelectionView(self)
         self.admin_message = await self.admin_channel.send(embed=playerSelectionView.embed, view=playerSelectionView)
@@ -90,7 +91,7 @@ class Tournament(TournamentData):
 
     async def update(self) -> None:
         self.classement_message = await self.classement_message.edit(embed=self.classement_embed)
-        self.rounds_message = await self.rounds_message.edit(embeds=self.rounds_embeds)
+        await self.roundsView.update()
         self.rules_message = await self.rules_message.edit(embed=self.rules_embed)
         self.save_state()
 

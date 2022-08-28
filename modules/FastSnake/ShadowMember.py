@@ -1033,3 +1033,10 @@ class ShadowMember:
         Unbans this member. Equivalent to :meth:`Guild.unban`.
         """
         await self.member.unban(reason=reason)
+
+    ### DUNDER ###
+
+    def __eq__(self, __o: object) -> bool:
+        if isinstance(__o, ShadowMember):
+            return __o.member == self.member
+        return self.member == __o

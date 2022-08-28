@@ -33,6 +33,41 @@ class PlayerSelectionView(MemberSelectionView):
             await self.tournament.delete()
 
 
+class RoundView(disnake.ui.View):
+    def __init__(self, tournament: TournamentData):
+        super().__init__(timeout=None)
+        self.tournament: TournamentData = tournament
+        self.message: disnake.Message = None
+
+    @property
+    def embeds(self) -> disnake.Embed:
+        return self.tournament.rounds_embeds
+
+    async def start(self) -> "RoundView":
+        self.vocal.disabled = True
+        self.message = await self.tournament.rounds_channel.send(embeds=self.embeds, view=self)
+        return self
+
+    async def update(self) -> None:
+        if self.tournament.state >= State.SET:
+            self.vocal.disabled = False
+        if self.message:
+            await self.message.edit(embeds=self.embeds, view=self)
+        else:
+            logging.error(f"RoundView neede to be started before the first update")
+
+    @disnake.ui.button(label="Go to Vocal")
+    async def vocal(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
+        await interaction.response.defer()
+        for i, match in enumerate(self.tournament.current_round.matches):
+            for j, team in enumerate(match.teams):
+                for player in team.players:
+                    if player == interaction.author and interaction.author.voice:
+                        await player.move_to(self.tournament.voice_channels[i][j])
+                        return
+        await self.update()
+
+
 class AdminView(disnake.ui.View):
     def __init__(self, tournament: TournamentData):
         super().__init__(timeout=None)
