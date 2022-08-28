@@ -522,7 +522,7 @@ class MerakiChampion(lol.MerakiChampion):
             for effect in ability.effects:
                 description = "> " + "\n> ".join(effect.description.split("\n"))
                 for attr in effect.leveling:
-                    description += f"\n**{attr.attribute} :**\n"
+                    description += f"\n\n**{attr.attribute} :**\n"
                     if attr.modifiers and len(attr.modifiers) > 0:
                         description += f"{self.modifiers_to_line(attr.modifiers)}"
                 embed.add_field(name="➖", value=description, inline=False)
