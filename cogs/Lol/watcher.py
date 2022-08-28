@@ -633,14 +633,22 @@ class CurrentGame(lol.spectator.CurrentGame):
 
     @property
     def map_name(self) -> str:
-        return next((mapData.get("mapName") for mapData in mapsData if mapData.get("mapID") == self.map_id), "UNKNOWN")
+        map_name = next(
+            (mapData.get("mapName") for mapData in mapsData if mapData.get("mapId") == self.map_id), "UNKNOWN"
+        )
+        if map_name == "UNKNOWN":
+            logging.warning(f"No map matching id {self.map_id}")
+        return map_name
 
     @property
     def game_name(self) -> str:
-        return next(
+        game_name = next(
             (queueData.get("description") for queueData in queuesData if queueData.get("queueId") == self.queue_id),
             "UNKNOWN------",
         )[:-6]
+        if game_name == "UNKNOWN":
+            logging.warning(f"Game name not found for {self.queue_id}")
+        return game_name
 
     @property
     def map_image(self) -> str:

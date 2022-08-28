@@ -436,17 +436,6 @@ class Lol(commands.Cog):
     async def drink(self, inter: ApplicationCommandInteraction):
         await inter.response.send_message(embed=drink_embed)
 
-    @commands.slash_command(description="Obtenir le dernier patch the League of Legends")
-    async def patchnote(
-        self,
-        inter: ApplicationCommandInteraction,
-        previous: int = commands.Param(
-            description="Nombre de patch en arrière (0 pour le patch en cours)", ge=0, default=0
-        ),
-    ):
-        patch = PatchNoteView(inter, previous)
-        await inter.response.send_message(embed=patch.embed, view=patch)
-
 
 def setup(bot: commands.InteractionBot):
     bot.add_cog(Lol(bot))
