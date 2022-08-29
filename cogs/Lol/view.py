@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from typing import List
+from typing import Union
 
 import disnake
 
@@ -87,36 +88,94 @@ class CurrentGameView(disnake.ui.View):
         self.gameEmbed: disnake.Embed = None
         self.teamEmbeds: List[disnake.Embed] = None
 
-    async def start(self, inter: disnake.ApplicationCommandInteraction):
+    async def start(self, inter: Union[disnake.ApplicationCommandInteraction, disnake.Member], max: int = 1):
         self.inter = inter
         try:
             summoner = await Summoner(name=self.summoner_name).get()
         except NotFound:
+            if isinstance(inter, disnake.ApplicationCommand):
+                await inter.edit_original_message(
+                    embed=FS.Embed(
+                        title="Invocateur inconnu",
+                        description=f"Le nom d'invocateur ***{self.summoner_name}*** ne correspond à aucun invocateur...",
+                    ),
+                    view=None,
+                )
+                await inter.delete_original_message(delay=3)
+            else:
+                await inter.send(
+                    embed=FS.Embed(
+                        title="Invocateur inconnu",
+                        description=f"Le nom d'invocateur ***{self.summoner_name}*** ne correspond à aucun invocateur...",
+                    ),
+                    view=None,
+                )
+            return
+        if isinstance(inter, disnake.ApplicationCommand):
             await inter.edit_original_message(
-                embed=FS.Embed(
-                    title="Invocateur inconnu",
-                    description=f"Le nom d'invocateur ***{self.summoner_name}*** ne correspond à aucun invocateur...",
-                ),
-                view=None,
+                embeds=[
+                    await summoner.embed,
+                    FS.Embed(description=f"{FS.Emotes.LOADING} *Recherche de game en cours...*"),
+                ]
             )
-            await inter.delete_original_message(delay=3)
+        else:
+            self.inter = await inter.send(
+                embeds=[
+                    await summoner.embed,
+                    FS.Embed(description=f"{FS.Emotes.LOADING} *Recherche de game en cours...*"),
+                ]
+            )
+        counter: int = 0
+        while True:
+            try:
+                self.live_game = await CurrentGame(summoner_id=summoner.id).get()
+                break
+            except NotFound:
+                counter += 5
+                if counter < max:
+                    await asyncio.sleep(5)
+                else:
+                    break
+
+        if not self.live_game:
+            logging.info(f"Game not found after {counter} seconds")
+            if isinstance(inter, disnake.ApplicationCommand):
+                await inter.edit_original_message(
+                    embeds=[
+                        (await summoner.embed),
+                        FS.Embed(
+                            description="*Pas de partie en cours ou bien le mode de jeu n'est pas supporté (only Summoner Rift and ARAM)*"
+                        ),
+                    ]
+                )
+                await inter.delete_original_message(delay=10)
+            else:
+                await self.inter.edit(
+                    embeds=[
+                        (await summoner.embed),
+                        FS.Embed(
+                            description="*Pas de partie en cours ou bien le mode de jeu n'est pas supporté (only Summoner Rift and ARAM)*"
+                        ),
+                    ]
+                )
             return
 
-        await inter.edit_original_message(
-            embeds=[await summoner.embed, FS.Embed(description=f"{FS.Emotes.LOADING} *Recherche de game en cours...*")]
-        )
-        try:
-            self.live_game = await CurrentGame(summoner_id=summoner.id).get()
-        except NotFound:
-            await inter.edit_original_message(
-                embeds=[(await summoner.embed), FS.Embed(description="*Pas de partie en cours*")]
-            )
-            await inter.delete_original_message(delay=10)
-            return
+        logging.info(f"Game found after {counter} seconds")
 
-        await inter.edit_original_message(
-            embeds=[await summoner.embed, FS.Embed(description=f"{FS.Emotes.LOADING} *Récupération des données...*")]
-        )
+        if isinstance(inter, disnake.ApplicationCommand):
+            await inter.edit_original_message(
+                embeds=[
+                    await summoner.embed,
+                    FS.Embed(description=f"{FS.Emotes.LOADING} *Récupération des données...*"),
+                ]
+            )
+        else:
+            await self.inter.edit(
+                embeds=[
+                    await summoner.embed,
+                    FS.Embed(description=f"{FS.Emotes.LOADING} *Récupération des données...*"),
+                ]
+            )
 
         self.buttons: List[disnake.ui.Button] = []
         self.embeds_cached = []
@@ -136,7 +195,7 @@ class CurrentGameView(disnake.ui.View):
                 self.buttons.append(button)
                 if participant.summoner_name == summoner.name:
                     self.current_participant_index = (i, j)
-        await self.update(inter)
+        await self.update(self.inter)
 
     async def embeds(self) -> List[disnake.Embed]:
         if self.embeds_cached[self.current_participant_index[0]][self.current_participant_index[1]] == None:
@@ -157,6 +216,9 @@ class CurrentGameView(disnake.ui.View):
     async def update(self, inter: disnake.MessageInteraction):
         for button in self.buttons:
             button.disabled = [int(i) for i in button.custom_id.split(":")] == self.current_participant_index
+        if isinstance(inter, disnake.Message):
+            await inter.edit(embeds=await self.embeds(), view=self)
+            return
         if inter.response.is_done():
             await inter.edit_original_message(embeds=await self.embeds(), view=self)
         else:
@@ -182,8 +244,10 @@ class ClashTeamView(disnake.ui.View):
             summoner = await Summoner(name=self.summoner_name).get()
             clashPlayers = await summoner.clash_players.get()
             if len(clashPlayers.players) > 0:
-                self.team = ClashTeam(id=clashPlayers.players[0].team_id)
-                self.summoners: List[Summoner] = [await player.summoner.get() for player in self.team.players]
+                self.team = await ClashTeam(id=clashPlayers.players[0].team_id).get()
+                self.summoners: List[Summoner] = [
+                    await Summoner(id=player.summoner_id).get() for player in self.team.players
+                ]
                 return self
             else:
                 await inter.edit_original_message(
@@ -223,7 +287,7 @@ class ClashTeamView(disnake.ui.View):
                 self.current_summoner = self.summoners[i]
         self.add_item(
             disnake.ui.Button(
-                style=disnake.ButtonStyle.link, url=await self.team.opgg_url(), emoji=FS.Emotes.Lol.OPGG, row=2
+                style=disnake.ButtonStyle.link, url=await self.team.opgg_url, emoji=FS.Emotes.Lol.OPGG, row=2
             )
         )
         await self.update(inter)

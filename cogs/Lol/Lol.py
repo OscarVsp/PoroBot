@@ -26,6 +26,7 @@ class Lol(commands.Cog):
         self.bot: commands.InteractionBot = bot
         self.summoners = pickledb.load("cogs/Lol/summoners.db", False)
         self.clash_channel = None
+        self.live_trackers: Dict[disnake.Member, bool] = {}
 
     """@commands.Cog.listener('on_message')
     async def on_message(self, message : disnake.Message):
@@ -415,6 +416,37 @@ class Lol(commands.Cog):
         if clashView:
             await clashView.start(inter)
 
+    @lol.sub_command(
+        name="add_tracker", description="Track your lol games and send you the game info at the start of each game"
+    )
+    async def add_trakcer(self, inter: ApplicationCommandInteraction):
+        await inter.response.defer(ephemeral=True)
+        if str(inter.author.id) in self.summoners.getall():
+            self.live_trackers.setdefault(inter.author, True)
+            await inter.edit_original_message(
+                embed=FS.Embed(
+                    description="Tracker started !\nStart a game and i will send you the tracker in private.",
+                    footer_text="Check that your activity is enable on discord (Settings > Actitivy settings > Activity Privacy > Display current activity)",
+                )
+            )
+            logging.info(f"Added lol tracker for {inter.author.display_name}")
+        else:
+            await inter.edit_original_message(
+                embed=FS.warning(
+                    "Your League of Legends account need to be link to use to command.\nUse `/lol account` to do it !"
+                )
+            )
+
+    @lol.sub_command(name="remove_tracker", description="Remove the lol tracker")
+    async def removed_tracker(self, inter: ApplicationCommandInteraction):
+        await inter.response.defer(ephemeral=True)
+        if inter.author in self.live_trackers.keys():
+            self.live_trackers.pop(inter.author)
+            await inter.edit_original_message(embed=FS.Embed(description="Tracker removed !"))
+            logging.info(f"Removed lol tracker for {inter.author.display_name}")
+        else:
+            await inter.edit_original_message(embed=FS.warning("I'm not tracking your !"))
+
     @commands.slash_command(description="Voir combien de temps et d'argent tu as dépensés sur LOL")
     async def wasteonlol(self, inter: ApplicationCommandInteraction):
         await inter.response.send_message(
@@ -440,6 +472,27 @@ class Lol(commands.Cog):
     @commands.slash_command(description="Obtenir les règles de l'aram à boire")
     async def drink(self, inter: ApplicationCommandInteraction):
         await inter.response.send_message(embed=drink_embed)
+
+    async def send_tracker(self, target: disnake.Member):
+        await CurrentGameView(self.summoners.get(str(target.id))).start(target, max=12)
+        await asyncio.sleep(30)
+        self.live_trackers.update([(target, True)])
+
+    @staticmethod
+    def check_start_game(before: disnake.Member, after: disnake.Member, game_name: str):
+        for activity in after.activities:
+            if activity.name == game_name and activity.state and activity.state == "In Game":
+                for activity in before.activities:
+                    if activity.name == game_name and activity.state and activity.state == "In Game":
+                        return False
+                return True
+
+    @commands.Cog.listener("on_presence_update")
+    async def on_presence_update(self, before: disnake.Member, after: disnake.Member):
+        if after in self.live_trackers and self.live_trackers.get(after):
+            if self.check_start_game(before, after, "League of Legends"):
+                self.live_trackers.update([(after, False)])
+                await self.send_tracker(after)
 
 
 def setup(bot: commands.InteractionBot):

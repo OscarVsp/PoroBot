@@ -247,7 +247,7 @@ class ClashTeam(lol.ClashTeam):
 
     @property
     def icon_url(self) -> str:
-        return self._icon_url + self.icon_id + "/1.png"
+        return self._icon_url + str(self.icon_id) + "/1.png"
 
     @async_property
     async def opgg_url(self) -> str:
@@ -257,16 +257,17 @@ class ClashTeam(lol.ClashTeam):
 
     @async_property
     async def embed(self) -> disnake.Embed:
-        description = f"Tier **{self.tierFormatted}**\n\n"
+        description = f"Tier **{FS.Emotes.Lol.Rank.get(self.tier)}**\n\n"
         for player in self.sortedPlayers:
             summoner = await Summoner(id=player.summoner_id).get()
             league = await summoner.league_entries.get()
-            description += f"> {FS.Emotes.Lol.Positions.get(player.position)}{FS.Emotes.Lol.Ranks.get(league.first.rank)} {summoner.name}"
+            description += f"> {FS.Emotes.Lol.Positions.get(player.position)}{FS.Emotes.Lol.Tier.get(league.first.tier)} {summoner.name}"
             if player.role == "CAPTAIN":
                 description += f" {FS.Emotes.Lol.CAPTAIN}"
             description += "\n"
         return FS.Embed(
-            title=f"__**{self.name} [{self.abbreviation.upper()}]**__",
+            author_name=f"{self.abbreviation.upper()}",
+            title=f"**{self.name}**",
             description=description,
             thumbnail=self.icon_url,
             color=disnake.Colour.blue(),
