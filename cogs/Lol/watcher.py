@@ -91,11 +91,13 @@ class SummonerLeague(lol.SummonerLeague):
 
     @staticmethod
     def sorting_score(entry: lol.league.SummonerLeagueEntryData):
-        return (
-            SummonerLeague.TIERS.index(entry.tier if entry else 0) * 10000
-            + SummonerLeague.RANKS.index(entry.rank if entry else 0) * 1000
-            + entry.league_points
-        )
+        if entry:
+            return (
+                SummonerLeague.TIERS.index(entry.tier) * 10000
+                + SummonerLeague.RANKS.index(entry.rank) * 1000
+                + entry.league_points
+            )
+        return 0
 
     @property
     def solo(self) -> Optional[lol.league.SummonerLeagueEntryData]:

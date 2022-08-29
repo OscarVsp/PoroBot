@@ -217,7 +217,10 @@ class Lol(commands.Cog):
 
         for i in range(len(sorted_members)):
             entries = await sorted_summoners[i].league_entries.get()
-            ranks += f"{FS.Emotes.Lol.Tier.get(entries.first.tier)} **{entries.first.rank}**\n"
+            if entries.first:
+                ranks += f"{FS.Emotes.Lol.Tier.get(entries.first.tier)}{FS.Emotes.Lol.Rank.get(entries.first.rank)} **{entries.first.rank}**\n"
+            else:
+                ranks += f"{FS.Emotes.Lol.Tier.NONE}{FS.Emotes.Lol.Rank.NONE}\n"
             players += f"**{sorted_members[i].display_name}** (`{sorted_summoners[i].name}`)\n"
 
         await inter.edit_original_message(
