@@ -26,7 +26,7 @@ class Lol(commands.Cog):
         self.bot: commands.InteractionBot = bot
         self.summoners = pickledb.load("cogs/Lol/summoners.db", False)
         self.clash_channel = None
-        self.live_trackers: Dict[disnake.Member, bool] = {}
+        self.live_trackers = pickledb.load("cogs/Lol/trackers.db", False)
 
     """@commands.Cog.listener('on_message')
     async def on_message(self, message : disnake.Message):
@@ -417,35 +417,31 @@ class Lol(commands.Cog):
             await clashView.start(inter)
 
     @lol.sub_command(
-        name="add_tracker", description="Track your lol games and send you the game info at the start of each game"
+        name="tracker", description="Track your lol games and send you details about the game when it start"
     )
-    async def add_trakcer(self, inter: ApplicationCommandInteraction):
+    async def tracker(self, inter: ApplicationCommandInteraction, enable: bool):
         await inter.response.defer(ephemeral=True)
-        if str(inter.author.id) in self.summoners.getall():
-            self.live_trackers.setdefault(inter.author, True)
+        if str(inter.author.id) not in self.summoners.getall():
             await inter.edit_original_message(
                 embed=FS.Embed(
-                    description="Tracker started !\nStart a game and i will send you the tracker in private.",
-                    footer_text="Check that your activity is enable on discord (Settings > Actitivy settings > Activity Privacy > Display current activity)",
+                    title=f"**LIVE GAME TRACKER**",
+                    description="⚠️ You need to link your League of Legends account to use this command.\n> Use `/lol account`",
                 )
             )
-            logging.info(f"Added lol tracker for {inter.author.display_name}")
+            return
+        self.live_trackers.set(str(inter.author.id), enable)
+        self.live_trackers.dump()
+        if enable:
+            await inter.edit_original_message(
+                embed=FS.Embed(
+                    title=f"**LIVE GAME TRACKER**",
+                    description="✅ **Tracker enabled !**\n\nI will send you message about your games when they start.\n\n> The discord activity need to be enable:\n> `Settings > Activity Pricvacy > Display current activity`\n\n> You can disable the tracker with `/lol tracker enable:False`",
+                )
+            )
         else:
             await inter.edit_original_message(
-                embed=FS.warning(
-                    "Your League of Legends account need to be link to use to command.\nUse `/lol account` to do it !"
-                )
+                embed=FS.Embed(title=f"**LIVE GAME TRACKER**", description="✅ **Tracker disabled !**")
             )
-
-    @lol.sub_command(name="remove_tracker", description="Remove the lol tracker")
-    async def removed_tracker(self, inter: ApplicationCommandInteraction):
-        await inter.response.defer(ephemeral=True)
-        if inter.author in self.live_trackers.keys():
-            self.live_trackers.pop(inter.author)
-            await inter.edit_original_message(embed=FS.Embed(description="Tracker removed !"))
-            logging.info(f"Removed lol tracker for {inter.author.display_name}")
-        else:
-            await inter.edit_original_message(embed=FS.warning("I'm not tracking your !"))
 
     @commands.slash_command(description="Voir combien de temps et d'argent tu as dépensés sur LOL")
     async def wasteonlol(self, inter: ApplicationCommandInteraction):
@@ -474,9 +470,10 @@ class Lol(commands.Cog):
         await inter.response.send_message(embed=drink_embed)
 
     async def send_tracker(self, target: disnake.Member):
-        await CurrentGameView(self.summoners.get(str(target.id))).start(target, max=12)
-        await asyncio.sleep(30)
-        self.live_trackers.update([(target, True)])
+        await CurrentGameView(self.summoners.get(str(target.id))).start(target, max=5)
+        await asyncio.sleep(5)
+        self.live_trackers.set(str(target.id), True)
+        self.live_trackers.dump()
 
     @staticmethod
     def check_start_game(before: disnake.Member, after: disnake.Member, game_name: str):
@@ -489,9 +486,10 @@ class Lol(commands.Cog):
 
     @commands.Cog.listener("on_presence_update")
     async def on_presence_update(self, before: disnake.Member, after: disnake.Member):
-        if after in self.live_trackers and self.live_trackers.get(after):
+        if str(after.id) in self.live_trackers.getall() and self.live_trackers.get(str(after.id)):
             if self.check_start_game(before, after, "League of Legends"):
-                self.live_trackers.update([(after, False)])
+                self.live_trackers.set(str(after.id), False)
+                self.live_trackers.dump()
                 await self.send_tracker(after)
 
 
