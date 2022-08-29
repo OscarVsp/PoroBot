@@ -302,9 +302,11 @@ class Lol(commands.Cog):
         self, inter: ApplicationCommandInteraction, nom: str = commands.Param(description="Le nom du champion.")
     ):
         await inter.response.defer(ephemeral=False)
-
-        championView = await ChampionView(nom).get()
-        await championView.start(inter)
+        if nom in (await champion_keys_cache.data)["name_by_id"].values():
+            championView = await ChampionView(nom).get()
+            await championView.start(inter)
+        else:
+            await inter.edit_original_message(embed=FS.warning(f"Not champion with name **{nom}**"))
 
     @champion.autocomplete("nom")
     async def autocomp_championt(self, inter: disnake.ApplicationCommandInteraction, user_input: str):
