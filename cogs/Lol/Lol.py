@@ -218,7 +218,7 @@ class Lol(commands.Cog):
         for i in range(len(sorted_members)):
             entries = await sorted_summoners[i].league_entries.get()
             if entries.first:
-                ranks += f"{FS.Emotes.Lol.Tier.get(entries.first.tier)}{FS.Emotes.Lol.Rank.get(entries.first.rank)} **{entries.first.rank}**\n"
+                ranks += f"{FS.Emotes.Lol.Tier.get(entries.first.tier)}{FS.Emotes.Lol.Rank.get(entries.first.rank)}\n"
             else:
                 ranks += f"{FS.Emotes.Lol.Tier.NONE}{FS.Emotes.Lol.Rank.NONE}\n"
             players += f"**{sorted_members[i].display_name}** (`{sorted_summoners[i].name}`)\n"
@@ -481,9 +481,13 @@ class Lol(commands.Cog):
     @staticmethod
     def check_start_game(before: disnake.Member, after: disnake.Member, game_name: str):
         for activity in after.activities:
-            if activity.name == game_name and activity.state and activity.state == "In Game":
+            if activity.name == game_name and activity.state and activity.state.lower() in ["in game", "en jeu"]:
                 for activity in before.activities:
-                    if activity.name == game_name and activity.state and activity.state == "In Game":
+                    if (
+                        activity.name == game_name
+                        and activity.state
+                        and activity.state.lower() in ["in game", "en jeu"]
+                    ):
                         return False
                 return True
 
