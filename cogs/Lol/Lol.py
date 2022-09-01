@@ -214,7 +214,9 @@ class Lol(commands.Cog):
             else:
                 filtre_members = []
                 for guild in self.bot.guilds:
-                    filtre_members.append(guild.members)
+                    for member in guild.members:
+                        if member not in filtre_members:
+                            filtre_members.append(member)
 
         (sorted_members, sorted_summoners) = await self.get_lol_classement(filtre_members)
 
@@ -244,7 +246,7 @@ class Lol(commands.Cog):
     @classement.autocomplete("filtre")
     def autocomple_filtre(self, inter: disnake.ApplicationCommandInteraction, user_input: str):
         if not inter.guild:
-            return []
+            return "Filter can only be used in guild !"
         filtres = []
         for role in inter.guild.roles:
             if role.name.lower().startswith(user_input.lower()):
