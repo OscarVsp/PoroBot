@@ -374,7 +374,7 @@ class MerakiChampion(lol.MerakiChampion):
             else:
                 return [f"{round(stat.percent,2)}%", "", f"{stat.percent}%"]
         else:
-            return ["*N/A*", "", ""]
+            return ["*--*", "", "*--*"]
 
     def stat_to_line(self, stat: lol.merakichampion.MerakiChampionStatDetailData) -> str:
         tup = self.stats_to_tuple(stat)
@@ -384,19 +384,13 @@ class MerakiChampion(lol.MerakiChampion):
     def stat_fields(self) -> List[dict]:
         return [
             {
-                "name": "__**STATS**__",
-                "value": f"{FS.Emotes.Lol.AttackType.get(self.adaptive_type.split('_')[0])} {FS.Emotes.Lol.AttackType.get(self.attack_type)} "
-                + " ".join([f"{FS.Emotes.Lol.Roles.get(role)}" for role in self.roles]),
-                "inline": False,
-            },
-            {
                 "name": f"➖ ➖ __**Base**__",
                 "value": f"""{FS.Emotes.Lol.Stats.HEALT} ➖ **{self.stats_to_tuple(self.stats.health)[0]}** Hp
                             {FS.Emotes.Lol.Stats.HEALTREGEN} ➖ **{self.stats_to_tuple(self.stats.health_regen)[0]}** Hp/s
                             {FS.Emotes.Lol.Stats.MANA} ➖ **{self.stats_to_tuple(self.stats.mana)[0]}** Mana
                             {FS.Emotes.Lol.Stats.MANAREGEN} ➖ **{self.stats_to_tuple(self.stats.mana_regen)[0]}** Mana/s
                             {FS.Emotes.Lol.Stats.ARMOR} ➖ **{self.stats_to_tuple(self.stats.armor)[0]}** Armor
-                            {FS.Emotes.Lol.Stats.MAGICRESISTE} ➖ **{self.stats_to_tuple(self.stats.magic_resistance)[0]} **Magic Resistance
+                            {FS.Emotes.Lol.Stats.MAGICRESISTE} ➖ **{self.stats_to_tuple(self.stats.magic_resistance)[0]}** Magic Resistance
                             {FS.Emotes.Lol.Stats.ATTACKDAMAGE} ➖ **{self.stats_to_tuple(self.stats.attack_damage)[0]}** Attack damage
                             {FS.Emotes.Lol.Stats.ATTACKSPEED} ➖ **{self.stats_to_tuple(self.stats.attack_speed)[0]}** Attack speed
                             {FS.Emotes.Lol.Stats.RANGE} ➖ **{self.stats_to_tuple(self.stats.attack_range)[0]}** Attack range
@@ -461,11 +455,18 @@ class MerakiChampion(lol.MerakiChampion):
     def spellType_to_color(abilitiy: lol.merakichampion.MerakiChampionSpellData) -> disnake.Colour:
         ret = None
         for effect in abilitiy.effects:
-            if effect.description.startswith("Active"):
+            if effect.description.split(":")[0].endswith("Active") or effect.description.split(":")[0].startswith(
+                "Active"
+            ):
                 return disnake.Colour.dark_red()
-            elif effect.description.startswith("Passive"):
+            elif effect.description.split(":")[0].endswith("Passive") or effect.description.split(":")[0].startswith(
+                "Passive"
+            ):
                 ret = disnake.Colour.dark_blue()
-            elif effect.description.startswith("Innate") and ret == None:
+            elif (
+                effect.description.split(":")[0].endswith("Innate")
+                or effect.description.split(":")[0].startswith("Innate")
+            ) and ret == None:
                 ret = disnake.Colour.dark_purple()
         return ret
 
@@ -581,9 +582,12 @@ class MerakiChampion(lol.MerakiChampion):
                     "> " + "\n> ".join(effect.description.split("\n"))
                     for effect in ability.effects
                     if (
-                        effect.description.startswith("Innate")
-                        or effect.description.startswith("Active")
-                        or effect.description.startswith("Passive")
+                        effect.description.split(":")[0].endswith("Innate")
+                        or effect.description.split(":")[0].startswith("Innate")
+                        or effect.description.split(":")[0].endswith("Active")
+                        or effect.description.split(":")[0].startswith("Active")
+                        or effect.description.split(":")[0].endswith("Passive")
+                        or effect.description.split(":")[0].startswith("Passive")
                     )
                 ]
             ),
@@ -602,27 +606,35 @@ class MerakiChampion(lol.MerakiChampion):
         )
 
     @property
-    def advanced_stats(self) -> List[disnake.Embed]:
-        embed = FS.Embed(title="__**ADVANCED STATS**__")
+    def stats_embed(self) -> List[disnake.Embed]:
+        embed = FS.Embed(
+            title="__**STATS**__",
+            description=f"{FS.Emotes.Lol.AttackType.get(self.adaptive_type.split('_')[0])} {FS.Emotes.Lol.AttackType.get(self.attack_type)} "
+            + " ".join([f"{FS.Emotes.Lol.Roles.get(role)}" for role in self.roles]),
+            color=disnake.Colour.dark_blue(),
+        )
+        for field in self.stat_fields:
+            embed.add_field(name=field.get("name"), value=field.get("value"), inline=field.get("inline", True))
+        embed.add_field(name="➖", value="➖", inline=False)
         stats: List[str] = []
         if self.stats.acquisition_radius:
-            stats.append(f"**Acquisition radius:** `{self.stats.acquisition_radius.flat}`")
+            stats.append(f"**Acquisition radius:** `{round(self.stats.acquisition_radius.flat,3)}`")
         if self.stats.selection_radius:
-            stats.append(f"**Selection radius:** `{self.stats.selection_radius.flat}`")
+            stats.append(f"**Selection radius:** `{round(self.stats.selection_radius.flat,3)}`")
         if self.stats.pathing_radius:
-            stats.append(f"**Pathing radius:** `{self.stats.pathing_radius.flat}`")
+            stats.append(f"**Pathing radius:** `{round(self.stats.pathing_radius.flat,3)}`")
         if self.stats.gameplay_radius:
-            stats.append(f"**Gameplay radius:** `{self.stats.gameplay_radius.flat}`")
+            stats.append(f"**Gameplay radius:** `{round(self.stats.gameplay_radius.flat,3)}`")
         if self.stats.attack_speed_ratio:
-            stats.append(f"**attack speed ratio:** `{self.stats.attack_speed_ratio.flat}`")
+            stats.append(f"**attack speed ratio:** `{round(self.stats.attack_speed_ratio.flat,3)}`")
         if self.stats.attack_cast_time:
-            stats.append(f"**attack cast time:** `{self.stats.attack_cast_time.flat}`")
+            stats.append(f"**attack cast time:** `{round(self.stats.attack_cast_time.flat,3)}`")
         if self.stats.attack_speed_ratio:
-            stats.append(f"**attack speed ratio:** `{self.stats.attack_speed_ratio.flat}`")
+            stats.append(f"**attack speed ratio:** `{round(self.stats.attack_speed_ratio.flat,3)}`")
         if self.stats.attack_total_time:
-            stats.append(f"**attack total time:** `{self.stats.attack_total_time.flat}`")
+            stats.append(f"**attack total time:** `{round(self.stats.attack_total_time.flat,3)}`")
         if self.stats.attack_delay_offset:
-            stats.append(f"**attack delay offset:** `{self.stats.attack_delay_offset.flat}`")
+            stats.append(f"**attack delay offset:** `{round(self.stats.attack_delay_offset.flat,3)}`")
         if stats:
             embed.add_field(name="**ADVANCED**", value="\n".join(stats))
         stats: List[str] = []
@@ -656,14 +668,12 @@ class MerakiChampion(lol.MerakiChampion):
         embed = FS.Embed(
             author_name=self.full_name if self.full_name else self.name,
             title=f"*{self.title}*",
-            description=self.lore[:100] + "[...]" if len(self.lore) > 100 else self.lore,
+            description=f'> "{self.lore[:200]}[...]"' if len(self.lore) > 200 else f'> "{self.lore}"',
             author_icon_url=self.skins[0].tile_path,
             color=disnake.Colour.dark_blue(),
             thumbnail=self.skins[0].load_screen_path,
             footer_text=f"Last changed in patch {self.patch_last_changed}",
         )
-        for field in self.stat_fields:
-            embed.add_field(name=field.get("name"), value=field.get("value"), inline=field.get("inline", True))
         return embed
 
     @property

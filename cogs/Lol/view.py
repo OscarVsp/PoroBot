@@ -223,6 +223,9 @@ class CurrentGameView(disnake.ui.View):
         if isinstance(inter, disnake.Message):
             await inter.edit(embeds=await self.embeds(), view=self)
             return
+        if isinstance(inter, disnake.PartialMessageable):
+            await inter.send(embeds=await self.embeds(), view=self)
+            return
         if inter.response.is_done():
             await inter.edit_original_message(embeds=await self.embeds(), view=self)
         else:
@@ -240,6 +243,12 @@ class CurrentGameView(disnake.ui.View):
         ).get()
         await champion.start(inter.channel)
         await self.update(inter)
+
+    @disnake.ui.button(label="Delete message", emoji="🧹", row=4, style=disnake.ButtonStyle.danger)
+    async def delete(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
+        await inter.response.defer()
+        await inter.delete_original_message()
+        self.stop()
 
     async def call_back(self, inter: disnake.MessageInteraction):
         await inter.response.defer()
@@ -309,6 +318,12 @@ class ClashTeamView(disnake.ui.View):
         )
         await self.update(inter)
 
+    @disnake.ui.button(label="Delete message", emoji="🧹", row=4, style=disnake.ButtonStyle.danger)
+    async def delete(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
+        await inter.response.defer()
+        await inter.delete_original_message()
+        self.stop()
+
     @async_property
     async def embeds(self) -> List[disnake.Embed]:
         return [await self.current_summoner.embed, await self.team.embed]
@@ -356,7 +371,9 @@ class ChampionView(disnake.ui.View):
         if isinstance(inter, disnake.TextChannel):
             await inter.send(embeds=self.embeds, view=self)
             return
-
+        if isinstance(inter, disnake.PartialMessageable):
+            await inter.send(embeds=self.embeds, view=self)
+            return
         if inter.response.is_done():
             await inter.edit_original_message(embeds=self.embeds, view=self)
         else:
@@ -370,9 +387,9 @@ class ChampionView(disnake.ui.View):
         button.disabled = True
         await self.update(inter)
 
-    @disnake.ui.button(label="Advanced stats", row=1)
-    async def advanced(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
-        self.embeds = self.champion.advanced_stats
+    @disnake.ui.button(label="Stats", row=1)
+    async def stats(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
+        self.embeds = self.champion.stats_embed
         for other_button in self.children:
             other_button.disabled = False
         button.disabled = True
@@ -417,3 +434,9 @@ class ChampionView(disnake.ui.View):
             other_button.disabled = False
         button.disabled = True
         await self.update(inter)
+
+    @disnake.ui.button(label="Delete message", emoji="🧹", row=4, style=disnake.ButtonStyle.danger)
+    async def delete(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
+        await inter.response.defer()
+        await inter.delete_original_message()
+        self.stop()

@@ -58,7 +58,7 @@ class Lol(commands.Cog):
                                 embed=FS.Embed(title=":x: Erreur",description=f"Je ne parvient pas à trouver le joueur correspondant à l'id suivant :{summoner_id}")
                             )"""
 
-    @commands.slash_command(name="lol")
+    @commands.slash_command(name="lol", dm_permission=True)
     async def lol(self, inter):
         pass
 
@@ -194,21 +194,27 @@ class Lol(commands.Cog):
 
         filtre_members: List[disnake.Member] = None
 
-        if filtre:
-            filtre_clean = filtre.split(" ")[1]
-            for role in inter.guild.roles:
-                if role.name == filtre_clean:
-                    filtre_members = role.members
-                    break
+        if inter.guild:
 
-            if filtre_members == None:
-                for event in inter.guild.scheduled_events:
-                    if event.name == filtre_clean:
-                        filtre_members = [member async for member in event.fetch_users()]
+            if filtre:
+                filtre_clean = filtre.split(" ")[1]
+                for role in inter.guild.roles:
+                    if role.name == filtre_clean:
+                        filtre_members = role.members
                         break
 
-        if filtre_members == None or filtre == None:
-            filtre_members = inter.guild.members
+                if filtre_members == None:
+                    for event in inter.guild.scheduled_events:
+                        if event.name == filtre_clean:
+                            filtre_members = [member async for member in event.fetch_users()]
+                            break
+
+            if filtre_members == None or filtre == None:
+                filtre_members = inter.guild.members
+            else:
+                filtre_members = []
+                for guild in self.bot.guilds:
+                    filtre_members.append(guild.members)
 
         (sorted_members, sorted_summoners) = await self.get_lol_classement(filtre_members)
 
@@ -237,6 +243,8 @@ class Lol(commands.Cog):
 
     @classement.autocomplete("filtre")
     def autocomple_filtre(self, inter: disnake.ApplicationCommandInteraction, user_input: str):
+        if not inter.guild:
+            return []
         filtres = []
         for role in inter.guild.roles:
             if role.name.lower().startswith(user_input.lower()):
@@ -252,7 +260,10 @@ class Lol(commands.Cog):
     async def live(
         self,
         inter: ApplicationCommandInteraction,
-        invocateur: str = commands.Param(description="Le nom de l'invocateur à rechercher.", default=None),
+        invocateur: str = commands.Param(
+            description="Le nom de l'invocateur à rechercher. Peut être vide pour soit-même si tu as lié ton compte",
+            default=None,
+        ),
     ):
         await inter.response.defer(ephemeral=False)
         if invocateur == None:
