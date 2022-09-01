@@ -346,6 +346,10 @@ class Lol(commands.Cog):
         inter: ApplicationCommandInteraction,
         nombre: int = commands.Param(description="Nombre de sous groupe", gt=1),
     ):
+        if isinstance(inter, disnake.PartialMessageable):
+            await inter.response.send_message(
+                embed=FS.warning('"/lol seeding" command can only be use on server for the moment.')
+            )  # TODO add fitler option in DM and fix member selection to allow dm
         await inter.response.defer(ephemeral=True)
         selection = await memberSelection(
             target=inter, description="Compose le groupe de membre à diviser.", check=self.seeding_check

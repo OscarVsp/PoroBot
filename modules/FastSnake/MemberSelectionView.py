@@ -25,7 +25,8 @@ class MemberSelectionView(ConfirmationView):
         color: disnake.Colour = disnake.Colour.default(),
     ):
         super().__init__(target, embeds, title, description, timeout, color)
-
+        if isinstance(target, disnake.PartialMessageable):
+            raise TypeError("MemberSelection cannot be used on DM channel for the moment !")  # TODO
         self.size: Union[List[int], int] = size
 
         self.selected_members: List[disnake.Member] = pre_selection.copy() if pre_selection else []
