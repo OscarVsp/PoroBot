@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from typing import List
+
 import disnake
 
 import modules.FastSnake as FS
@@ -38,7 +40,7 @@ class AlmanaxView(disnake.ui.View):
         await interaction.author.send(embed=self.data_to_embed(Almanax_scraper.get_almanax(365)))
 
     @classmethod
-    def data_to_embed(cls, data):
+    def data_to_embed(cls, data) -> List[disnake.Embed]:
         if type(data) == list:
             max_embed_size = 4000
             offrandes = "\n".join([f"{d['date']} : **{d['item_quantity']}x** {d['item']}" for d in data])
@@ -54,7 +56,7 @@ class AlmanaxView(disnake.ui.View):
                 for offrande in offrandes:
                     embeds.append(FS.Embed(description=offrande))
                 return embeds
-            return embed
+            return [embed]
 
         return FS.Embed(
             title=f":calendar_spiral:__**Almanax du {data['date']}**__:calendar_spiral:",

@@ -24,7 +24,11 @@ class Dofus(commands.Cog):
         self.almanax_task.add_exception_type(asyncpg.PostgresConnectionError)
         self.almanax_task.start()
 
-    @commands.slash_command(description="Obtenir l'almanax du jour/des prochains jours")
+    @commands.slash_command(name="dofus", dm_permission=True)
+    async def dofus(self, inter):
+        pass
+
+    @dofus.sub_command(name="almanax", description="Obtenir l'almanax du jour/des prochains jours")
     async def almanax(
         self,
         inter: ApplicationCommandInteraction,
@@ -35,17 +39,18 @@ class Dofus(commands.Cog):
         await inter.response.send_message(
             embed=FS.Embed(
                 title="Consultation du Krosmoz en cours...",
-                description="À chaque fois que l'almanax d'un jour est demandé pour la première fois, cela peut prendre un peu de temps.\nL'almanax te sera envoyé en privé dès qu'il sera prêt.",
+                description=""
+                if isinstance(inter.channel, disnake.PartialMessageable)
+                else "À chaque fois que l'almanax d'un jour est demandé pour la première fois, cela peut prendre un peu de temps.\nL'almanax te sera envoyé en privé dès qu'il sera prêt.",
                 thumbnail=FS.Images.SABLIER,
             ),
             delete_after=10,
         )
-        embed_s = AlmanaxView.data_to_embed(await Almanax_scraper.get_almanax(nombre_de_jours))
-        if type(embed_s) == list:
-            for embed in embed_s:
-                await inter.author.send(embed=embed)
+        embeds = AlmanaxView.data_to_embed(await Almanax_scraper.get_almanax(nombre_de_jours))
+        if isinstance(inter.channel, disnake.PartialMessageable):
+            await inter.edit_original_message(embeds=embeds)
         else:
-            await inter.author.send(embed=embed_s)
+            await inter.author.send(embeds=embeds)
 
     @tasks.loop(hours=24)
     async def almanax_task(self):
