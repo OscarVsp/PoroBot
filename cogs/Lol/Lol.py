@@ -211,12 +211,12 @@ class Lol(commands.Cog):
 
             if filtre_members == None or filtre == None:
                 filtre_members = inter.guild.members
-            else:
-                filtre_members = []
-                for guild in self.bot.guilds:
-                    for member in guild.members:
-                        if member not in filtre_members:
-                            filtre_members.append(member)
+        else:
+            filtre_members = []
+            for guild in self.bot.guilds:
+                for member in guild.members:
+                    if member not in filtre_members:
+                        filtre_members.append(member)
 
         (sorted_members, sorted_summoners) = await self.get_lol_classement(filtre_members)
 
