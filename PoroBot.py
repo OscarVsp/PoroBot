@@ -73,12 +73,6 @@ class PoroBot(InteractionBot):
         logging.info(f"| Cogs loaded : " + ", ".join([f"{cog}" for cog in self.cogs.keys()]))
         logging.info("| Started successfully !" if self.start_succed else "| Started with some issues...")
         logging.info(f"| Ready !")
-
-        await self.change_presence(
-            activity=disnake.Activity(name='"/" -> commandes', type=disnake.ActivityType.playing)
-        )
-
-        logging.info("-" * 50)
         logging.info("-" * 50)
 
     def load_commands(self) -> None:

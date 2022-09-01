@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
+from random import choice
+
+import asyncpg
 import disnake
 from disnake import ApplicationCommandInteraction
 from disnake.ext import commands
+from disnake.ext import tasks
 
 import modules.FastSnake as FS
 from .view import *
@@ -11,6 +15,8 @@ class Basic(commands.Cog):
     def __init__(self, bot):
         """Initialize the cog"""
         self.bot: commands.InteractionBot = bot
+        self.presence_update.add_exception_type(asyncpg.PostgresConnectionError)
+        self.presence_update.start()
 
     @commands.slash_command(description="Commander un bière (test le ping du bot)")
     async def beer(self, inter: ApplicationCommandInteraction):
@@ -52,6 +58,38 @@ class Basic(commands.Cog):
             await inter.response.send_message(
                 embed=FS.warning("Seul Hyksos peut utiliser cette commande !"), ephemeral=True
             )
+
+    @tasks.loop(minutes=1)
+    async def presence_update(self):
+        cmd = choice(self.bot.global_slash_commands)
+        while cmd.default_member_permissions:
+            cmd = choice(self.bot.global_slash_commands)
+
+        await self.bot.change_presence(
+            activity=disnake.Activity(name=f"/{cmd.name}", type=disnake.ActivityType.watching)
+        )
+
+    @presence_update.before_loop
+    async def presence_update_before(self):
+        await self.bot.wait_until_ready()
+
+    @presence_update.error
+    async def presence_update_error(self, error):
+        tb = self.bot.tracebackEx(error)
+        await self.bot.log_channel.send(
+            embed=FS.Embed(
+                title=f":x: __** ERROR**__ :x:",
+                description=f"""```{error}```\nRaised on task **presence_update task**.""",
+            )
+        )
+        n = len(tb) // 4096
+        for i in range(n):
+            await self.bot.log_channel.send(embed=FS.Embed(description=f"```python\n{tb[4096*i:4096*(i+1)]}```"))
+        await self.bot.log_channel.send(embed=FS.Embed(description=f"```python\n{tb[4096*n:]}```"))
+        logging.error(f"{error} raised on task presence_update\n {tb}")
+
+    def cog_unload(self):
+        self.presence_update.cancel()
 
 
 def setup(bot: commands.InteractionBot):
