@@ -42,7 +42,7 @@ class PoroBot(InteractionBot):
 
         if self.test_mode:
             logging.info("Starting in test mod...")
-            super().__init__(intents=intents, test_guilds=[533360564878180382])
+            super().__init__(intents=intents)  # , test_guilds=[533360564878180382])
         else:
             logging.info("Starting in prod mod...")
             super().__init__(intents=intents)
@@ -126,17 +126,17 @@ class PoroBot(InteractionBot):
 
     async def on_slash_command(self, interaction: disnake.ApplicationCommandInteraction) -> None:
         logging.info(
-            f"Slash command '{interaction.application_command.name}:{interaction.id}' from '{interaction.guild.name} #{interaction.channel.name}' by '{interaction.author.name}' started..."
+            f"Slash command '{interaction.application_command.name}:{interaction.id}' from '{interaction.guild.name+'#'+interaction.channel.name if interaction.guild else 'DM'}' by '{interaction.author.name}' started..."
         )
 
     async def on_user_command(self, interaction: disnake.UserCommandInteraction) -> None:
         logging.info(
-            f"User command '{interaction.application_command.name}:{interaction.id}' from '{interaction.guild.name} #{interaction.channel.name}' by '{interaction.author.name}' started..."
+            f"User command '{interaction.application_command.name}:{interaction.id}' from '{interaction.guild.name+'#'+interaction.channel.name if interaction.guild else 'DM'}' by '{interaction.author.name}' started..."
         )
 
     async def on_message_command(self, interaction: disnake.MessageCommandInteraction) -> None:
         logging.info(
-            f"Message command '{interaction.application_command.name}:{interaction.id}' from '{interaction.guild.name} #{interaction.channel.name}' by '{interaction.author.name}' started..."
+            f"Message command '{interaction.application_command.name}:{interaction.id}' from '{interaction.guild.name+'#'+interaction.channel.name if interaction.guild else 'DM'}' by '{interaction.author.name}' started..."
         )
 
     async def on_slash_command_error(self, interaction: ApplicationCommandInteraction, error: Exception) -> None:
@@ -150,17 +150,17 @@ class PoroBot(InteractionBot):
 
     async def on_slash_command_completion(self, interaction: disnake.ApplicationCommandInteraction) -> None:
         logging.info(
-            f"Slash command '{interaction.application_command.name}:{interaction.id}' from '{interaction.guild.name} #{interaction.channel.name}' by '{interaction.author.name}' at '{interaction.created_at}' runed with succes"
+            f"Slash command '{interaction.application_command.name}:{interaction.id}' from '{interaction.guild.name+'#'+interaction.channel.name if interaction.guild else 'DM'}' by '{interaction.author.name}' at '{interaction.created_at}' ended normally"
         )
 
     async def on_user_command_completion(self, interaction: disnake.UserCommandInteraction) -> None:
         logging.info(
-            f"User command '{interaction.application_command.name}:{interaction.id}' from '{interaction.guild.name} #{interaction.channel.name}' by '{interaction.author.name}' at '{interaction.created_at}' runed with succes"
+            f"User command '{interaction.application_command.name}:{interaction.id}' from '{interaction.guild.name+'#'+interaction.channel.name if interaction.guild else 'DM'}' by '{interaction.author.name}' at '{interaction.created_at}' ended normally"
         )
 
     async def on_message_command_completion(self, interaction: disnake.MessageCommandInteraction) -> None:
         logging.info(
-            f"Message command '{interaction.application_command.name}:{interaction.id}' from '{interaction.guild.name} #{interaction.channel.name}' by '{interaction.author.name}' at '{interaction.created_at}' runed with succes"
+            f"Message command '{interaction.application_command.name}:{interaction.id}' from '{interaction.guild.name+'#'+interaction.channel.name if interaction.guild else 'DM'}' by '{interaction.author.name}' at '{interaction.created_at}' ended normally"
         )
 
 
