@@ -59,19 +59,24 @@ class Basic(commands.Cog):
                 embed=FS.warning("Seul Hyksos peut utiliser cette commande !"), ephemeral=True
             )
 
-    @tasks.loop(minutes=1)
+    @tasks.loop(seconds=30)
     async def presence_update(self):
-        cmd = choice(self.bot.global_slash_commands)
-        while cmd.default_member_permissions:
-            cmd = choice(self.bot.global_slash_commands)
+        cmd: disnake.APISlashCommand = choice(self.list_slash_cmd)
 
         await self.bot.change_presence(
-            activity=disnake.Activity(name=f"/{cmd.name}", type=disnake.ActivityType.watching)
+            activity=disnake.Activity(
+                name=f"/{cmd.name}" + (f" {choice(cmd.options).name}" if cmd.options else ""),
+                type=disnake.ActivityType.watching,
+            )
         )
 
     @presence_update.before_loop
     async def presence_update_before(self):
         await self.bot.wait_until_ready()
+        self.list_slash_cmd = []
+        for cmd in list(self.bot.global_slash_commands):
+            if not cmd.default_member_permissions:
+                self.list_slash_cmd.append(cmd)
 
     @presence_update.error
     async def presence_update_error(self, error):
