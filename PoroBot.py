@@ -42,7 +42,7 @@ class PoroBot(InteractionBot):
 
         if self.test_mode:
             logging.info("Starting in test mod...")
-            super().__init__(intents=intents)  # , test_guilds=[533360564878180382])
+            super().__init__(intents=intents, test_guilds=[533360564878180382])
         else:
             logging.info("Starting in prod mod...")
             super().__init__(intents=intents)
