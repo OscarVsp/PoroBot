@@ -77,6 +77,8 @@ class Basic(commands.Cog):
         for cmd in list(self.bot.global_slash_commands):
             if not cmd.default_member_permissions:
                 self.list_slash_cmd.append(cmd)
+        if len(self.list_slash_cmd) == 0:
+            self.presence_update.cancel()
 
     @presence_update.error
     async def presence_update_error(self, error):
