@@ -10,6 +10,7 @@ from .classes import Round
 from .classes import State
 from .classes import Team
 from .classes import TournamentData
+from cogs.Tournament.modal import CodesModal
 from cogs.Tournament.modal import NotificationModal
 from modules.FastSnake import *
 
@@ -181,6 +182,10 @@ class AdminView(disnake.ui.View):
         else:
             await self.update(interaction)
 
+    @disnake.ui.button(emoji="🔗", label="Codes", style=disnake.ButtonStyle.gray, row=1)
+    async def codes(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
+        await interaction.response.send_modal(CodesModal(self.tournament))
+
     @disnake.ui.select(min_values=1, max_values=1, row=2, placeholder="Sélectionner un match")
     async def match_selection(self, select: disnake.ui.Select, interaction: disnake.MessageInteraction):
         self.round_selected = self.tournament.rounds[int(select.values[0][0])]
@@ -234,7 +239,10 @@ class DraftView(disnake.ui.View):
 
 
 class DraftManager:
-    def __init__(self, channels: Tuple[disnake.VoiceChannel, disnake.VoiceChannel], labels: List[str]):
+    def __init__(
+        self, tournament: TournamentData, channels: Tuple[disnake.VoiceChannel, disnake.VoiceChannel], labels: List[str]
+    ):
+        self.tournament: TournamentData = tournament
         self.channels: Tuple[disnake.VoiceChannel, disnake.VoiceChannel] = channels
         self.messages: Dict[disnake.VoiceChannel, disnake.Message] = {channels[0]: None, channels[1]: None}
         self.labels: List[str] = labels
@@ -244,7 +252,16 @@ class DraftManager:
         self.level: int = 0
         self.view: DraftView = DraftView(self)
 
+    @property
+    def code(self) -> Optional[str]:
+        if self.tournament._codes:
+            return self.tournament._codes[self.tournament.current_round.round_idx][
+                self.tournament.voice_channels.index(self.channels)
+            ]
+        return None
+
     def embed(self, channel: disnake.VoiceChannel):
+
         tup: List[List[str]] = [[], [], []]
         for i in range(self.level):
             tup[0].append(f"**{self.labels[i]}:**")
@@ -254,15 +271,36 @@ class DraftManager:
             tup[0].append(f"**{self.labels[self.level]}:**")
             if self.selections[self.level][channel]:
                 tup[1].append(f"`{self.selections[self.level][channel]}`")
-        return FS.Embed(
-            title="__**DRAFT**__",
-            description="> Just type in the chat the name of the champion to ban/pick. You will see the ban/pick enemy only when both teams have chosen (and vice versa).\n> ⚠️ You cannot modify your choices !",
-            fields=[
-                {"name": "➖", "value": "\n".join(tup[0]), "inline": True},
-                {"name": "__**You**__", "value": "\n".join(tup[1]) if len(tup[1]) else "` `", "inline": True},
-                {"name": "__**Enemy**__", "value": "\n".join(tup[2]) if len(tup[2]) else "` `", "inline": True},
-            ],
-        )
+            return FS.Embed(
+                title="__**DRAFT**__",
+                description="> Simply type in the chat the name of the champion to ban/pick. You will see the ban/pick enemy only when both teams have chosen.\n> ⚠️ You cannot modify your choices !",
+                fields=[
+                    {"name": "➖", "value": "\n".join(tup[0]), "inline": True},
+                    {"name": "__**You**__", "value": "\n".join(tup[1]) if len(tup[1]) else "` `", "inline": True},
+                    {"name": "__**Enemy**__", "value": "\n".join(tup[2]) if len(tup[2]) else "` `", "inline": True},
+                ],
+            )
+        elif self.code:
+            return FS.Embed(
+                title="__**DRAFT**__",
+                description="> Simply type in the chat the name of the champion to ban/pick. You will see the ban/pick enemy only when both teams have chosen.\n> ⚠️ You cannot modify your choices !",
+                fields=[
+                    {"name": "➖", "value": "\n".join(tup[0]), "inline": True},
+                    {"name": "__**You**__", "value": "\n".join(tup[1]) if len(tup[1]) else "` `", "inline": True},
+                    {"name": "__**Enemy**__", "value": "\n".join(tup[2]) if len(tup[2]) else "` `", "inline": True},
+                    {"name": "__**Tournament code**__", "value": f"\n`{self.code}`"},
+                ],
+            )
+        else:
+            return FS.Embed(
+                title="__**DRAFT**__",
+                description="> Simply type in the chat the name of the champion to ban/pick. You will see the ban/pick enemy only when both teams have chosen.\n> ⚠️ You cannot modify your choices !",
+                fields=[
+                    {"name": "➖", "value": "\n".join(tup[0]), "inline": True},
+                    {"name": "__**You**__", "value": "\n".join(tup[1]) if len(tup[1]) else "` `", "inline": True},
+                    {"name": "__**Enemy**__", "value": "\n".join(tup[2]) if len(tup[2]) else "` `", "inline": True},
+                ],
+            )
 
     def other_channel(self, channel: disnake.VoiceChannel) -> disnake.VoiceChannel:
         return self.channels[(self.channels.index(channel) + 1) % 2]
@@ -292,3 +330,6 @@ class DraftManager:
         self.level = 0
         self.selections = [{self.channels[0]: None, self.channels[1]: None} for _ in range(len(self.labels))]
         await self.update()
+
+    def set_codes(self, code: str):
+        self.code = code

@@ -979,6 +979,7 @@ class TournamentData(Container):
         self._nb_players_per_team: int = nb_players_per_team
         self._nb_point_to_win_match: int = nb_point_to_win_match
         self._last_state: dict = None
+        self._codes: List[List[str]] = None
 
         self.everyone: disnake.Role = self.guild.default_role
         self.category: disnake.CategoryChannel = None
@@ -1125,7 +1126,17 @@ class TournamentData(Container):
         else:
             return None
 
+    def set_codes(self, codes: List[str]):
+        self._codes = []
+        for r in range(self.nb_rounds):
+            self._codes.append([])
+            for m in range(self.nb_matches_per_round):
+                self._codes[r].append(codes[r * self.nb_matches_per_round + m])
+
     async def build(self) -> None:
+        pass
+
+    async def next_round(self) -> None:
         pass
 
     async def set_players(self, members: List[disnake.Member]) -> None:

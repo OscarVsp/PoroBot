@@ -88,7 +88,7 @@ class Tournament(TournamentData):
         await self.update()
         for matchChannels in self.voice_channels:
             self.draftManagers.append(
-                await DraftManager(matchChannels, ["⛔ Ban 1", "✅ Pick 1", "⛔ Ban 2", "✅ Pick 2"]).start()
+                await DraftManager(self, matchChannels, ["⛔ Ban 1", "✅ Pick 1", "⛔ Ban 2", "✅ Pick 2"]).start()
             )
 
     def generate_round(self) -> None:
