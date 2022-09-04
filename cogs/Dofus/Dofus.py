@@ -21,7 +21,7 @@ class Dofus(commands.Cog):
         self.bot: commands.InteractionBot = bot
         self.scraper = Almanax_scraper()
         self.almanax_message: disnake.Message = None
-        self.almanax_channel = os.getenv("ALMANAX_CHANNEL", None)
+        self.almanax_channel = self.bot.get_channel(int(os.getenv("ALMANAX_CHANNEL", None)))
         self.almanax_task.add_exception_type(asyncpg.PostgresConnectionError)
         self.almanax_task.start()
 
