@@ -21,6 +21,7 @@ class Dofus(commands.Cog):
         self.bot: commands.InteractionBot = bot
         self.scraper = Almanax_scraper()
         self.almanax_message: disnake.Message = None
+        self.almanax_channel = os.getenv("ALMANAX_CHANNEL", None)
         self.almanax_task.add_exception_type(asyncpg.PostgresConnectionError)
         self.almanax_task.start()
 
@@ -69,7 +70,6 @@ class Dofus(commands.Cog):
             logging.info("Almanax task waiting for bot to be ready...")
             await self.bot.wait_until_ready()
             await asyncio.sleep(1)
-            self.almanax_channel = self.bot.get_channel(int(self.bot.config["ALMANAX_CHANNEL"]))
             if self.almanax_channel == None:
                 self.almanax_task.cancel()
                 logging.error(f"Almanax channel '{self.almanax_channel}' not found. Task is cancelled.")
@@ -101,7 +101,7 @@ class Dofus(commands.Cog):
         logging.error(f"{error} raised on task Almanax_task \n {tb}")
 
     def cog_unload(self):
-        self.almanax.cancel()
+        self.almanax_task.cancel()
 
 
 def setup(bot: commands.InteractionBot):
