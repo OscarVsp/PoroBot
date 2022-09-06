@@ -4,10 +4,8 @@ from typing import List
 
 import disnake
 from deep_translator import GoogleTranslator
-from disnake import ApplicationCommandInteraction
 from disnake.ext import commands
 
-import modules.FastSnake as FS
 from .view import Locker
 
 
@@ -26,7 +24,7 @@ class Server(commands.Cog):
     def outgoing_connection(before: disnake.VoiceState, after: disnake.VoiceState) -> bool:
         return before.channel != None and before.channel != after.channel
 
-    @commands.slash_command(
+    """@commands.slash_command(
         name="lock",
         default_member_permissions=disnake.Permissions.all(),
         dm_permission=False,
@@ -62,7 +60,7 @@ class Server(commands.Cog):
             if channel not in self.locked_channels:
                 if channel.permissions_for(inter.author).view_channel:
                     unlocked_channel.append(channel.name)
-        return unlocked_channel
+        return unlocked_channel"""
 
     @commands.Cog.listener("on_voice_state_update")
     async def on_voice_update(self, member: disnake.Member, before: disnake.VoiceState, after: disnake.VoiceState):

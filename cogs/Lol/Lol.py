@@ -25,38 +25,7 @@ class Lol(commands.Cog):
         """
         self.bot: commands.InteractionBot = bot
         self.summoners = pickledb.load("cogs/Lol/summoners.db", False)
-        self.clash_channel = None
         self.live_trackers = pickledb.load("cogs/Lol/trackers.db", False)
-
-    """@commands.Cog.listener('on_message')
-    async def on_message(self, message : disnake.Message):
-        if message.author.bot and message.content.startswith("PoroWebhook"):
-            temp :str = message.content[12:]
-            [code,data] = temp.split(':')
-            if code == "001":
-                if self.clash_channel == None:
-                    self.clash_channel = self.bot.get_channel(int(self.bot.config['CLASH_CHANNEL']))
-                summoner_ids = data.split(',')
-                for summoner_id in summoner_ids:
-                    try:
-                        summoner = await Summoner.by_id(summoner_id)
-                        team = await ClashTeam.by_summoner(summoner)
-                        if team:
-                            await self.clash_channel.send(
-                                embed=(await team.embed()),
-                                components=disnake.ui.Button(label="OPGG", emoji=FS.Emotes.Lol.OPGG, style=disnake.ButtonStyle.link, url=(await team.opgg()))
-                            )
-                        else:
-                            await self.log_channel.send(
-                                embeds=[FS.Embed(title=":x: Erreur",description="Je ne parvient pas à trouver la team clash du joueur suivant :"),(await summoner.embed())]
-                            )
-                            await self.clash_channel.send(
-                                embeds=[FS.Embed(title=":x: Erreur",description="Je ne parvient pas à trouver la team clash du joueur suivant :"),(await summoner.embed())]
-                            )
-                    except (SummonerNotFound):
-                        await self.bot.log_channel.send(
-                                embed=FS.Embed(title=":x: Erreur",description=f"Je ne parvient pas à trouver le joueur correspondant à l'id suivant :{summoner_id}")
-                            )"""
 
     @commands.slash_command(name="lol", dm_permission=True)
     async def lol(self, inter):
@@ -424,17 +393,6 @@ class Lol(commands.Cog):
                 ),
                 view=None,
             )
-
-    @lol.sub_command(name="clash", description="Scouter une team clash à partir du nom d'un des joueurs")
-    async def clash(
-        self,
-        inter: ApplicationCommandInteraction,
-        summoner: str = commands.Param(description="Le nom d'invocateur d'un des joueurs"),
-    ):
-        await inter.response.defer()
-        clashView: ClashTeamView = await ClashTeamView(summoner).get(inter)
-        if clashView:
-            await clashView.start(inter)
 
     @lol.sub_command(
         name="tracker", description="Track your lol games and send you details about the game when it start"
