@@ -69,7 +69,7 @@ class Dofus(commands.Cog):
             logging.info("Almanax task waiting for bot to be ready...")
             await self.bot.wait_until_ready()
             await asyncio.sleep(1)
-            self.almanax_channel = self.bot.get_channel(int(self.bot.config["ALMANAX_CHANNEL"]))
+            self.almanax_channel = self.bot.get_channel(int(os.getenv("ALMANAX_CHANNEL", None)))
             if self.almanax_channel == None:
                 self.almanax_task.cancel()
                 logging.error(f"Almanax channel '{self.almanax_channel}' not found. Task is cancelled.")
@@ -101,7 +101,7 @@ class Dofus(commands.Cog):
         logging.error(f"{error} raised on task Almanax_task \n {tb}")
 
     def cog_unload(self):
-        self.almanax.cancel()
+        self.almanax_task.cancel()
 
 
 def setup(bot: commands.InteractionBot):
