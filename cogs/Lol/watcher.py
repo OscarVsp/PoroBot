@@ -190,6 +190,43 @@ class ChampionMasteries(lol.ChampionMasteries):
             num /= 1000.0
         return "{}{}".format("{:f}".format(num).rstrip("0").rstrip("."), ["", "K", "M", "B", "T"][magnitude])
 
+    @staticmethod
+    def level_to_color(level: int) -> disnake.Colour:
+        if level == 1:
+            return disnake.Colour.default()
+        elif level == 2:
+            return disnake.Colour.dark_gray()
+        elif level == 3:
+            return disnake.Colour.light_gray()
+        elif level == 4:
+            return disnake.Colour.lighter_gray()
+        elif level == 5:
+            return disnake.Colour.red()
+        elif level == 6:
+            return disnake.Colour.purple()
+        elif level == 7:
+            return disnake.Colour.blue()
+
+    @async_property
+    async def embeds(self) -> List[disnake.Embed]:
+        sorted_champions = sorted(self.masteries, key=lambda c: (c.champion_level, c.champion_points), reverse=True)
+        blocks: List[List[lol.ChampionMastery]] = [[] for _ in range(7)]
+        for champion in sorted_champions:
+            blocks[-champion.champion_level].append(champion)
+        embeds: List[disnake.Embed] = []
+        for j, block in enumerate(blocks):
+            title = f"{FS.Emotes.Lol.MASTERIES[-(j+1)]} __**Mastery {7-j}**__"
+            color = self.level_to_color(7 - j)
+            text = ""
+            for i, champion in enumerate(block):
+                if i != 0 and i % 20 == 0:
+                    embeds.append(FS.Embed(title=title, description=text, color=color))
+                    text = ""
+                    title = disnake.Embed.Empty
+                text += f"{FS.Emotes.Lol.Champions.get(champion.champion_id)} *{self.champion_points_formatted(champion)}*\n"
+            embeds.append(FS.Embed(title=title, description=text, color=color))
+        return embeds
+
 
 class ClashPlayers(lol.ClashPlayers):
     class Meta(lol.ClashPlayers.Meta):

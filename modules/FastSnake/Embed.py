@@ -248,7 +248,7 @@ class Embed(disnake.Embed):
         for line in description.split("\n"):
             if (
                 len((line + "\n").strip()) > embeds[-1].remaining_space
-                or len((line + "\n").strip()) + len(embeds[-1].description.strip()) > 4096
+                or len((line + "\n").strip()) + len(embeds[-1].description.strip()) > 4000
             ):
                 embeds.append(Embed(color=color, description=""))
             embeds[-1].description += line + "\n"

@@ -283,6 +283,52 @@ class Lol(commands.Cog):
             )
             await inter.delete_original_message(delay=3)
 
+    @lol.sub_command(name="masteries", description="Info sur les masteries d'un invocateur")
+    async def masteries(
+        self,
+        inter: ApplicationCommandInteraction,
+        invocateur: str = commands.Param(description="Le nom de l'invocateur.", default=None),
+    ):
+        await inter.response.defer(ephemeral=False)
+        if invocateur == None:
+            if str(inter.author.id) in self.summoners.getall():
+                invocateur = self.summoners.get(str(inter.author.id))
+            else:
+                await inter.edit_original_message(
+                    embed=FS.Embed(
+                        description="""Spécifie un nom d'invocateur ou bien lie ton compte lol en utilisant "/lol account"."""
+                    )
+                )
+                return
+
+        try:
+            summoner = await Summoner(name=invocateur).get()
+            masteries = await summoner.champion_masteries.get()
+            await inter.edit_original_message(
+                embed=FS.Embed(
+                    title="Envoie en privé",
+                    description=f"La list des maitrises va t'être envoyé en privé.",
+                    footer_text="Tu peux rejeter ce message pour le faire disparaitre",
+                ),
+                view=None,
+            )
+            embeds = await masteries.embeds
+            i = 0
+            while len(embeds) > 10 * (i + 1):
+                await inter.author.send(embeds=embeds[10 * i : 10 * (i + 1)])
+                i += 1
+            await inter.author.send(embeds=embeds[10 * i :])
+        except NotFound:
+            await inter.edit_original_message(
+                embed=FS.Embed(
+                    title="Invocateur inconnu",
+                    description=f"Le nom d'invocateur ***{invocateur}*** ne correspond à aucun invocateur...",
+                    footer_text="Tu peux rejeter ce message pour le faire disparaitre",
+                ),
+                view=None,
+            )
+            await inter.delete_original_message(delay=3)
+
     @lol.sub_command(name="champion", description="Info sur un champion")
     async def champion(
         self, inter: ApplicationCommandInteraction, nom: str = commands.Param(description="Le nom du champion.")
