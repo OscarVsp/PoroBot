@@ -33,7 +33,7 @@ class Dofus(commands.Cog):
         self,
         inter: ApplicationCommandInteraction,
         nombre_de_jours: int = commands.Param(
-            description="Le nombre de prochain jour dont tu veux connaitre l'almanax", ge=0, lt=364, default=0
+            description="Le nombre de prochain jour dont tu veux connaitre l'almanax", ge=0, lt=365, default=0
         ),
     ):
         await inter.response.send_message(
