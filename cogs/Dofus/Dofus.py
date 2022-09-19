@@ -46,11 +46,8 @@ class Dofus(commands.Cog):
             ),
             delete_after=10,
         )
-        embeds = AlmanaxView.data_to_embed(await Almanax_scraper.get_almanax(nombre_de_jours))
-        if isinstance(inter.channel, disnake.PartialMessageable):
-            await inter.edit_original_message(embeds=embeds)
-        else:
-            await inter.author.send(embeds=embeds)
+        for embed in AlmanaxView.data_to_embed(await Almanax_scraper.get_almanax(nombre_de_jours)):
+            await inter.author.send(embed=embed)
 
     @tasks.loop(hours=24)
     async def almanax_task(self):
