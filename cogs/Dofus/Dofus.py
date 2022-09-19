@@ -57,7 +57,7 @@ class Dofus(commands.Cog):
         logging.info("Almanax tasks run")
         await self.almanax_message.delete()
         self.almanax_message = await self.almanax_channel.send(
-            embed=AlmanaxView.data_to_embed(await Almanax_scraper.get_almanax())
+            embeds=AlmanaxView.data_to_embed(await Almanax_scraper.get_almanax())
         )
 
     @almanax_task.before_loop
