@@ -8,4 +8,5 @@ from .Embed import *
 from .MemberSelectionView import *
 from .Modals import *
 from .ShadowMember import *
+from .SimpleModal import *
 from .Views import *

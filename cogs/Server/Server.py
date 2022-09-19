@@ -1,21 +1,16 @@
 # -*- coding: utf-8 -*-
-import logging
-from typing import List
-
 import disnake
 from deep_translator import GoogleTranslator
 from disnake.ext import commands
 
-from .view import Locker
+from .view import PollCreationView
 
 
 class Server(commands.Cog):
     def __init__(self, bot):
         """Initialize the cog"""
         self.bot: commands.InteractionBot = bot
-        self.locked_channels: List[Locker] = []
         self.translator = GoogleTranslator(source="auto", target="en")
-
 
     def tr(self, text: str) -> str:
         if text != None and text != disnake.Embed.Empty:
@@ -65,6 +60,17 @@ class Server(commands.Cog):
             content=content,
             embeds=embeds,
         )
+
+    @commands.slash_command(name="poll", description="Créer un sondage dans le channel actuel")
+    async def poll(
+        self,
+        inter: disnake.ApplicationCommandInteraction,
+        titre: str = commands.Param(description="Le titre du sondage"),
+        role: disnake.Role = commands.Param(description="Le role à mentionner", default=None),
+    ):
+        await inter.response.defer(ephemeral=True)
+        pollCreationView = PollCreationView(inter, titre, role)
+        await inter.edit_original_message(embed=pollCreationView.embed, view=pollCreationView)
 
 
 def setup(bot: commands.InteractionBot):
