@@ -43,24 +43,24 @@ class AlmanaxView(disnake.ui.View):
     def data_to_embed(cls, data) -> List[disnake.Embed]:
         if type(data) == list:
             max_embed_size = 4000
-            offrandes = "\n".join([f"{d['date']} : **{d['item_quantity']}x** {d['item']}" for d in data])
-            len(offrandes)
-            offrandes = [offrandes[i : i + max_embed_size] for i in range(0, len(offrandes), max_embed_size)]
-            embed = FS.Embed(
-                title=f":calendar_spiral:__**Almanax des {len(data)} prochains jours**__:calendar_spiral:",
-                description=offrandes[0],
-            )
-            if len(offrandes) >= 2:
-                embeds = [embed]
-                offrandes.pop(0)
-                for offrande in offrandes:
-                    embeds.append(FS.Embed(description=offrande))
-                return embeds
-            return [embed]
+            embeds: List[disnake.Embed] = [
+                disnake.Embed(
+                    title=f":calendar_spiral: __**Almanax des {len(data)} prochains jours**__ :calendar_spiral:"
+                )
+            ]
+            offrandes: List[str] = [f"{d['date']} : **{d['item_quantity']}x** {d['item']}" for d in data]
+            text: str = ""
+            for offrand in offrandes:
+                if len(text) + len(offrand) > max_embed_size:
+                    embeds.append(disnake.Embed(description=text))
+                    text = ""
+                text += offrand + "\n"
+            embeds.append(disnake.Embed(description=text))
+            return embeds
 
         return [
             FS.Embed(
-                title=f":calendar_spiral:__**Almanax du {data['date']}**__:calendar_spiral:",
+                title=f":calendar_spiral: __**Almanax du {data['date']}**__ :calendar_spiral:",
                 fields=[
                     {"name": "__Offrande :__", "value": f"**{data['item_quantity']}x** {data['item']}"},
                     {"name": "__Bonus :__", "value": f"{data['description']}"},
