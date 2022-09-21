@@ -13,12 +13,13 @@ from disnake.ext import tasks
 import modules.FastSnake as FS
 from .scraper import Almanax_scraper
 from .view import *
+from bot.bot import Bot
 
 
 class Dofus(commands.Cog):
     def __init__(self, bot):
         """Initialize the cog"""
-        self.bot: commands.InteractionBot = bot
+        self.bot: Bot = bot
         self.scraper = Almanax_scraper()
         self.almanax_message: disnake.Message = None
         self.almanax_task.add_exception_type(asyncpg.PostgresConnectionError)

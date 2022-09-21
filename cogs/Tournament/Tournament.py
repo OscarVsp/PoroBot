@@ -12,13 +12,14 @@ from .classes import TournamentData
 from .TournamentManager import Tournament as TournamentClass
 from .TournamentManager import Tournament2v2Roll
 from .TournamentMutliView import phaseCreation
+from bot.bot import Bot
 from modules.FastSnake import confirmation
 
 
 class Tournament(commands.Cog):
     def __init__(self, bot):
         """Initialize the cog"""
-        self.bot: InteractionBot = bot
+        self.bot: Bot = bot
         self.tournaments: List[TournamentClass] = []
 
     @commands.slash_command(

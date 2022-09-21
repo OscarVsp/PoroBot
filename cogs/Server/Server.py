@@ -4,12 +4,13 @@ from deep_translator import GoogleTranslator
 from disnake.ext import commands
 
 from .view import PollCreationView
+from bot.bot import Bot
 
 
 class Server(commands.Cog):
     def __init__(self, bot):
         """Initialize the cog"""
-        self.bot: commands.InteractionBot = bot
+        self.bot: Bot = bot
         self.translator = GoogleTranslator(source="auto", target="en")
         self.registration_role = None
 

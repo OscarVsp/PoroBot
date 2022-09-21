@@ -12,6 +12,7 @@ import modules.FastSnake as FS
 from .exceptions import *
 from .view import *
 from .watcher import *
+from bot.bot import Bot
 from modules.FastSnake.SimpleModal import SimpleModal
 from modules.FastSnake.Views import confirmation
 from modules.FastSnake.Views import memberSelection
@@ -23,7 +24,7 @@ class Lol(commands.Cog):
 
         Get the member dict for the lore from the "Members.json" file next to it.
         """
-        self.bot: commands.InteractionBot = bot
+        self.bot: Bot = bot
         self.summoners = pickledb.load("cogs/Lol/summoners.db", False)
         self.live_trackers = pickledb.load("cogs/Lol/trackers.db", False)
 

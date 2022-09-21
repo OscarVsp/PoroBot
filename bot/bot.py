@@ -27,12 +27,9 @@ tracemalloc.start()
 import disnake
 from disnake import ApplicationCommandInteraction
 from disnake.ext.commands import InteractionBot
-from dotenv import load_dotenv
-
-import modules.FastSnake as FS
 
 
-class PoroBot(InteractionBot):
+class Bot(InteractionBot):
     def __init__(self, logger, logFormatter):
         self.logger = logger
         self.logFormatter = logFormatter
@@ -42,7 +39,7 @@ class PoroBot(InteractionBot):
 
         if self.test_mode:
             logging.info("Starting in test mod...")
-            super().__init__(intents=intents, test_guilds=[533360564878180382])
+            super().__init__(intents=intents, test_guilds=[int(os.getenv("TEST_GUILD"))])
         else:
             logging.info("Starting in prod mod...")
             super().__init__(intents=intents)
@@ -77,13 +74,14 @@ class PoroBot(InteractionBot):
 
     def load_commands(self) -> None:
         for extension in os.listdir(f"./cogs"):
-            try:
-                self.load_extension(f"cogs.{extension}.{extension}")
-                logging.info(f"Loaded extension '{extension}'")
-            except Exception as e:
-                exception = f"{type(e).__name__}: {e}"
-                logging.warning(f"Failed to load extension {extension}\n{exception}\n{self.tracebackEx(exception)}")
-                self.start_succed = False
+            if extension != ".gitignore":
+                try:
+                    self.load_extension(f"cogs.{extension}.{extension}")
+                    logging.info(f"Loaded extension '{extension}'")
+                except Exception as e:
+                    exception = f"{type(e).__name__}: {e}"
+                    logging.warning(f"Failed to load extension {extension}\n{exception}\n{self.tracebackEx(exception)}")
+                    self.start_succed = False
 
     async def send_error_log(self, interaction: ApplicationCommandInteraction, error: Exception):
         tb = self.tracebackEx(error)
@@ -92,31 +90,24 @@ class PoroBot(InteractionBot):
         )
         await interaction.send(
             content=self.owner.mention,
-            embed=FS.Embed(
+            embed=disnake.Embed(
                 title=":x: __**ERROR**__ :x:",
-                description=f"Une erreur s'est produite lors de la commande **/{interaction.application_command.name}**\n{self.owner.mention} a été prévenu et corrigera ce bug au plus vite !\nUtilise `/beer` pour un bière de consolation :beer:",
-                thumbnail=FS.Images.Poros.SHOCKED,
+                description=f"Une erreur s'est produite lors de la commande **/{interaction.application_command.name}**\n{self.owner.mention} a été prévenu et corrigera ce bug au plus vite !",
                 color=disnake.Colour.red(),
             ),
             delete_after=10,
         )
         await self.log_channel.send(
-            embed=FS.Embed(
-                title=f":x: __** ERROR**__ :x:",
-                description=f"```{error}```",
-                fields=[
-                    {
-                        "name": f"Raised on command :",
-                        "value": f"**/{interaction.application_command.name}:{interaction.id}** from {interaction.guild.name} #{interaction.channel.mention} by {interaction.author.mention} at {interaction.created_at} with options\n```{interaction.filled_options}```"
-                        + (f" and target\n``'{interaction.target}``'." if interaction.target else "."),
-                    }
-                ],
+            embed=disnake.Embed(title=f":x: __** ERROR**__ :x:", description=f"```{error}```").add_field(
+                name=f"Raised on command :",
+                value=f"**/{interaction.application_command.name}:{interaction.id}** from {interaction.guild.name} #{interaction.channel.mention} by {interaction.author.mention} at {interaction.created_at} with options\n```{interaction.filled_options}```"
+                + (f" and target\n``'{interaction.target}``'." if interaction.target else "."),
             )
         )
         n = len(tb) // 4050
         for i in range(n):
-            await self.log_channel.send(embed=FS.Embed(description=f"```python\n{tb[4050*i:4050*(i+1)]}```"))
-        await self.log_channel.send(embed=FS.Embed(description=f"```python\n{tb[4050*n:]}```"))
+            await self.log_channel.send(embed=disnake.Embed(description=f"```python\n{tb[4050*i:4050*(i+1)]}```"))
+        await self.log_channel.send(embed=disnake.Embed(description=f"```python\n{tb[4050*n:]}```"))
 
     async def on_slash_command(self, interaction: disnake.ApplicationCommandInteraction) -> None:
         logging.info(
@@ -156,40 +147,3 @@ class PoroBot(InteractionBot):
         logging.info(
             f"Message command '{interaction.application_command.name}:{interaction.id}' from '{interaction.guild.name+'#'+interaction.channel.name if interaction.guild else 'DM'}' by '{interaction.author.name}' at '{interaction.created_at}' ended normally"
         )
-
-
-if __name__ == "__main__":
-
-    logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
-    rootLogger = logging.getLogger()
-    rootLogger.setLevel(logging.DEBUG)
-
-    consoleHandler = logging.StreamHandler()
-    consoleHandler.setFormatter(logFormatter)
-    consoleHandler.setLevel(logging.INFO)
-    rootLogger.addHandler(consoleHandler)
-
-    if platform.system() == "Linux":
-        fileInfoHandler = logging.handlers.RotatingFileHandler(
-            filename="logs/info.log", mode="w", encoding="UTF-8", delay=True, backupCount=5
-        )
-        fileDebugHandler = logging.handlers.RotatingFileHandler(
-            filename="logs/debug.log", mode="w", encoding="UTF-8", delay=True, backupCount=5
-        )
-        fileInfoHandler.setFormatter(logFormatter)
-        fileInfoHandler.setLevel(logging.INFO)
-        fileInfoHandler.doRollover()
-        rootLogger.addHandler(fileInfoHandler)
-        fileDebugHandler.setFormatter(logFormatter)
-        fileDebugHandler.setLevel(logging.DEBUG)
-        fileDebugHandler.doRollover()
-        rootLogger.addHandler(fileDebugHandler)
-
-    else:
-        logging.warning("Non Linux system. Log info and debug file won't be available.")
-
-    load_dotenv()
-
-    poro = PoroBot(logger=rootLogger, logFormatter=logFormatter)
-
-    poro.run(os.getenv("DISCORD_TOKEN"))

@@ -7,13 +7,13 @@ from typing import List
 import disnake
 from disnake.ext import commands
 
-import modules.FastSnake as FS
+from bot.bot import Bot
 
 
 class Admin(commands.Cog):
     def __init__(self, bot):
         """Initialize the cog"""
-        self.bot: commands.InteractionBot = bot
+        self.bot: Bot = bot
 
     async def update_proc(self, inter: disnake.ApplicationCommandInteraction, branch: str, restart: bool):
         cmd_split = ("git", "pull", "origin", branch)
@@ -23,20 +23,20 @@ class Admin(commands.Cog):
             )
             stdout, stderr = await process.communicate()
             if process.returncode == 0:
-                embed = FS.Embed(title=f"✅ Update successed", description=f"```{stdout.decode().strip()}```")
+                embed = disnake.Embed(title=f"✅ Update successed", description=f"```{stdout.decode().strip()}```")
                 await inter.edit_original_message(embed=embed)
                 if restart and stdout.decode().strip() != "Already up to date.":
                     await self.restart_proc(inter)
             else:
                 await inter.edit_original_message(
-                    embed=FS.Embed(
-                        title=f"❌ Update failed with status code {FS.Emotes.Num(process.returncode)}",
+                    embed=disnake.Embed(
+                        title=f"❌ Update failed with status code {process.returncode}",
                         description=f"```{stderr.decode().strip()}```",
                     )
                 )
         except FileNotFoundError:
             await inter.edit_original_message(
-                embed=FS.Embed(
+                embed=disnake.Embed(
                     title=f"❌ Update failed due to *FileNotFoundError*",
                     description=f"```Couldn't find file {cmd_split[0]}```",
                 )
@@ -49,14 +49,14 @@ class Admin(commands.Cog):
             process = await asyncio.create_subprocess_exec(
                 *cmd_split, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
             )
-            embeds.append(FS.Embed(title=f"⌛ Restarting..."))
+            embeds.append(disnake.Embed(title=f"⌛ Restarting..."))
             await inter.edit_original_message(embeds=embeds)
 
             stdout, stderr = await process.communicate()
 
         except FileNotFoundError:
             embeds.append(
-                FS.Embed(
+                disnake.Embed(
                     title=f"❌ Restart failed due to *FileNotFoundError*",
                     description=f"Couldn't find file ***{cmd_split[0]}***",
                 )
@@ -80,7 +80,7 @@ class Admin(commands.Cog):
     ):
         await inter.response.defer(ephemeral=True)
         if self.bot.test_mode:
-            await inter.edit_original_message(embed=FS.Embed(description=f"Cannot update in test mode."))
+            await inter.edit_original_message(embed=disnake.Embed(description=f"Cannot update in test mode."))
         else:
             await self.update_proc(inter, branch, restart)
 
@@ -88,7 +88,7 @@ class Admin(commands.Cog):
     async def restart(self, inter: disnake.ApplicationCommandInteraction):
         await inter.response.defer(ephemeral=True)
         if self.bot.test_mode:
-            await inter.edit_original_message(embed=FS.Embed(description=f"Cannot restart in test mode."))
+            await inter.edit_original_message(embed=disnake.Embed(description=f"Cannot restart in test mode."))
         else:
             await self.restart_proc(inter)
 
@@ -111,20 +111,22 @@ class Admin(commands.Cog):
 
                 if process.returncode == 0:
                     await inter.edit_original_message(
-                        embed=FS.Embed(title=f"✅ command successed", description=f"```{stdout.decode().strip()}```")
+                        embed=disnake.Embed(
+                            title=f"✅ command successed", description=f"```{stdout.decode().strip()}```"
+                        )
                     )
                 else:
                     await inter.edit_original_message(
-                        embed=FS.Embed(
-                            title=f"❌ Command failed with status code {FS.Emotes.Num(process.returncode)}",
+                        embed=disnake.Embed(
+                            title=f"❌ Command failed with status code {process.returncode}",
                             description=f"```{stderr.decode().strip()}```",
                         )
                     )
             except TimeoutError:
-                await inter.edit_original_message(embed=FS.Embed(title=f"❌ Command timeout"))
+                await inter.edit_original_message(embed=disnake.Embed(title=f"❌ Command timeout"))
         except FileNotFoundError:
             await inter.edit_original_message(
-                embed=FS.Embed(
+                embed=disnake.Embed(
                     title=f"❌ Command error due to *FileNotFoundError*",
                     description=f"Couldn't find file ****{cmd_split[0]}****",
                 )
@@ -153,7 +155,7 @@ class Admin(commands.Cog):
                 except FileNotFoundError:
                     logging.debug(f"logsCmd: file 'logs/{level}.log.{i}' skipped because not found")
             await inter.author.send(files=files)
-        await inter.edit_original_message(embed=FS.Embed(description="Logs sent on private !"))
+        await inter.edit_original_message(embed=disnake.Embed(description="Logs sent on private !"))
 
 
 def setup(bot: commands.InteractionBot):

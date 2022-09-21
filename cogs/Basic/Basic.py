@@ -9,12 +9,13 @@ from disnake.ext import tasks
 
 import modules.FastSnake as FS
 from .view import *
+from bot.bot import Bot
 
 
 class Basic(commands.Cog):
     def __init__(self, bot):
         """Initialize the cog"""
-        self.bot: commands.InteractionBot = bot
+        self.bot: Bot = bot
         self.presence_update.add_exception_type(asyncpg.PostgresConnectionError)
         self.presence_update.start()
 

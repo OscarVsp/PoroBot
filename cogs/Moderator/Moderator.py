@@ -6,6 +6,7 @@ import disnake
 from disnake.ext import commands
 
 import modules.FastSnake as FS
+from bot.bot import Bot
 
 
 class ColorEnum(disnake.Colour, Enum):
@@ -39,7 +40,7 @@ class ColorEnum(disnake.Colour, Enum):
 class Moderator(commands.Cog):
     def __init__(self, bot):
         """Initialize the cog"""
-        self.bot: commands.InteractionBot = bot
+        self.bot: Bot = bot
 
     @commands.slash_command(name="emotes")
     async def emotes(self, inter: disnake.ApplicationCommandInteraction):
