@@ -330,6 +330,17 @@ class Lol(commands.Cog):
             )
             await inter.delete_original_message(delay=3)
 
+    @lol.sub_command(name="clash", description="Scouter une team clash à partir du nom d'un des joueurs")
+    async def clash(
+        self,
+        inter: ApplicationCommandInteraction,
+        summoner: str = commands.Param(description="Le nom d'invocateur d'un des joueurs"),
+    ):
+        await inter.response.defer()
+        clashView: ClashTeamView = await ClashTeamView(summoner).get(inter)
+        if clashView:
+            await clashView.start(inter)
+
     @lol.sub_command(name="champion", description="Info sur un champion")
     async def champion(
         self, inter: ApplicationCommandInteraction, nom: str = commands.Param(description="Le nom du champion.")

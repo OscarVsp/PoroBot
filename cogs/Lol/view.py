@@ -6,7 +6,6 @@ import disnake
 
 import modules.FastSnake as FS
 from .watcher import *
-from modules.LolPatchNoteScraper import PatchNote
 
 drink_embed = FS.Embed(
     title="__**:underage: RÈGLES DE L'ARAM À BOIRE ! :beers:**__",
@@ -247,6 +246,87 @@ class CurrentGameView(disnake.ui.View):
     async def call_back(self, inter: disnake.MessageInteraction):
         await inter.response.defer()
         self.current_participant_index = [int(i) for i in inter.component.custom_id.split(":")]
+        await self.update(inter)
+
+
+class ClashTeamView(disnake.ui.View):
+    def __init__(self, summoner_name: str):
+        super().__init__(timeout=60 * 60)
+        self.summoner_name: str = summoner_name
+        self.current_summoner: Summoner = None
+        self.team: ClashTeam = None
+        self.summoners: List[Summoner] = None
+        self.inter: disnake.MessageCommandInteraction = None
+
+    async def get(self, inter: disnake.ApplicationCommandInteraction) -> Optional["ClashTeamView"]:
+        try:
+            summoner = await Summoner(name=self.summoner_name).get()
+            clashPlayers = await summoner.clash_players.get()
+            if len(clashPlayers.players) > 0:
+                self.team = await ClashTeam(id=clashPlayers.players[0].team_id).get()
+                self.summoners: List[Summoner] = [
+                    await Summoner(id=player.summoner_id).get() for player in self.team.players
+                ]
+                return self
+            else:
+                await inter.edit_original_message(
+                    embed=FS.Embed(
+                        title="Pas de team clash",
+                        description=f"L'invocateur ***{self.summoner_name}*** ne fais pas parti d'une équipe clash...",
+                    ),
+                    view=None,
+                )
+                await inter.delete_original_message(delay=5)
+                return None
+        except NotFound:
+            await inter.edit_original_message(
+                embed=FS.Embed(
+                    title="Invocateur inconnu",
+                    description=f"Le nom d'invocateur ***{self.summoner_name}*** ne correspond à aucun invocateur...",
+                ),
+                view=None,
+            )
+            await inter.delete_original_message(delay=5)
+            return None
+
+    async def start(self, inter: disnake.ApplicationCommandInteraction):
+        self.inter = inter
+        self.buttons: List[disnake.ui.Button] = []
+        for i in range(len(self.summoners)):
+            name = self.summoners[i].name
+            if len(name) > 12:
+                name = name[:12]
+            button = disnake.ui.Button(
+                label=name, custom_id=f"{i}", emoji=FS.Emotes.Lol.Positions.get(self.team.players[i].position)
+            )
+            button.callback = self.call_back
+            self.add_item(button)
+            self.buttons.append(button)
+            if self.summoners[i].name.lower() == self.summoner_name.lower():
+                self.current_summoner = self.summoners[i]
+        self.add_item(
+            disnake.ui.Button(
+                style=disnake.ButtonStyle.link, url=await self.team.opgg_url, emoji=FS.Emotes.Lol.OPGG, row=2
+            )
+        )
+        await self.update(inter)
+
+    @async_property
+    async def embeds(self) -> List[disnake.Embed]:
+        return [await self.current_summoner.embed, await self.team.embed]
+
+    async def update(self, inter: disnake.MessageInteraction):
+        for button in self.buttons:
+            button.disabled = self.current_summoner.name.lower().startswith(button.label.lower())
+        if inter.response.is_done():
+            await inter.edit_original_message(embeds=await self.embeds, view=self)
+        else:
+            await inter.response.edit_message(embeds=await self.embeds, view=self)
+
+    async def call_back(self, inter: disnake.MessageInteraction):
+        self.current_player = next(
+            (s for s in self.summoners if s.name.lower().startswith(inter.component.label.lower())), None
+        )
         await self.update(inter)
 
 
