@@ -53,11 +53,13 @@ class Basic(commands.Cog):
                     description=f"Cliquez ci-dessous pour démarrer watch together dans le channel vocal **{inter.author.voice.channel.name}**"
                 ),
                 components=[button],
+                ephemeral=True,
             )
         else:
             await inter.response.send_message(
                 embed=FS.Embed(
-                    description=f"Vous devez etre dans un salon vocal de ce serveur pour commencer watch together."
+                    description=f"Vous devez etre dans un salon vocal de ce serveur pour commencer watch together.",
+                    ephemeral=True,
                 )
             )
 
