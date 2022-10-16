@@ -38,7 +38,7 @@ class Basic(commands.Cog):
         )
 
     @commands.slash_command(description="Démarrer watch together dans un salon vocal")
-    async def activity(self, inter: ApplicationCommandInteraction):
+    async def watch_together(self, inter: ApplicationCommandInteraction):
         if inter.author.voice and inter.author.voice.channel and inter.author.voice.channel.guild == inter.guild:
             invite = await inter.author.voice.channel.create_invite(
                 max_age=0,
@@ -46,7 +46,7 @@ class Basic(commands.Cog):
                 target_application=disnake.PartyType.watch_together,
             )
             button = disnake.ui.Button(
-                style=disnake.ButtonStyle.link, url=f"https://discord.gg/{invite.code}", label="Démarrer l'activité"
+                style=disnake.ButtonStyle.link, url=f"https://discord.gg/{invite.code}", label="Watch together"
             )
             await inter.response.send_message(
                 embed=FS.Embed(
