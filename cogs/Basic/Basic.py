@@ -37,6 +37,30 @@ class Basic(commands.Cog):
             view=PoroFeed(inter),
         )
 
+    @commands.slash_command(description="Démarrer watch together dans un salon vocal")
+    async def activity(self, inter: ApplicationCommandInteraction):
+        if inter.author.voice and inter.author.voice.channel and inter.author.voice.channel.guild == inter.guild:
+            invite = await inter.author.voice.channel.create_invite(
+                max_age=0,
+                target_type=disnake.InviteTarget.embedded_application,
+                target_application=disnake.PartyType.watch_together,
+            )
+            button = disnake.ui.Button(
+                style=disnake.ButtonStyle.link, url=f"https://discord.gg/{invite.code}", label="Démarrer l'activité"
+            )
+            await inter.response.send_message(
+                embed=FS.Embed(
+                    description=f"Cliquez ci-dessous pour démarrer watch together dans le channel vocal **{inter.author.voice.channel.name}**"
+                ),
+                components=[button],
+            )
+        else:
+            await inter.response.send_message(
+                embed=FS.Embed(
+                    description=f"Vous devez etre dans un salon vocal de ce serveur pour commencer watch together."
+                )
+            )
+
     @commands.user_command(name="Voir le lore")
     async def lore(self, inter: disnake.UserCommandInteraction):
         lore_embed = get_lore_embed(inter.target.name)
