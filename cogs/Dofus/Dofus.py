@@ -72,11 +72,16 @@ class Dofus(commands.Cog):
                 self.almanax_task.cancel()
                 logging.error(f"Almanax channel '{self.almanax_channel}' not found. Task is cancelled.")
             else:
-                await self.almanax_channel.purge(limit=10)
-                self.almanax_message = await self.almanax_channel.send(
-                    embeds=AlmanaxView.data_to_embed(await Almanax_scraper.get_almanax())
-                )
-                logging.info("Almanax first tasks run at start.")
+                time = datetime.now()
+                self.almanax_message = self.almanax_channel.last_message
+                if self.almanax_message and self.almanax_message.created_at.date() != time.date():
+                    await self.almanax_channel.purge(limit=10)
+                    self.almanax_message = await self.almanax_channel.send(
+                        embeds=AlmanaxView.data_to_embed(await Almanax_scraper.get_almanax())
+                    )
+                    logging.info("Almanax first tasks run at start because current message is outdated.")
+                else:
+                    logging.info("Almanax skip before current message is up to date.")
                 time = datetime.now()
                 time_to_wait = (23 - time.hour) * 3600 + (59 - time.minute + 1) * 60 + (59 - time.second)
                 logging.info(
