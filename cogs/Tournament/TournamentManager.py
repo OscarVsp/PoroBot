@@ -303,7 +303,7 @@ class Tournament2v2Roll(Tournament):
                             > {FS.Emotes.Lol.ARAM} __Map__ : Abime hurlante
                             > Ⓜ️ __Mode__ : Blind
                             > {FS.Emotes.BAN} __Pick & Bans__ : La draft se fait sur discord, via le bot, dans le chat du salon vocal du match. Chaque équipe pourra ban/pick meme temps avec l'ordre suivant : **ban 1** -> **ban 2** -> **pick 1** -> **ban 3** -> **pick 2**
-                            Une fois les picks et bans finis, vous obtiendrez un code tournoi à rentrer dans le client (cliquez sur **Jouer**, puis sur le symbole de trophé en haut à droite). Vous devez bien sur respecter les picks établis durant la draft lors de la création de la partie.""",
+                            Une fois les picks et bans finis, vous obtiendrez un code tournoi à rentrer dans le client (cliquez sur **Jouer**, puis sur le symbole de trophée en haut à droite). Vous devez bien sur respecter les picks établis durant la draft lors de la création de la partie.""",
                 },
                 {
                     "name": "__**Règles d'un match**__",
@@ -356,7 +356,7 @@ class Tournament2v2Roll(Tournament):
                             > {FS.Emotes.Lol.ARAM} __Map__ : Abime hurlante
                             > Ⓜ️ __Mode__ : Blind
                             > {FS.Emotes.BAN} __Pick & Bans__ : La draft se fait sur discord, via le bot, dans le chat du salon vocal du match. Chaque équipe pourra ban/pick meme temps avec l'ordre suivant : **ban 1** -> **ban 2** -> **pick 1** -> **ban 3** -> **pick 2**
-                            Une fois les picks et bans finis, vous obtiendrez un code tournoi à rentrer dans le client (cliquez sur **Jouer**, puis sur le symbole de trophé en haut à droite). Vous devez bien sur respecter les picks établis durant la draft lors de la création de la partie.""",
+                            Une fois les picks et bans finis, vous obtiendrez un code tournoi à rentrer dans le client (cliquez sur **Jouer**, puis sur le symbole de trophée en haut à droite). Vous devez bien sur respecter les picks établis durant la draft lors de la création de la partie.""",
                 },
                 {
                     "name": "__**Règles d'un match**__",
