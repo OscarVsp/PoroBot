@@ -73,7 +73,9 @@ class Dofus(commands.Cog):
                 logging.error(f"Almanax channel '{self.almanax_channel}' not found. Task is cancelled.")
             else:
                 time = datetime.now()
-                self.almanax_message = self.almanax_channel.last_message
+                self.almanax_message = None
+                async for message in self.almanax_channel.history(limit=1):
+                    self.almanax_message = message
                 if not self.almanax_message or self.almanax_message.created_at.date() != time.date():
                     await self.almanax_channel.purge(limit=10)
                     self.almanax_message = await self.almanax_channel.send(
