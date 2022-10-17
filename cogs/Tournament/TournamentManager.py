@@ -250,13 +250,28 @@ class Tournament2v2Roll(Tournament):
             return embed
         sorted_players: List[Player] = self.getRanking()
         ranks = self.rank_emotes(sorted_players)
+        if self._last_rank:
+            evolutions = []
+            for i, player in enumerate(sorted_players):
+                if i > self._last_rank.index(player):
+                    evolutions.append(FS.Emotes.ARROWS_UP)
+                elif i < self._last_rank.index(player):
+                    evolutions.append(FS.Emotes.ARROWS_DOWN)
+                else:
+                    evolutions.append("➖")
+
+        else:
+            evolutions = ["➖" for _ in range(len(sorted_players))]
+        self._last_rank = sorted_players
         return FS.Embed(
             title=self._classement_title,
             color=disnake.Colour.gold(),
             fields=[
                 {
                     "name": "🎖️➖__*Joueurs*__",
-                    "value": "\n".join([f"{ranks[i]}➖**{p.name}**" for i, p in enumerate(sorted_players)]),
+                    "value": "\n".join(
+                        [f"{ranks[i]}{evolutions[i]} **{p.name}**" for i, p in enumerate(sorted_players)]
+                    ),
                     "inline": True,
                 },
                 {
@@ -403,6 +418,18 @@ class Tournament2v2Roll(Tournament):
         embeds = [FS.Embed(title=self._admin_title)]
         sorted_players: List[Player] = self.getRanking()
         ranks = self.rank_emotes(sorted_players)
+        if self._last_rank:
+            evolutions = []
+            for i, player in enumerate(sorted_players):
+                if i > self._last_rank.index(player):
+                    evolutions.append(FS.Emotes.ARROWS_UP)
+                elif i < self._last_rank.index(player):
+                    evolutions.append(FS.Emotes.ARROWS_DOWN)
+                else:
+                    evolutions.append("➖")
+
+        else:
+            evolutions = ["➖" for _ in range(len(sorted_players))]
         embeds.append(
             FS.Embed(
                 title="🏆 __**CLASSEMENT**__🏆 ",
@@ -410,7 +437,9 @@ class Tournament2v2Roll(Tournament):
                 fields=[
                     {
                         "name": "🎖️➖__*Joueurs*__",
-                        "value": "\n".join([f"{ranks[i]}➖**{p.name}**" for i, p in enumerate(sorted_players)]),
+                        "value": "\n".join(
+                            [f"{ranks[i]}{evolutions[i]} **{p.name}**" for i, p in enumerate(sorted_players)]
+                        ),
                         "inline": True,
                     },
                     {

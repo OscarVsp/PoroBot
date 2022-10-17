@@ -191,6 +191,7 @@ class Player(ShadowMember):
         super().__init__(member)
         self._scores: List[int] = [0 for _ in range(scoreSet.size)]
         self._scoreSet: ScoreSet = scoreSet
+        self._evolve: bool = None
 
     @property
     def score(self, index: int = 0) -> int:
@@ -211,6 +212,10 @@ class Player(ShadowMember):
     @property
     def log_id(self) -> str:
         return f"[PLAYER {self.name}:{self.id}]"
+
+    @property
+    def evolve(self) -> bool:
+        return self._evolve
 
     def add_score(self, value: int = 1, index: int = 0) -> None:
         if len(self._scores) > index:
@@ -980,6 +985,7 @@ class TournamentData(Container):
         self._nb_point_to_win_match: int = nb_point_to_win_match
         self._last_state: dict = None
         self._codes: List[List[str]] = None
+        self._last_rank: List[Player] = None
 
         self.everyone: disnake.Role = self.guild.default_role
         self.category: disnake.CategoryChannel = None
