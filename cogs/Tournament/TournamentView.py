@@ -16,9 +16,9 @@ from modules.FastSnake import *
 
 
 class PlayerSelectionView(MemberSelectionView):
-    def __init__(self, tournament: TournamentData):
+    def __init__(self, tournament: TournamentData, inter: disnake.ApplicationCommandInteraction):
         super().__init__(
-            target=tournament.admin_channel,
+            target=inter,
             embeds=[],
             title=tournament._admin_title,
             description="Sélectionne les participants.",
@@ -30,9 +30,17 @@ class PlayerSelectionView(MemberSelectionView):
     async def end(self) -> None:
         await super().end()
         if self.state == ViewState.CONFIRMED:
+            await self.target.edit_original_message(
+                embed=disnake.Embed(title=self.title, description="Joueurs ajoutés. Démarrage du tournoi.."), view=None
+            )
             await self.tournament.set_players(self.selected_members)
+            await self.target.edit_original_message(
+                embed=disnake.Embed(title=self.title, description="Tournoi démarré !")
+            )
         else:
-            await self.tournament.delete()
+            await self.target.edit_original_message(
+                embed=disnake.Embed(title=self.title, description="Ajout de joueur annulé."), view=None
+            )
 
 
 class RoundView(disnake.ui.View):
@@ -58,7 +66,7 @@ class RoundView(disnake.ui.View):
         else:
             logging.error(f"RoundView neede to be started before the first update")
 
-    @disnake.ui.button(label="Go to Vocal", emoji="🎧")
+    @disnake.ui.button(label="Aller dans le vocal d'équipe", emoji="🎧")
     async def vocal(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
         await interaction.response.defer()
         for i, match in enumerate(self.tournament.current_round.matches):
@@ -117,7 +125,7 @@ class AdminView(disnake.ui.View):
                     label=f"Round {j+1} - Match{chr(ord('A') + i)}",
                     description=f"{self.tournament.rounds[j].matches[i].teams[0].name} VS {self.tournament.rounds[j].matches[i].teams[1].name}",
                     value=f"{j}{i}",
-                    emoji=FS.Emotes.RESTART,
+                    emoji=FS.Emotes.REDO,
                 )
                 for j in range(self.tournament.nb_rounds)
                 for i in range(self.tournament.nb_matches_per_round)
@@ -146,14 +154,16 @@ class AdminView(disnake.ui.View):
 
     @disnake.ui.button(emoji="✅", label="Valider", style=disnake.ButtonStyle.green, row=1)
     async def update_button(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
+        await interaction.response.defer()
         if self.round_selected == self.tournament.current_round:
             await self.tournament.draftManagers[self.match_selected.match_idx].reset()
         self.reset_selection()
         await self.tournament.update()
         await self.update(interaction)
 
-    @disnake.ui.button(emoji=FS.Emotes.RESTART, label="Annuler", style=disnake.ButtonStyle.primary, row=1)
+    @disnake.ui.button(emoji=FS.Emotes.REDO, label="Annuler", style=disnake.ButtonStyle.primary, row=1)
     async def discard_button(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
+        await interaction.response.defer()
         self.reset_selection()
         self.tournament.restore_from_last_state()
         await self.tournament.update()
@@ -163,10 +173,10 @@ class AdminView(disnake.ui.View):
     async def notif(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
         await interaction.response.send_modal(NotificationModal(self.tournament))
 
-    @disnake.ui.button(emoji="⚠️", label="Stop", style=disnake.ButtonStyle.danger, row=1)
+    @disnake.ui.button(emoji=FS.Emotes.BAN, label="Stop", style=disnake.ButtonStyle.danger, row=1)
     async def arret(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
         confirmation = await FS.confirmation(
-            interaction,
+            target=interaction,
             embeds=self.tournament.admin_embeds,
             title=f"⚠️ __**ARRÊTER LE TOURNOI**__ ",
             description=f"Es-tu sûr de vouloir arrêter le tournoi ?\nCela va supprimer tout les channels de la catégorie et t'envoyer les résultats en privé.",
@@ -184,7 +194,7 @@ class AdminView(disnake.ui.View):
         else:
             await self.update(interaction)
 
-    @disnake.ui.button(emoji="🔗", label="Codes", style=disnake.ButtonStyle.gray, row=1)
+    @disnake.ui.button(emoji=FS.Emotes.Lol.RIOTFIST, label="Codes", style=disnake.ButtonStyle.gray, row=1)
     async def codes(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
         await interaction.response.send_modal(CodesModal(self.tournament))
 
@@ -234,7 +244,7 @@ class DraftView(disnake.ui.View):
         super().__init__(timeout=None)
         self.draftManager = draftManager
 
-    @disnake.ui.button(label="New draft", emoji="🆕")
+    @disnake.ui.button(label="Nouvelle draft", emoji=FS.Emotes.Lol.Champions.NONE)
     async def reset(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
         await interaction.response.defer()
         await self.draftManager.new_draft()
@@ -264,7 +274,7 @@ class DraftManager:
 
     def embed(self, channel: disnake.VoiceChannel):
 
-        description: str = "> Simply type in the chat the name of the champion to ban/pick **them wait** for your opponent to also choose.\n> You will see the ban/pick enemy only when both teams have made their choice."
+        description: str = "> Ecrivez simplement dans le chat le nom du champion à ban/pick, puis **attendez** que votre opposant fasse sont choix également.\n> Une fois que les deux équipes auront fait leur choix, celui-ci sera affiché et le ban/pick suivant sera demandé."
 
         tup: List[List[str]] = [[], [], []]
         for i in range(self.level):
@@ -280,12 +290,16 @@ class DraftManager:
                 description=description,
                 fields=[
                     {"name": "➖", "value": "\n".join(tup[0]), "inline": True},
-                    {"name": "__**You**__", "value": "\n".join(tup[1]) if len(tup[1]) else "` `", "inline": True},
-                    {"name": "__**Enemy**__", "value": "\n".join(tup[2]) if len(tup[2]) else "` `", "inline": True},
+                    {"name": "__**Vous**__", "value": "\n".join(tup[1]) if len(tup[1]) else "` `", "inline": True},
+                    {
+                        "name": "__**Votre opposant**__",
+                        "value": "\n".join(tup[2]) if len(tup[2]) else "` `",
+                        "inline": True,
+                    },
                 ],
-                footer_text="Wait for your opponents to make their choice..."
+                footer_text="En attente de votre opposant..."
                 if self.selections[self.level][channel]
-                else "Type in the chat to make your choice !",
+                else "Faites votre choix !",
             )
         elif self.code:
             return FS.Embed(
@@ -293,11 +307,15 @@ class DraftManager:
                 description=description,
                 fields=[
                     {"name": "➖", "value": "\n".join(tup[0]), "inline": True},
-                    {"name": "__**You**__", "value": "\n".join(tup[1]) if len(tup[1]) else "` `", "inline": True},
-                    {"name": "__**Enemy**__", "value": "\n".join(tup[2]) if len(tup[2]) else "` `", "inline": True},
-                    {"name": "__**Tournament code**__", "value": f"`{self.code}`"},
+                    {"name": "__**Vous**__", "value": "\n".join(tup[1]) if len(tup[1]) else "` `", "inline": True},
+                    {
+                        "name": "__**Votre opposant**__",
+                        "value": "\n".join(tup[2]) if len(tup[2]) else "` `",
+                        "inline": True,
+                    },
+                    {"name": "__**Code tournoi**__", "value": f"`{self.code}`"},
                 ],
-                footer_text="La draft est terminée, mais attendez la fin de la partie avant de reset !",
+                footer_text="La draft est terminée, vous pouvez commencer la partie en utilisant le code tournoi ci-dessous.",
             )
         else:
             return FS.Embed(
@@ -305,10 +323,14 @@ class DraftManager:
                 description=description,
                 fields=[
                     {"name": "➖", "value": "\n".join(tup[0]), "inline": True},
-                    {"name": "__**You**__", "value": "\n".join(tup[1]) if len(tup[1]) else "` `", "inline": True},
-                    {"name": "__**Enemy**__", "value": "\n".join(tup[2]) if len(tup[2]) else "` `", "inline": True},
+                    {"name": "__**Vous**__", "value": "\n".join(tup[1]) if len(tup[1]) else "` `", "inline": True},
+                    {
+                        "name": "__**Votre opposant**__",
+                        "value": "\n".join(tup[2]) if len(tup[2]) else "` `",
+                        "inline": True,
+                    },
                 ],
-                footer_text="La draft est terminée, mais attendez la fin de la partie avant de reset !",
+                footer_text="La draft est terminée, vous pouvez commencer.",
             )
 
     def other_channel(self, channel: disnake.VoiceChannel) -> disnake.VoiceChannel:

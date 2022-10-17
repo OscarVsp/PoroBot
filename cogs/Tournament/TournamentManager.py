@@ -66,8 +66,11 @@ class Tournament(TournamentData):
         self.classement_message = await self.classement_channel.send(embed=self.classement_embed)
         self.roundsView = await RoundView(self).start()
         self.rules_message = await self.rules_channel.send(embed=self.rules_embed)
-        playerSelectionView = PlayerSelectionView(self)
-        self.admin_message = await self.admin_channel.send(embed=playerSelectionView.embed, view=playerSelectionView)
+        self.admin_message = await self.admin_channel.send(
+            embed=disnake.Embed(
+                description="Utilisez **/tournois start** pour sélectionner les joueurs et démarrer le tournoi."
+            )
+        )
         cat_perm_everyone.view_channel = True
         await self.category.set_permissions(self.everyone, overwrite=cat_perm_everyone)
         text_voice_channel_perm = disnake.PermissionOverwrite()
@@ -96,7 +99,7 @@ class Tournament(TournamentData):
                 await teamChannel.set_permissions(self.role, overwrite=text_voice_channel_perm)
             self.draftManagers.append(
                 await DraftManager(
-                    self, matchChannels, ["⛔ Ban 1", "✅ Pick 1", "⛔ Ban 2", "⛔ Ban 3", "✅ Pick 2"]
+                    self, matchChannels, ["⛔ Ban 1", "⛔ Ban 2", "✅ Pick 1", "⛔ Ban 3", "✅ Pick 2"]
                 ).start()
             )
 
@@ -163,6 +166,7 @@ class Tournament2v2Roll(Tournament):
     KILL_EMOTE = FS.Emotes.CROSSING_SWORD_WHITE
     TURRET_EMOTE = FS.Emotes.Lol.TURRET
     CS_EMOTE = FS.Emotes.Lol.CS
+    SIZES = [4, 5, 8]
 
     class Seeding:
         S4: List[List[List[List[int]]]] = [[[[2, 3], [1, 4]]], [[[1, 3], [2, 4]]], [[[1, 2], [3, 4]]]]

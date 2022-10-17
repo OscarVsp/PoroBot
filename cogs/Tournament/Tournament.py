@@ -13,6 +13,7 @@ from .TournamentManager import Tournament as TournamentClass
 from .TournamentManager import Tournament2v2Roll
 from .TournamentMutliView import phaseCreation
 from bot.bot import Bot
+from cogs.Tournament.TournamentView import PlayerSelectionView
 from modules.FastSnake import confirmation
 
 
@@ -28,25 +29,40 @@ class Tournament(commands.Cog):
     async def tournament(self, inter):
         pass
 
-    @tournament.sub_command(name="roll2v2", description="Créer un tournoi en format 2v2 roll")
-    async def roll2v2(
+    @tournament.sub_command(name="new", description="Créer un tournoi")
+    async def new_tournament(
         self,
         inter: ApplicationCommandInteraction,
+        format: str = commands.Param(description="Le format à créer", choices=[Tournament2v2Roll.TYPE]),
+        taille: str = commands.Param(description="Nombre de participants"),
         nom: str = commands.Param(description="Nom du tournoi"),
-        taille: int = commands.Param(description="Nombre de participants", choices=[4, 5, 8]),
     ):
 
-        await inter.response.send_message(
-            embed=FS.Embed(description=f"{FS.Emotes.LOADING} Création du tournoi..."), ephemeral=True
-        )
-        tournament = Tournament2v2Roll(inter.guild, taille, name=nom)
+        await inter.response.defer(ephemeral=True)
+        if format == Tournament2v2Roll.TYPE:
+            if int(taille) not in Tournament2v2Roll.SIZES:
+                await inter.edit_original_message(
+                    embed=disnake.Embed(
+                        description="Ce format nécessite "
+                        + ", ".join([str(i) for i in Tournament2v2Roll.SIZES])
+                        + " joueurs !"
+                    )
+                )
+                return
+            tournament = Tournament2v2Roll(inter.guild, int(taille), name=nom)
+        else:
+            await inter.edit_original_message(embed=disnake.Embed(description=f"Le format {format} n'éxiste pas..."))
+            return
         self.tournaments.append(tournament)
         await tournament.build()
-        await inter.edit_original_message(
-            embed=FS.Embed(
-                description=f"Tournois **{tournament.name}** créé !\nVa [ici]({tournament.admin_message.jump_url}) pour choisir les joueurs et gérer la suite du tournoi."
-            )
-        )
+        await inter.edit_original_message(embed=FS.Embed(description=f"Tournois **{tournament.name}** créé !"))
+
+    @new_tournament.autocomplete("taille")
+    async def new_tournament_taille(self, inter: disnake.ApplicationCommandInteraction, user_input: str):
+        if inter.filled_options.get("format") == Tournament2v2Roll.TYPE:
+            return [str(i) for i in Tournament2v2Roll.SIZES]
+        else:
+            return ["2", "4", "5", "6", "8", "10", "12", "14", "16", "20"]
 
     @tournament.sub_command(name="multi", description="Créer un tournoi à plusieurs phases")
     async def multi(
@@ -102,6 +118,23 @@ class Tournament(commands.Cog):
 
         else:
             await inter.edit_original_message(embed=cancel_embed, view=None)
+
+    @tournament.sub_command(name="start", description="Sélectionner les joueurs et démarrer le tournois")
+    async def start_tournament(
+        self, inter: ApplicationCommandInteraction, tournament: str = commands.Param(description="Le tournoi à start")
+    ):
+        await inter.response.defer(ephemeral=True)
+        _tournament = next(
+            (_tournament for _tournament in self.tournaments if _tournament.name.lower() == tournament.lower())
+        )
+        if _tournament:
+            await PlayerSelectionView(_tournament, inter).send()
+
+    @start_tournament.autocomplete("tournament")
+    async def start_autocomplete(self, inter: ApplicationCommandInteraction, user_input: str):
+        return [
+            tournament.name for tournament in self.tournaments if tournament.name.lower().startswith(user_input.lower())
+        ]
 
     @tournament.sub_command(name="regles", description="Obtenir les règles d'un format")
     async def tournament_rules(
