@@ -74,7 +74,7 @@ class Dofus(commands.Cog):
             else:
                 time = datetime.now()
                 self.almanax_message = self.almanax_channel.last_message
-                if self.almanax_message and self.almanax_message.created_at.date() != time.date():
+                if not self.almanax_message or self.almanax_message.created_at.date() != time.date():
                     await self.almanax_channel.purge(limit=10)
                     self.almanax_message = await self.almanax_channel.send(
                         embeds=AlmanaxView.data_to_embed(await Almanax_scraper.get_almanax())
