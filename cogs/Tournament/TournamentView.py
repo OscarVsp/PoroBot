@@ -173,6 +173,10 @@ class AdminView(disnake.ui.View):
     async def notif(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
         await interaction.response.send_modal(NotificationModal(self.tournament))
 
+    @disnake.ui.button(emoji=FS.Emotes.Lol.RIOTFIST, label="Codes", style=disnake.ButtonStyle.gray, row=1)
+    async def codes(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
+        await interaction.response.send_modal(CodesModal(self.tournament))
+
     @disnake.ui.button(emoji=FS.Emotes.BAN, label="Stop", style=disnake.ButtonStyle.danger, row=1)
     async def arret(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
         confirmation = await FS.confirmation(
@@ -193,10 +197,6 @@ class AdminView(disnake.ui.View):
             await self.tournament.delete(interaction)
         else:
             await self.update(interaction)
-
-    @disnake.ui.button(emoji=FS.Emotes.Lol.RIOTFIST, label="Codes", style=disnake.ButtonStyle.gray, row=1)
-    async def codes(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
-        await interaction.response.send_modal(CodesModal(self.tournament))
 
     @disnake.ui.select(min_values=1, max_values=1, row=2, placeholder="Sélectionner un match")
     async def match_selection(self, select: disnake.ui.Select, interaction: disnake.MessageInteraction):

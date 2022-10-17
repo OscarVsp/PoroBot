@@ -253,25 +253,24 @@ class Tournament2v2Roll(Tournament):
         if self._last_rank:
             evolutions = []
             for i, player in enumerate(sorted_players):
-                if i > self._last_rank.index(player):
+                if i < self._last_rank.index(player):
                     evolutions.append(FS.Emotes.ARROWS_UP)
-                elif i < self._last_rank.index(player):
+                elif i > self._last_rank.index(player):
                     evolutions.append(FS.Emotes.ARROWS_DOWN)
                 else:
                     evolutions.append("➖")
 
         else:
             evolutions = ["➖" for _ in range(len(sorted_players))]
-        self._last_rank = sorted_players
+        if sorted_players[0].points != 0:
+            self._last_rank = sorted_players
         return FS.Embed(
             title=self._classement_title,
             color=disnake.Colour.gold(),
             fields=[
                 {
-                    "name": "🎖️➖__*Joueurs*__",
-                    "value": "\n".join(
-                        [f"{ranks[i]}{evolutions[i]} **{p.name}**" for i, p in enumerate(sorted_players)]
-                    ),
+                    "name": "🎖️➖__**Joueurs**__",
+                    "value": "\n".join([f"{ranks[i]}{evolutions[i]} *{p.name}*" for i, p in enumerate(sorted_players)]),
                     "inline": True,
                 },
                 {
@@ -421,9 +420,9 @@ class Tournament2v2Roll(Tournament):
         if self._last_rank:
             evolutions = []
             for i, player in enumerate(sorted_players):
-                if i > self._last_rank.index(player):
+                if i < self._last_rank.index(player):
                     evolutions.append(FS.Emotes.ARROWS_UP)
-                elif i < self._last_rank.index(player):
+                elif i > self._last_rank.index(player):
                     evolutions.append(FS.Emotes.ARROWS_DOWN)
                 else:
                     evolutions.append("➖")
@@ -436,9 +435,9 @@ class Tournament2v2Roll(Tournament):
                 color=disnake.Colour.gold(),
                 fields=[
                     {
-                        "name": "🎖️➖__*Joueurs*__",
+                        "name": "🎖️➖__**Joueurs**__",
                         "value": "\n".join(
-                            [f"{ranks[i]}{evolutions[i]} **{p.name}**" for i, p in enumerate(sorted_players)]
+                            [f"{ranks[i]}{evolutions[i]} *{p.name}*" for i, p in enumerate(sorted_players)]
                         ),
                         "inline": True,
                     },
