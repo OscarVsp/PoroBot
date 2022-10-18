@@ -216,6 +216,7 @@ class Tournament2v2Roll(Tournament):
             ),
             nb_point_to_win_match=2,
         )
+        self._rounds_rank: List[List[Player]] = [None for _ in range(self._nb_rounds)]
 
     def generate_round(self) -> None:
         if self.players == None:
@@ -250,27 +251,25 @@ class Tournament2v2Roll(Tournament):
             return embed
         sorted_players: List[Player] = self.getRanking()
         ranks = self.rank_emotes(sorted_players)
-        if self._last_rank:
+        i_round = self.rounds.index(self.current_round)
+        if i_round > 1:
             evolutions = []
             for i, player in enumerate(sorted_players):
-                if i < self._last_rank.index(player):
+                if i < self._rounds_rank[i_round-1].index(player):
                     evolutions.append(FS.Emotes.ARROWS_UP)
-                elif i > self._last_rank.index(player):
+                elif i > self._rounds_rank[i_round-1].index(player):
                     evolutions.append(FS.Emotes.ARROWS_DOWN)
                 else:
                     evolutions.append("➖")
-
         else:
             evolutions = ["➖" for _ in range(len(sorted_players))]
-        if sorted_players[0].points != 0:
-            self._last_rank = sorted_players
         return FS.Embed(
             title=self._classement_title,
             color=disnake.Colour.gold(),
             fields=[
                 {
-                    "name": "🎖️➖__**Joueurs**__",
-                    "value": "\n".join([f"{ranks[i]}{evolutions[i]} *{p.name}*" for i, p in enumerate(sorted_players)]),
+                    "name": "🎖️ ➖ __**Joueurs**__",
+                    "value": "\n".join([f"{ranks[i]} {evolutions[i]} *{p.name}*" for i, p in enumerate(sorted_players)]),
                     "inline": True,
                 },
                 {
@@ -417,27 +416,29 @@ class Tournament2v2Roll(Tournament):
         embeds = [FS.Embed(title=self._admin_title)]
         sorted_players: List[Player] = self.getRanking()
         ranks = self.rank_emotes(sorted_players)
-        if self._last_rank:
+        i_round = self.rounds.index(self.current_round)
+        if i_round > 1:
             evolutions = []
             for i, player in enumerate(sorted_players):
-                if i < self._last_rank.index(player):
+                if i < self._rounds_rank[i_round-1].index(player):
                     evolutions.append(FS.Emotes.ARROWS_UP)
-                elif i > self._last_rank.index(player):
+                elif i > self._rounds_rank[i_round-1].index(player):
                     evolutions.append(FS.Emotes.ARROWS_DOWN)
                 else:
                     evolutions.append("➖")
 
         else:
             evolutions = ["➖" for _ in range(len(sorted_players))]
+        self._rounds_rank[i_round] = sorted_players
         embeds.append(
             FS.Embed(
                 title="🏆 __**CLASSEMENT**__🏆 ",
                 color=disnake.Colour.gold(),
                 fields=[
                     {
-                        "name": "🎖️➖__**Joueurs**__",
+                        "name": "🎖️ ➖ __**Joueurs**__",
                         "value": "\n".join(
-                            [f"{ranks[i]}{evolutions[i]} *{p.name}*" for i, p in enumerate(sorted_players)]
+                            [f"{ranks[i]} {evolutions[i]} *{p.name}*" for i, p in enumerate(sorted_players)]
                         ),
                         "inline": True,
                     },
