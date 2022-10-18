@@ -217,6 +217,15 @@ class Tournament2v2Roll(Tournament):
             nb_point_to_win_match=2,
         )
         self._rounds_rank: List[List[Player]] = [None for _ in range(self._nb_rounds)]
+        self._codes: List[str] = [
+            ["EUW04b25-6031691e-1ce2-4bdf-addd-f360ac38828c","EUW04b53-5d9e989d-c658-4cbc-a3a7-a9e39ee19522"],
+            ["EUW04b53-79fcc6c6-734f-4993-88fb-7f5b40dbb0b4","EUW04b53-67739d42-4548-46aa-9f05-25d58b260ebc"],
+            ["EUW04b53-e99c56d4-3c4f-44bd-ac8c-d658f777aeaa","EUW04b53-ffc70ccb-000e-4236-9247-1864078d0440"],
+            ["EUW04b53-54402c60-f3f8-40b8-87df-f692e17452af","EUW04b53-1e935f11-a787-4dce-aec1-355422186e33"],
+            ["EUW04b53-d13a771c-93bb-485b-a26b-f8a46d795a15","EUW04b53-88f78c44-c0d5-4e46-9eb7-573491d37742"],
+            ["EUW04b53-8a5d244b-47e6-4b95-b2aa-e633ce8e2d49","EUW04b53-4510697a-f5bb-4db0-98e4-7808bccb2d1e"],
+            ["EUW04b53-79fd4971-ea6e-4b94-8f97-69911de3cdec","EUW04b53-1c20bba0-9758-482c-aa4a-76250eec6b3b"], 
+        ]
 
     def generate_round(self) -> None:
         if self.players == None:

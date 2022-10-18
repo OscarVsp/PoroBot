@@ -10,7 +10,6 @@ from .classes import Round
 from .classes import State
 from .classes import Team
 from .classes import TournamentData
-from .modal import CodesModal
 from .modal import NotificationModal
 from modules.FastSnake import *
 
@@ -155,13 +154,11 @@ class AdminView(disnake.ui.View):
     @disnake.ui.button(emoji="✅", label="Valider", style=disnake.ButtonStyle.green, row=1)
     async def update_button(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
         await interaction.response.defer()
-        if self.round_selected == self.tournament.current_round:
-            await self.tournament.draftManagers[self.match_selected.match_idx].reset()
         self.reset_selection()
         await self.tournament.update()
         await self.update(interaction)
 
-    @disnake.ui.button(emoji=FS.Emotes.REDO, label="Annuler", style=disnake.ButtonStyle.primary, row=1)
+    @disnake.ui.button(emoji=FS.Emotes.REDO, label="Annuler", style=disnake.ButtonStyle.danger, row=1)
     async def discard_button(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
         await interaction.response.defer()
         self.reset_selection()
@@ -169,13 +166,9 @@ class AdminView(disnake.ui.View):
         await self.tournament.update()
         await self.update(interaction)
 
-    @disnake.ui.button(emoji="🔔", label="Annonce", style=disnake.ButtonStyle.gray, row=1)
+    @disnake.ui.button(emoji="🔔", label="Annonce", style=disnake.ButtonStyle.primary, row=1)
     async def notif(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
         await interaction.response.send_modal(NotificationModal(self.tournament))
-
-    @disnake.ui.button(emoji=FS.Emotes.Lol.RIOTFIST, label="Codes", style=disnake.ButtonStyle.gray, row=1)
-    async def codes(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
-        await interaction.response.send_modal(CodesModal(self.tournament))
 
     @disnake.ui.button(emoji=FS.Emotes.BAN, label="Stop", style=disnake.ButtonStyle.danger, row=1)
     async def arret(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
@@ -360,6 +353,3 @@ class DraftManager:
         new_draft = DraftManager(self.tournament, self.channels, self.labels)
         self.tournament.draftManagers[self.tournament.draftManagers.index(self)] = new_draft
         await new_draft.start()
-
-    def set_codes(self, code: str):
-        self.code = code

@@ -1071,7 +1071,7 @@ class TournamentData(Container):
     @property
     def current_round(self) -> Optional[Round]:
         for round in self._rounds:
-            if round.state == State.SET:
+            if round.state >= State.SET:
                 return round
         return None
 
@@ -1135,13 +1135,6 @@ class TournamentData(Container):
             return [FS.Embed(title=self._admin_title, color=disnake.Colour.lighter_grey(), description="ERROR !")]
         else:
             return None
-
-    def set_codes(self, codes: List[str]):
-        self._codes = []
-        for r in range(self.nb_rounds):
-            self._codes.append([])
-            for m in range(self.nb_matches_per_round):
-                self._codes[r].append(codes[r * self.nb_matches_per_round + m])
 
     async def build(self) -> None:
         pass

@@ -44,26 +44,3 @@ class NotificationModal(disnake.ui.Modal):
             )
         )
         await msg.delete(delay=2)
-
-
-class CodesModal(disnake.ui.Modal):
-    def __init__(self, tournament: TournamentData):
-        components = [
-            disnake.ui.TextInput(
-                label=f"Les {tournament.nb_rounds*tournament.nb_matches_per_round} codes du tournois, un par ligne",
-                style=disnake.TextInputStyle.paragraph,
-                custom_id="codes",
-            )
-        ]
-        self.tournament: TournamentData = tournament
-        super().__init__(title="Création d'une annonce", components=components, timeout=600)
-
-    async def callback(self, interaction: disnake.ModalInteraction) -> None:
-        await interaction.response.defer()
-        codes = interaction.text_values.get("codes").splitlines()
-        if len(codes) == (self.tournament.nb_matches_per_round * self.tournament.nb_rounds):
-            self.tournament.set_codes(codes)
-            msg = await interaction.edit_original_message(embed=FS.Embed(description=f"✅ Codes enregistrés !"))
-        else:
-            msg = await interaction.edit_original_message(embed=FS.Embed(description=f"⚠️ Nombre de code incorrect !"))
-        await msg.delete(delay=2)
