@@ -50,7 +50,7 @@ class Basic(commands.Cog):
             )
             await inter.response.send_message(
                 embed=FS.Embed(
-                    description=f"Cliquez ci-dessous pour démarrer watch together dans le channel vocal **{inter.author.voice.channel.name}**"
+                    description=f"Cliquez ci-dessous pour démarrer **watch together** (youtube) dans le channel vocal ***{inter.author.voice.channel.name}***"
                 ),
                 components=[button],
                 ephemeral=True,
