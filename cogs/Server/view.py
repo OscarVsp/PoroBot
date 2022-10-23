@@ -98,10 +98,10 @@ class PollOptionModal(disnake.ui.Modal):
         )
 
     async def callback(self, interaction: disnake.ModalInteraction, /) -> None:
-        await interaction.response.defer(ephemeral=True)
+        await interaction.response.defer()
         self.sondage.options.append(interaction.text_values.get("name"))
         await self.sondage.update()
-        await interaction.edit_original_message(embed=disnake.Embed(description="Option added !"))
+        await interaction.delete_original_message()
 
 
 class PollDescriptionModal(disnake.ui.Modal):
@@ -117,7 +117,7 @@ class PollDescriptionModal(disnake.ui.Modal):
         )
 
     async def callback(self, interaction: disnake.ModalInteraction, /) -> None:
-        await interaction.response.defer(ephemeral=True)
+        await interaction.response.defer()
         self.sondage.description = interaction.text_values.get("description")
         await self.sondage.update()
-        await interaction.edit_original_message(embed=disnake.Embed(description="Description set !"))
+        await interaction.delete_original_message()
