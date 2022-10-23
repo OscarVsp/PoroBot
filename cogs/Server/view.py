@@ -70,6 +70,7 @@ class PollCreationView(disnake.ui.View):
 
     @disnake.ui.button(label="Send", row=3)
     async def send(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
+        await interaction.response.defer()
         self.stop()
         embed = disnake.Embed(
             title=self.title,
