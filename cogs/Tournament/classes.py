@@ -1071,9 +1071,9 @@ class TournamentData(Container):
     @property
     def current_round(self) -> Optional[Round]:
         for round in self._rounds:
-            if round.state >= State.SET:
+            if round.state == State.SET or round.state == State.STARTED:
                 return round
-        return None
+        return round
 
     @property
     def nb_rounds(self) -> int:

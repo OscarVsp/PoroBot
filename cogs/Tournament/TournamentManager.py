@@ -426,6 +426,7 @@ class Tournament2v2Roll(Tournament):
         sorted_players: List[Player] = self.getRanking()
         ranks = self.rank_emotes(sorted_players)
         i_round = self.rounds.index(self.current_round)
+        print(i_round)
         if i_round > 1:
             evolutions = []
             for i, player in enumerate(sorted_players):
