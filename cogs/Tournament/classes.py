@@ -725,7 +725,7 @@ class Match(Container):
         return {
             "name": self.title,
             "value": "\n".join(
-                [f"{indicators[i]}{FS.Emotes.Num(round(e.points))} {e.name}" for i, e in enumerate(self._entities)]
+                [f"{indicators[i]}{FS.Emotes.Num(round(e.points))} {e.display}" for i, e in enumerate(self._entities)]
             ),
             "inline": True,
         }
@@ -743,7 +743,7 @@ class Match(Container):
             "name": self.title,
             "value": "\n".join(
                 [
-                    f"{indicators[i]}{''.join([FS.Emotes.Num(round(score)) for score in e.scores])} {e.name}"
+                    f"{indicators[i]}{''.join([FS.Emotes.Num(round(score)) for score in e.scores])} {e.display}"
                     for i, e in enumerate(self._entities)
                 ]
             ),

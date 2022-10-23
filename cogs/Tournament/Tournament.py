@@ -121,14 +121,14 @@ class Tournament(commands.Cog):
 
     @tournament.sub_command(name="start", description="Sélectionner les joueurs et démarrer le tournois")
     async def start_tournament(
-        self, inter: ApplicationCommandInteraction, tournament: str = commands.Param(description="Le tournoi à start")
+        self, inter: ApplicationCommandInteraction, tournament: str = commands.Param(description="Le tournoi à start"), shuffle: bool = commands.Param(description="Mélanger les joueurs avant de faire les rounds", default=False)
     ):
         await inter.response.defer(ephemeral=True)
         _tournament = next(
             (_tournament for _tournament in self.tournaments if _tournament.name.lower() == tournament.lower())
         )
         if _tournament:
-            await PlayerSelectionView(_tournament, inter).send()
+            await PlayerSelectionView(_tournament, inter, shuffle).send()
 
     @start_tournament.autocomplete("tournament")
     async def start_autocomplete(self, inter: ApplicationCommandInteraction, user_input: str):

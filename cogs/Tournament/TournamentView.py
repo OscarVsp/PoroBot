@@ -15,7 +15,7 @@ from modules.FastSnake import *
 
 
 class PlayerSelectionView(MemberSelectionView):
-    def __init__(self, tournament: TournamentData, inter: disnake.ApplicationCommandInteraction):
+    def __init__(self, tournament: TournamentData, inter: disnake.ApplicationCommandInteraction, shuffle: bool):
         super().__init__(
             target=inter,
             embeds=[],
@@ -25,6 +25,7 @@ class PlayerSelectionView(MemberSelectionView):
             size=tournament.size,
         )
         self.tournament: TournamentData = tournament
+        self.shuffle: bool = shuffle
 
     async def end(self) -> None:
         await super().end()
@@ -32,7 +33,7 @@ class PlayerSelectionView(MemberSelectionView):
             await self.target.edit_original_message(
                 embed=disnake.Embed(title=self.title, description="Joueurs ajoutés. Démarrage du tournoi.."), view=None
             )
-            await self.tournament.set_players(self.selected_members)
+            await self.tournament.set_players(self.selected_members, self.shuffle)
             await self.target.edit_original_message(
                 embed=disnake.Embed(title=self.title, description="Tournoi démarré !")
             )

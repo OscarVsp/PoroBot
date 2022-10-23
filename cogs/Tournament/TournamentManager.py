@@ -81,13 +81,13 @@ class Tournament(TournamentData):
             for team in match:
                 await team.set_permissions(self.everyone, overwrite=text_voice_channel_perm)
 
-    async def set_players(self, members: List[disnake.Member]) -> None:
+    async def set_players(self, members: List[disnake.Member], shuffle: bool) -> None:
         await self.admin_message.delete()
         await super().set_players(members)
         self.role: disnake.Role = await self.guild.create_role(name=self.name)
         for player in self._players:
             await player.add_roles(self.role)
-        self.generate_round()
+        self.generate_round(shuffle)
         self.admin_view = AdminView(self)
         self.admin_message = await self.admin_channel.send(embeds=self.admin_embeds, view=self.admin_view)
         await self.update()
@@ -103,7 +103,7 @@ class Tournament(TournamentData):
                 ).start()
             )
 
-    def generate_round(self) -> None:
+    def generate_round(self, shuffle: bool) -> None:
         pass
 
     async def update(self) -> None:
@@ -169,24 +169,24 @@ class Tournament2v2Roll(Tournament):
     SIZES = [4, 5, 8]
 
     class Seeding:
-        S4: List[List[List[List[int]]]] = [[[[2, 3], [1, 4]]], [[[1, 3], [2, 4]]], [[[1, 2], [3, 4]]]]
+        S4: List[List[List[List[int]]]] = [[[[1, 2], [3, 4]]], [[[3, 2], [1, 4]]], [[[3, 1], [2, 4]]]]
 
         S5: List[List[List[List[int]]]] = [
-            [[[4, 5], [2, 3]]],
-            [[[1, 3], [2, 4]]],
-            [[[1, 5], [3, 4]]],
-            [[[2, 5], [1, 4]]],
-            [[[1, 2], [3, 5]]],
+            [[[1, 2], [3, 4]]],
+            [[[5, 4], [3, 1]]],
+            [[[5, 2], [4, 1]]],
+            [[[3, 2], [5, 1]]],
+            [[[5, 3], [4, 2]]],
         ]
 
         S8: List[List[List[List[int]]]] = [
-            [[[3, 4], [7, 8]], [[5, 6], [1, 2]]],
-            [[[6, 8], [5, 7]], [[1, 3], [2, 4]]],
-            [[[1, 4], [5, 8]], [[6, 7], [2, 3]]],
-            [[[4, 8], [2, 6]], [[3, 7], [1, 5]]],
-            [[[3, 8], [1, 6]], [[2, 5], [4, 7]]],
-            [[[2, 8], [3, 5]], [[4, 6], [1, 7]]],
-            [[[1, 8], [2, 7]], [[4, 5], [3, 6]]],
+            [[[1, 2], [3, 4]], [[5, 6], [7, 8]]],
+            [[[6, 4], [5, 3]], [[7, 1], [8, 2]]],
+            [[[7, 2], [5, 4]], [[6, 3], [8, 1]]],
+            [[[2, 4], [8, 6]], [[1, 3], [7, 5]]],
+            [[[1, 4], [7, 6]], [[8, 5], [2, 3]]],
+            [[[8, 4], [1, 5]], [[2, 6], [7, 3]]],
+            [[[7, 4], [8, 3]], [[2, 5], [1, 6]]],
         ]
 
     def __init__(self, guild: disnake.Guild, size: int, name: str = "2v2 Roll"):
@@ -227,10 +227,11 @@ class Tournament2v2Roll(Tournament):
             ["EUW04b53-79fd4971-ea6e-4b94-8f97-69911de3cdec","EUW04b53-1c20bba0-9758-482c-aa4a-76250eec6b3b"], 
         ]
 
-    def generate_round(self) -> None:
+    def generate_round(self, shuffle: bool) -> None:
         if self.players == None:
             raise PlayersNotSetError
-        self.shuffle_players()
+        if shuffle:
+            self.shuffle_players()
         self._rounds = []
         for round_idx in range(self._nb_rounds):
             matches = []
@@ -278,7 +279,7 @@ class Tournament2v2Roll(Tournament):
             fields=[
                 {
                     "name": "🎖️ ➖ __**Joueurs**__",
-                    "value": "\n".join([f"{ranks[i]} {evolutions[i]} *{p.name}*" for i, p in enumerate(sorted_players)]),
+                    "value": "\n".join([f"{ranks[i]} {evolutions[i]} *{p.display}*" for i, p in enumerate(sorted_players)]),
                     "inline": True,
                 },
                 {
@@ -448,7 +449,7 @@ class Tournament2v2Roll(Tournament):
                     {
                         "name": "🎖️ ➖ __**Joueurs**__",
                         "value": "\n".join(
-                            [f"{ranks[i]} {evolutions[i]} *{p.name}*" for i, p in enumerate(sorted_players)]
+                            [f"{ranks[i]} {evolutions[i]} *{p.display}*" for i, p in enumerate(sorted_players)]
                         ),
                         "inline": True,
                     },
