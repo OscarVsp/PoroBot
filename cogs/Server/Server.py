@@ -15,7 +15,7 @@ class Server(commands.Cog):
         self.registration_role = None
 
     def tr(self, text: str) -> str:
-        if text != None and text != disnake.Embed.Empty:
+        if text != None and text != None:
             return_text = ""
             i = (0, 4999)
             while i[1] < len(text):
@@ -42,9 +42,9 @@ class Server(commands.Cog):
         embeds = []
         if inter.target.embeds:
             for embed in inter.target.embeds:
-                if embed.title != disnake.Embed.Empty:
+                if embed.title != None:
                     embed.title = self.tr(embed.title)
-                if embed.description != disnake.Embed.Empty:
+                if embed.description != None:
                     embed.description = self.tr(embed.description)
                 if embed.footer.text:
                     embed.set_footer(text=self.tr(embed.footer.text), icon_url=embed.footer.icon_url)
@@ -73,23 +73,6 @@ class Server(commands.Cog):
         await inter.response.defer(ephemeral=True)
         pollCreationView = PollCreationView(inter, titre, role)
         await inter.edit_original_message(embed=pollCreationView.embed, view=pollCreationView)
-
-    """@commands.slash_command(
-        name="inscription",
-        description="Inscription pour le tournoi #6"
-    )
-    async def inscription(self, inter: disnake.ApplicationCommandInteraction):
-        if self.registration_role == None:
-            self.registration_role = self.bot.get_guild(281403075506339840).get_role(1021410292292395099)
-        if self.registration_role:
-            if self.registration_role in inter.author.roles:
-                await inter.response.send_message(ephemeral=True, embed=FS.Embed(title="__**Inscription au tournoi #6**__", description="⚠ Tu es déjà inscrit au tournoi #6 !\n> Si tu ne peux plus participer, envoie un message à <@281401408597655552> pour te désinscrire.", thumbnail=FS.Images.Tournament.TROPHY, footer_text="Tu peux rejeter ce message pour le faire disparaitre."))
-            else:
-                await inter.author.add_roles(self.registration_role)
-                await inter.response.send_message(ephemeral = True, embed=FS.Embed(title="__**Inscription au tournoi #6**__", description="✅ Tu es bien inscrit au tournoi #6 !", thumbnail=FS.Images.Tournament.TROPHY, footer_text="Tu peux rejeter ce message pour le faire disparaitre."))
-        else:
-            await inter.response.send_message(ephemeral = True, embed=FS.Embed(title="__**Inscription au tournoi #6**__", description="Impossible de trouver le role correspondant."))
-    """
 
 
 def setup(bot: commands.InteractionBot):

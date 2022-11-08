@@ -28,7 +28,7 @@ class Embed(disnake.Embed):
     that acts similar to a regular :class:`dict` except using dotted access,
     e.g. ``embed.author.icon_url``. If the attribute
     is invalid or empty, then a special sentinel value is returned,
-    :attr:`Embed.Empty`.
+    :attr:`None`.
 
     For ease of use, all parameters that expect a :class:`str` are implicitly
     casted to :class:`str` for you.
@@ -64,18 +64,18 @@ class Embed(disnake.Embed):
     def __init__(
         self,
         *,
-        title: str = disnake.Embed.Empty,
-        description: str = disnake.Embed.Empty,
-        color: int = disnake.Embed.Empty,
-        url: str = disnake.Embed.Empty,
+        title: str = None,
+        description: str = None,
+        color: int = None,
+        url: str = None,
         fields: Union[List[dict], dict] = None,
         author_name: str = None,
-        author_url: str = disnake.Embed.Empty,
-        author_icon_url: str = disnake.Embed.Empty,
-        thumbnail: Union[str, disnake.File] = disnake.Embed.Empty,
-        image: Union[str, disnake.File] = disnake.Embed.Empty,
-        footer_text: str = disnake.Embed.Empty,
-        footer_icon_url: str = disnake.Embed.Empty,
+        author_url: str = None,
+        author_icon_url: str = None,
+        thumbnail: Union[str, disnake.File] = None,
+        image: Union[str, disnake.File] = None,
+        footer_text: str = None,
+        footer_icon_url: str = None,
     ):
         if len(description) > 4096:
             logging.warn("Embed description length is higher than 4096 and will be truncated to avoid error.")
@@ -107,7 +107,7 @@ class Embed(disnake.Embed):
         if author_name != None:
             self.set_author(name=author_name, url=author_url, icon_url=author_icon_url)
 
-        if thumbnail != Embed.Empty:
+        if thumbnail != None:
             if type(thumbnail) == str:
                 self.set_thumbnail(url=thumbnail)
             elif type(thumbnail) == disnake.File:
@@ -117,7 +117,7 @@ class Embed(disnake.Embed):
                     f'Argument "thumbnail" should be type "str" or "disnake.File" but {type(fields)} has been provided.'
                 )
 
-        if image != Embed.Empty:
+        if image != None:
             if type(image) == str:
                 self.set_image(url=image)
             elif type(image) == disnake.File:
@@ -178,10 +178,10 @@ class Embed(disnake.Embed):
         if self.description and len(self.description.strip()) > 4096:
             raise ValueError("Embed description cannot be longer than 4096 characters")
 
-        if self.footer and self.footer != disnake.Embed.Empty and len(self._footer.get("text", "").strip()) > 2048:
+        if self.footer and self.footer != None and len(self._footer.get("text", "").strip()) > 2048:
             raise ValueError("Embed footer text cannot be longer than 2048 characters")
 
-        if self.author and self.author != disnake.Embed.Empty and len(self._author.get("name", "").strip()) > 256:
+        if self.author and self.author != None and len(self._author.get("name", "").strip()) > 256:
             raise ValueError("Embed author name cannot be longer than 256 characters")
 
         if self.fields:
@@ -189,7 +189,7 @@ class Embed(disnake.Embed):
                 raise ValueError("Embeds cannot have more than 25 fields")
 
             for field_index, field in enumerate(self._fields):
-                if field != disnake.Embed.Empty:
+                if field != None:
                     if len(field["name"].strip()) > 256:
                         raise ValueError(f"Embed field {field_index} name cannot be longer than 256 characters")
                     if len(field["value"].strip()) > 1024:
@@ -205,33 +205,33 @@ class Embed(disnake.Embed):
             space -= len(self.title.strip())
         if self.description:
             space -= len(self.description.strip())
-        if self.footer and self.footer != disnake.Embed.Empty:
+        if self.footer and self.footer != None:
             space -= len(self._footer.get("text", "").strip())
-        if self.author and self.author != disnake.Embed.Empty:
+        if self.author and self.author != None:
             space -= len(self._author.get("name", "").strip())
 
         if self.fields:
 
             for field in self._fields:
-                if field != disnake.Embed.Empty:
+                if field != None:
                     space -= len(field["name"].strip())
                     space -= len(field["value"].strip())
         return space
 
     @staticmethod
     def flex(
-        title: str = disnake.Embed.Empty,
-        description: str = disnake.Embed.Empty,
-        color: int = disnake.Embed.Empty,
-        url: str = disnake.Embed.Empty,
+        title: str = None,
+        description: str = None,
+        color: int = None,
+        url: str = None,
         fields: Union[List[dict], dict] = None,
         author_name: str = None,
-        author_url: str = disnake.Embed.Empty,
-        author_icon_url: str = disnake.Embed.Empty,
-        thumbnail: Union[str, disnake.File] = disnake.Embed.Empty,
-        image: Union[str, disnake.File] = disnake.Embed.Empty,
-        footer_text: str = disnake.Embed.Empty,
-        footer_icon_url: str = disnake.Embed.Empty,
+        author_url: str = None,
+        author_icon_url: str = None,
+        thumbnail: Union[str, disnake.File] = None,
+        image: Union[str, disnake.File] = None,
+        footer_text: str = None,
+        footer_icon_url: str = None,
     ) -> List[disnake.Embed]:
         embeds = [
             Embed(
@@ -276,7 +276,7 @@ class Embed(disnake.Embed):
                     value=field.get("value", "field value"),
                     inline=field.get("inline", False),
                 )
-        if footer_text != disnake.Embed.Empty and len(footer_text.strip()) > embeds[-1].remaining_space:
+        if footer_text != None and len(footer_text.strip()) > embeds[-1].remaining_space:
             embeds.append(Embed(color=color))
         embeds[-1].set_footer(text=footer_text, icon_url=footer_icon_url)
         if isinstance(image, str):

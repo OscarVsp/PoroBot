@@ -42,7 +42,7 @@ class ConfirmationView(disnake.ui.View):
         self.embeds: List[disnake.Embed] = embeds if embeds else []
         self.title: str = title
         self.description: str = description
-        self.thumbnail: str = thumbnail if thumbnail else disnake.Embed.Empty
+        self.thumbnail: str = thumbnail if thumbnail else None
         self.color: disnake.Colour = color
         self.interaction: disnake.MessageInteraction = None
 

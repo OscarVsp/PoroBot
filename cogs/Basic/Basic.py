@@ -37,32 +37,6 @@ class Basic(commands.Cog):
             view=PoroFeed(inter),
         )
 
-    @commands.slash_command(description="Démarrer watch together dans un salon vocal")
-    async def watch_together(self, inter: ApplicationCommandInteraction):
-        if inter.author.voice and inter.author.voice.channel and inter.author.voice.channel.guild == inter.guild:
-            invite = await inter.author.voice.channel.create_invite(
-                max_age=0,
-                target_type=disnake.InviteTarget.embedded_application,
-                target_application=disnake.PartyType.watch_together,
-            )
-            button = disnake.ui.Button(
-                style=disnake.ButtonStyle.link, url=f"https://discord.gg/{invite.code}", label="Watch together"
-            )
-            await inter.response.send_message(
-                embed=FS.Embed(
-                    description=f"Cliquez ci-dessous pour démarrer **watch together** (youtube) dans le channel vocal ***{inter.author.voice.channel.name}***"
-                ),
-                components=[button],
-                ephemeral=True,
-            )
-        else:
-            await inter.response.send_message(
-                embed=FS.Embed(
-                    description=f"Vous devez etre dans un salon vocal de ce serveur pour commencer watch together.",
-                    ephemeral=True,
-                )
-            )
-
     @commands.user_command(name="Voir le lore")
     async def lore(self, inter: disnake.UserCommandInteraction):
         lore_embed = get_lore_embed(inter.target.name)
@@ -85,6 +59,7 @@ class Basic(commands.Cog):
             await inter.response.send_message(
                 embed=FS.warning("Seul Hyksos peut utiliser cette commande !"), ephemeral=True
             )
+            
 
     @tasks.loop(seconds=30)
     async def presence_update(self):

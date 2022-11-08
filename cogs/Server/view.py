@@ -74,7 +74,7 @@ class PollCreationView(disnake.ui.View):
         self.stop()
         embed = disnake.Embed(
             title=self.title,
-            description=self.description if self.description else disnake.Embed.Empty,
+            description=self.description if self.description else None,
             color=disnake.Colour.purple(),
         )
         embed.add_field(

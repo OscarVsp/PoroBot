@@ -878,7 +878,7 @@ class Round(Container):
             self.round_idx == 0 or self._tournament.rounds[self._tournament.rounds.index(self) - 1].state == State.ENDED
         ):
             return disnake.Colour.green()
-        return disnake.Embed.Empty
+        return None
 
     @property
     def log_id(self) -> str:

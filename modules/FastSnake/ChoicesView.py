@@ -233,7 +233,7 @@ class SelectionView(ConfirmationView):
         timeout: int,
         options: List[SelectionRow],
         color: disnake.Colour = disnake.Colour.default(),
-        thumbnail: str = disnake.Embed.Empty,
+        thumbnail: str = None,
     ):
         super().__init__(target, embeds, title, description, timeout, color, thumbnail)
         if isinstance(options, SelectionRow):

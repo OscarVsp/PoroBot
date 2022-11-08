@@ -222,7 +222,7 @@ class ChampionMasteries(lol.ChampionMasteries):
                 if i != 0 and i % 20 == 0:
                     embeds.append(FS.Embed(title=title, description=text, color=color))
                     text = ""
-                    title = disnake.Embed.Empty
+                    title = None
                 text += f"{FS.Emotes.Lol.Champions.get(champion.champion_id)} *{self.champion_points_formatted(champion)}*\n"
             embeds.append(FS.Embed(title=title, description=text, color=color))
         return embeds
@@ -781,7 +781,7 @@ class CurrentGame(lol.spectator.CurrentGame):
             return FS.Images.Lol.ARAM
         else:
             logging.info(f"Map image not found for the {self.map_name = }")
-            return disnake.Embed.Empty
+            return None
 
     @property
     def configEmbed(self) -> disnake.Embed:

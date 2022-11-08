@@ -303,24 +303,24 @@ class Moderator(commands.Cog):
         channel: disnake.TextChannel = commands.Param(
             description="The channel where to send the embed (default : here)", default=None
         ),
-        titre: str = commands.Param(description="Le titre", default=disnake.Embed.Empty),
-        contenu: str = commands.Param(description="Le contenu", default=disnake.Embed.Empty),
+        titre: str = commands.Param(description="Le titre", default=None),
+        contenu: str = commands.Param(description="Le contenu", default=None),
         mention: Union[disnake.Role, disnake.Member] = commands.Param(
             description="Un role ou un membre à mentionner", default=None
         ),
         color: ColorEnum = commands.Param(description="La couleur", default=None),
-        url: str = commands.Param(description="L'url", default=disnake.Embed.Empty),
-        thumbnail_url: str = commands.Param(description="L'url du thumbnail", default=disnake.Embed.Empty),
+        url: str = commands.Param(description="L'url", default=None),
+        thumbnail_url: str = commands.Param(description="L'url du thumbnail", default=None),
         thumbnail_file: disnake.Attachment = commands.Param(description="Le fichier du thumbnail", default=None),
-        image_url: str = commands.Param(description="L'url de l'image", default=disnake.Embed.Empty),
+        image_url: str = commands.Param(description="L'url de l'image", default=None),
         image_file: disnake.Attachment = commands.Param(description="Le fichier de l'image", default=None),
         author_name: str = commands.Param(description="Le nom de l'auteur (defaut : ton nom)", default=None),
-        author_icon_url: str = commands.Param(description="L'icon de l'auteur", default=disnake.Embed.Empty),
-        footer_text: str = commands.Param(description="Le text du footer", default=disnake.Embed.Empty),
-        footer_icon_url: str = commands.Param(description="L'url de l'icon du footer", default=disnake.Embed.Empty),
+        author_icon_url: str = commands.Param(description="L'icon de l'auteur", default=None),
+        footer_text: str = commands.Param(description="Le text du footer", default=None),
+        footer_icon_url: str = commands.Param(description="L'url de l'icon du footer", default=None),
     ):
         await inter.response.defer(ephemeral=True)
-        if titre != disnake.Embed.Empty or contenu != disnake.Embed.Empty:
+        if titre != None or contenu != None:
             if not channel:
                 channel = inter.channel
             embed = FS.Embed(
@@ -352,29 +352,29 @@ class Moderator(commands.Cog):
         target: Union[disnake.Role, disnake.Member] = commands.Param(
             description="Le role ou le member à qui envoye l'embed"
         ),
-        titre: str = commands.Param(description="Le titre", default=disnake.Embed.Empty),
-        contenu: str = commands.Param(description="Le contenu", default=disnake.Embed.Empty),
+        titre: str = commands.Param(description="Le titre", default=None),
+        contenu: str = commands.Param(description="Le contenu", default=None),
         color: ColorEnum = commands.Param(description="La couleur", default=None),
-        url: str = commands.Param(description="L'url", default=disnake.Embed.Empty),
-        thumbnail_url: str = commands.Param(description="L'url du thumbnail", default=disnake.Embed.Empty),
+        url: str = commands.Param(description="L'url", default=None),
+        thumbnail_url: str = commands.Param(description="L'url du thumbnail", default=None),
         thumbnail_file: disnake.Attachment = commands.Param(description="Le fichier du thumbnail", default=None),
-        image_url: str = commands.Param(description="L'url de l'image", default=disnake.Embed.Empty),
+        image_url: str = commands.Param(description="L'url de l'image", default=None),
         image_file: disnake.Attachment = commands.Param(description="Le fichier de l'image", default=None),
         author_name: str = commands.Param(description="Le nom de l'auteur (defaut : ton nom)", default=None),
-        author_icon_url: str = commands.Param(description="L'icon de l'auteur", default=disnake.Embed.Empty),
-        footer_text: str = commands.Param(description="Le text du footer", default=disnake.Embed.Empty),
-        footer_icon_url: str = commands.Param(description="L'url de l'icon du footer", default=disnake.Embed.Empty),
+        author_icon_url: str = commands.Param(description="L'icon de l'auteur", default=None),
+        footer_text: str = commands.Param(description="Le text du footer", default=None),
+        footer_icon_url: str = commands.Param(description="L'url de l'icon du footer", default=None),
     ):
         await inter.response.defer(ephemeral=True)
         if (
-            titre != disnake.Embed.Empty
-            or contenu != disnake.Embed.Empty
+            titre != None
+            or contenu != None
             or thumbnail_file != None
-            or thumbnail_url != disnake.Embed.Empty
+            or thumbnail_url != None
             or image_file != None
-            or image_url != disnake.Embed.Empty
-            or author_name != disnake.Embed.Empty
-            or author_icon_url != disnake.Embed.Empty
+            or image_url != None
+            or author_name != None
+            or author_icon_url != None
         ):
             embed = FS.Embed(
                 title=titre,

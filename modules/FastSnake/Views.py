@@ -31,7 +31,7 @@ async def confirmation(
     embeds: List[disnake.Embed] = [],
     title: str = "Confirmation",
     description: str = "Confirmer l'action ?",
-    thumbnail: str = disnake.Embed.Empty,
+    thumbnail: str = None,
     timeout: int = None,
     color: disnake.Colour = disnake.Colour.red(),
 ) -> ConfirmationReturnData:
@@ -285,7 +285,7 @@ async def Selection(
     description: str = "Choisissez parmit les propositions ci-dessous",
     timeout: int = None,
     color: disnake.Colour = disnake.Colour.purple(),
-    thumbnail: str = disnake.Embed.Empty,
+    thumbnail: str = None,
 ) -> SelectionViewReturnData:
     """|coro|\n
     Send a QCM view linked to the interaction.
