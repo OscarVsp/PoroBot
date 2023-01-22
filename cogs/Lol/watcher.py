@@ -19,7 +19,7 @@ from pyot.conf.pipeline import PipelineConf
 from pyot.core.exceptions import *
 from pyot.utils.lol.champion import *
 
-import modules.FastSnake as FS
+from modules.Assets import *
 
 
 @activate_model("lol")
@@ -127,12 +127,12 @@ class SummonerLeague(lol.SummonerLeague):
     def league_to_line(self, league: lol.league.SummonerLeagueEntryData) -> str:
         if league:
             return f"{self.short(league)} *{league.league_points} LP*"
-        return f"{FS.Emotes.Lol.Tier.get('UNRANKED')}{FS.Emotes.Lol.Rank.NONE}"
+        return f"{Emotes.Lol.Tier.get('UNRANKED')}{Emotes.Lol.Rank.NONE}"
 
     def short(self, league: lol.league.SummonerLeagueEntryData) -> str:
         if league:
-            return f"{FS.Emotes.Lol.Tier.get(league.tier)}{FS.Emotes.Lol.Rank.get(league.rank)}"
-        return f"{FS.Emotes.Lol.Tier.get('UNRANKED')}{FS.Emotes.Lol.Rank.NONE}"
+            return f"{Emotes.Lol.Tier.get(league.tier)}{Emotes.Lol.Rank.get(league.rank)}"
+        return f"{Emotes.Lol.Tier.get('UNRANKED')}{Emotes.Lol.Rank.NONE}"
 
     @property
     def field(self) -> dict:
@@ -144,8 +144,8 @@ class SummonerLeague(lol.SummonerLeague):
         if self.flex:
             value += f"> **Flex :** {self.league_to_line(self.flex)}"
         if value == "":
-            value = f"{FS.Emotes.Lol.Tier.get('UNRANKED')} Unranked"
-        return {"name": f"{FS.Emotes.Lol.Tier.NONE} **RANKED**", "value": value, "inline": True}
+            value = f"{Emotes.Lol.Tier.get('UNRANKED')} Unranked"
+        return {"name": f"{Emotes.Lol.Tier.NONE} **RANKED**", "value": value, "inline": True}
 
 
 class ChampionMasteries(lol.ChampionMasteries):
@@ -168,18 +168,18 @@ class ChampionMasteries(lol.ChampionMasteries):
     def field(self, n: int = 3) -> dict:
         top = self.top(n=n)
         return {
-            "name": f"{FS.Emotes.Lol.MASTERIES[0]} **MASTERIES**",
+            "name": f"{Emotes.Lol.MASTERIES[0]} **MASTERIES**",
             "value": (
                 "\n".join([f"> {self.champion_to_line(champ)}" for champ in top])
                 if len(top) > 0
-                else f"{FS.Emotes.Lol.MASTERIES[0]} *Aucune maitrise*"
+                else f"{Emotes.Lol.MASTERIES[0]} *Aucune maitrise*"
             ),
             "inline": True,
         }
 
     @classmethod
     def champion_to_line(cls, champion: lol.ChampionMastery) -> str:
-        return f"{FS.Emotes.Lol.MASTERIES[champion.champion_level]} **{FS.Emotes.Lol.Champions.get(champion.champion_id)}** *{cls.champion_points_formatted(champion)}*"
+        return f"{Emotes.Lol.MASTERIES[champion.champion_level]} **{Emotes.Lol.Champions.get(champion.champion_id)}** *{cls.champion_points_formatted(champion)}*"
 
     @staticmethod
     def champion_points_formatted(champion: lol.ChampionMastery) -> str:
@@ -215,16 +215,16 @@ class ChampionMasteries(lol.ChampionMasteries):
             blocks[-champion.champion_level].append(champion)
         embeds: List[disnake.Embed] = []
         for j, block in enumerate(blocks):
-            title = f"{FS.Emotes.Lol.MASTERIES[-(j+1)]} __**Mastery {7-j}**__"
+            title = f"{Emotes.Lol.MASTERIES[-(j+1)]} __**Mastery {7-j}**__"
             color = self.level_to_color(7 - j)
             text = ""
             for i, champion in enumerate(block):
                 if i != 0 and i % 20 == 0:
-                    embeds.append(FS.Embed(title=title, description=text, color=color))
+                    embeds.append(disnake.Embed(title=title, description=text, color=color))
                     text = ""
                     title = None
-                text += f"{FS.Emotes.Lol.Champions.get(champion.champion_id)} *{self.champion_points_formatted(champion)}*\n"
-            embeds.append(FS.Embed(title=title, description=text, color=color))
+                text += f"{Emotes.Lol.Champions.get(champion.champion_id)} *{self.champion_points_formatted(champion)}*\n"
+            embeds.append(disnake.Embed(title=title, description=text, color=color))
         return embeds
 
 
@@ -296,22 +296,23 @@ class ClashTeam(lol.ClashTeam):
 
     @async_property
     async def embed(self) -> disnake.Embed:
-        description = f"Tier **{FS.Emotes.Lol.Rank.get(self.tier)}**\n\n"
+        description = f"Tier **{Emotes.Lol.Rank.get(self.tier)}**\n\n"
         for player in self.sortedPlayers:
             summoner = await Summoner(id=player.summoner_id).get()
             league = await summoner.league_entries.get()
-            description += f"> {FS.Emotes.Lol.Positions.get(player.position)}{FS.Emotes.Lol.Tier.get(league.first.tier)} {summoner.name}"
+            description += f"> {Emotes.Lol.Positions.get(player.position)}{Emotes.Lol.Tier.get(league.first.tier)} {summoner.name}"
             if player.role == "CAPTAIN":
-                description += f" {FS.Emotes.Lol.CAPTAIN}"
+                description += f" {Emotes.Lol.CAPTAIN}"
             description += "\n"
-        return FS.Embed(
-            author_name=f"{self.abbreviation.upper()}",
+        return disnake.Embed(
             title=f"**{self.name}**",
             description=description,
-            thumbnail=self.icon_url,
-            color=disnake.Colour.blue(),
+            color=disnake.Colour.blue()
+        ).set_author(
+            name=f"{self.abbreviation.upper()}",
+        ).set_thumbnail(
+            self.icon_url
         )
-
 
 class ClashTournament(lol.ClashTournament):
     class Meta(lol.ClashTournament.Meta):
@@ -360,15 +361,25 @@ class Summoner(lol.Summoner):
     async def embed(self) -> disnake.Embed:
         championMasteries = await self.champion_masteries.get()
         summonerLeague = await self.league_entries.get()
-        return FS.Embed(
-            author_name=f"{self.name.upper()}",
-            color=disnake.Colour.blue(),
-            author_icon_url=self.icon_url,
-            fields=[
-                championMasteries.field(),
-                summonerLeague.field,
-                {"name": f"{FS.Emotes.Lol.XP} **LEVEL**", "value": f"> **{self.level}**", "inline": True},
-            ],
+        champMastField = championMasteries.field()
+        summField = summonerLeague.field
+        return disnake.Embed(
+            color=disnake.Colour.blue()
+        ).set_author(
+            name=f"{self.name.upper()}",
+            icon_url=self.icon_url
+        ).add_field(
+            name=champMastField.get('name'),
+            value=champMastField.get('value'),
+            inline=summField.get('inline')
+        ).add_field(
+            name=summField.get('name'),
+            value=summField.get('value'),
+            inline=summField.get('inline')
+        ).add_field(
+            name=f"{Emotes.Lol.XP} **LEVEL**", 
+            value=f"> **{self.level}**",
+            inline=True
         )
 
 
@@ -422,20 +433,20 @@ class MerakiChampion(lol.MerakiChampion):
         return [
             {
                 "name": f"➖ ➖ __**Base**__",
-                "value": f"""{FS.Emotes.Lol.Stats.HEALT} ➖ **{self.stats_to_tuple(self.stats.health)[0]}** Hp
-                            {FS.Emotes.Lol.Stats.HEALTREGEN} ➖ **{self.stats_to_tuple(self.stats.health_regen)[0]}** Hp/s
-                            {FS.Emotes.Lol.Stats.MANA} ➖ **{self.stats_to_tuple(self.stats.mana)[0]}** Mana
-                            {FS.Emotes.Lol.Stats.MANAREGEN} ➖ **{self.stats_to_tuple(self.stats.mana_regen)[0]}** Mana/s
-                            {FS.Emotes.Lol.Stats.ARMOR} ➖ **{self.stats_to_tuple(self.stats.armor)[0]}** Armor
-                            {FS.Emotes.Lol.Stats.MAGICRESISTE} ➖ **{self.stats_to_tuple(self.stats.magic_resistance)[0]}** Magic Resistance
-                            {FS.Emotes.Lol.Stats.ATTACKDAMAGE} ➖ **{self.stats_to_tuple(self.stats.attack_damage)[0]}** Attack damage
-                            {FS.Emotes.Lol.Stats.ATTACKSPEED} ➖ **{self.stats_to_tuple(self.stats.attack_speed)[0]}** Attack speed
-                            {FS.Emotes.Lol.Stats.RANGE} ➖ **{self.stats_to_tuple(self.stats.attack_range)[0]}** Attack range
-                            {FS.Emotes.Lol.Stats.MOVESPEED} ➖ **{self.stats_to_tuple(self.stats.movespeed)[0]}** Movement speed""",
+                "value": f"""{Emotes.Lol.Stats.HEALT} ➖ **{self.stats_to_tuple(self.stats.health)[0]}** Hp
+                            {Emotes.Lol.Stats.HEALTREGEN} ➖ **{self.stats_to_tuple(self.stats.health_regen)[0]}** Hp/s
+                            {Emotes.Lol.Stats.MANA} ➖ **{self.stats_to_tuple(self.stats.mana)[0]}** Mana
+                            {Emotes.Lol.Stats.MANAREGEN} ➖ **{self.stats_to_tuple(self.stats.mana_regen)[0]}** Mana/s
+                            {Emotes.Lol.Stats.ARMOR} ➖ **{self.stats_to_tuple(self.stats.armor)[0]}** Armor
+                            {Emotes.Lol.Stats.MAGICRESISTE} ➖ **{self.stats_to_tuple(self.stats.magic_resistance)[0]}** Magic Resistance
+                            {Emotes.Lol.Stats.ATTACKDAMAGE} ➖ **{self.stats_to_tuple(self.stats.attack_damage)[0]}** Attack damage
+                            {Emotes.Lol.Stats.ATTACKSPEED} ➖ **{self.stats_to_tuple(self.stats.attack_speed)[0]}** Attack speed
+                            {Emotes.Lol.Stats.RANGE} ➖ **{self.stats_to_tuple(self.stats.attack_range)[0]}** Attack range
+                            {Emotes.Lol.Stats.MOVESPEED} ➖ **{self.stats_to_tuple(self.stats.movespeed)[0]}** Movement speed""",
                 "inline": True,
             },
             {
-                "name": f"**/**{FS.Emotes.Lol.XP}",
+                "name": f"**/**{Emotes.Lol.XP}",
                 "value": f"""{self.stats_to_tuple(self.stats.health)[1]}
                             {self.stats_to_tuple(self.stats.health_regen)[1]}
                             {self.stats_to_tuple(self.stats.mana)[1]}
@@ -449,7 +460,7 @@ class MerakiChampion(lol.MerakiChampion):
                 "inline": True,
             },
             {
-                "name": f"__**18**__{FS.Emotes.Lol.XP}",
+                "name": f"__**18**__{Emotes.Lol.XP}",
                 "value": f"""**{self.stats_to_tuple(self.stats.health)[2]}** Hp
                             **{self.stats_to_tuple(self.stats.health_regen)[2]}** Hp/s
                             **{self.stats_to_tuple(self.stats.mana)[2]}** Mana
@@ -524,21 +535,21 @@ class MerakiChampion(lol.MerakiChampion):
         embeds: List[disnake.Embed] = []
 
         for ability in abilities:
-            embed = FS.Embed(
+            embed = disnake.Embed(
                 title=f"__**{letter.upper()} - {ability.name}**__",
-                thumbnail=ability.icon,
-                color=self.spellType_to_color(ability),
-            )
-            embed.add_field(
+                color=self.spellType_to_color(ability)
+            ).set_thumbnail(
+                ability.icon
+            ).add_field(
                 name="Cost",
                 value=(
-                    f"{FS.Emotes.Lol.Stats.Ressource(ability.resource)} {self.modifiers_to_line(ability.cost.modifiers)}"
+                    f"{Emotes.Lol.Stats.Ressource(ability.resource)} {self.modifiers_to_line(ability.cost.modifiers)}"
                     if ability.resource
                     else "`--`"
                 ),
             )
             text = (
-                f"{FS.Emotes.Lol.Stats.ABILITYHASTE} {self.modifiers_to_line(ability.cooldown.modifiers)}"
+                f"{Emotes.Lol.Stats.ABILITYHASTE} {self.modifiers_to_line(ability.cooldown.modifiers)}"
                 if ability.cooldown
                 else "`--`"
             )
@@ -552,10 +563,10 @@ class MerakiChampion(lol.MerakiChampion):
             )  # TODO Add minition recharge ?
             embed.add_field(
                 name="Range",
-                value=f"{FS.Emotes.Lol.TargetType.get(ability.targeting)} `{ability.target_range}`"
+                value=f"{Emotes.Lol.TargetType.get(ability.targeting)} `{ability.target_range}`"
                 if ability.target_range
                 else (
-                    f"{FS.Emotes.Lol.TargetType.get(ability.targeting)} `{ability.effect_radius}`"
+                    f"{Emotes.Lol.TargetType.get(ability.targeting)} `{ability.effect_radius}`"
                     if ability.effect_radius
                     else "`--`"
                 ),
@@ -571,7 +582,7 @@ class MerakiChampion(lol.MerakiChampion):
             details: List[str] = []
             if ability.on_target_cd_static and ability.on_target_cd_static.lower() != "none":
                 details.append(
-                    f"> **Per target cd:** {FS.Emotes.Lol.Stats.ABILITYHASTE} `{ability.on_target_cd_static}`"
+                    f"> **Per target cd:** {Emotes.Lol.Stats.ABILITYHASTE} `{ability.on_target_cd_static}`"
                 )
             if ability.targeting and ability.targeting.lower() != "none":
                 details.append(f"> **Target type:** `{ability.targeting}`")
@@ -580,13 +591,13 @@ class MerakiChampion(lol.MerakiChampion):
             if ability.width and ability.width.lower() != "none":
                 details.append(f"> **Width:** `{ability.width}`")
             if ability.effect_radius and ability.effect_radius.lower() != "none":
-                details.append(f"> **Effect Radius:** {FS.Emotes.Lol.Stats.RANGE} `{ability.effect_radius}`")
+                details.append(f"> **Effect Radius:** {Emotes.Lol.Stats.RANGE} `{ability.effect_radius}`")
             if ability.tether_radius and ability.tether_radius.lower() != "none":
-                details.append(f"> **Tether Radius:** {FS.Emotes.Lol.Stats.RANGE} `{ability.tether_radius}`")
+                details.append(f"> **Tether Radius:** {Emotes.Lol.Stats.RANGE} `{ability.tether_radius}`")
             if ability.inner_radius and ability.inner_radius.lower() != "none":
-                details.append(f"> **Inner Radius:** {FS.Emotes.Lol.Stats.RANGE} `{ability.inner_radius}`")
+                details.append(f"> **Inner Radius:** {Emotes.Lol.Stats.RANGE} `{ability.inner_radius}`")
             if ability.collision_radius and ability.collision_radius.lower() != "none":
-                details.append(f"> **Collision Radius:** {FS.Emotes.Lol.Stats.RANGE} `{ability.collision_radius}`")
+                details.append(f"> **Collision Radius:** {Emotes.Lol.Stats.RANGE} `{ability.collision_radius}`")
             if ability.damage_type and ability.damage_type.lower() != "none":
                 details.append(f"> **Damage type:** `{ability.damage_type}`")
             if ability.affects and ability.affects.lower() != "none":
@@ -612,7 +623,7 @@ class MerakiChampion(lol.MerakiChampion):
         return embeds
 
     def ability_embed(self, letter: str, ability: lol.merakichampion.MerakiChampionSpellData) -> disnake.Embed:
-        return FS.Embed(
+        return disnake.Embed(
             title=f"__**{letter.upper()} - {ability.name}**__",
             description="\n➖\n".join(
                 [
@@ -628,8 +639,9 @@ class MerakiChampion(lol.MerakiChampion):
                     )
                 ]
             ),
-            thumbnail=ability.icon,
-            color=self.spellType_to_color(ability),
+            color=self.spellType_to_color(ability)
+        ).set_thumbnail(
+            ability.icon
         )
 
     @property
@@ -644,10 +656,10 @@ class MerakiChampion(lol.MerakiChampion):
 
     @property
     def stats_embed(self) -> List[disnake.Embed]:
-        embed = FS.Embed(
+        embed = disnake.Embed(
             title="__**STATS**__",
-            description=f"{FS.Emotes.Lol.AttackType.get(self.adaptive_type.split('_')[0])} {FS.Emotes.Lol.AttackType.get(self.attack_type)} "
-            + " ".join([f"{FS.Emotes.Lol.Roles.get(role)}" for role in self.roles]),
+            description=f"{Emotes.Lol.AttackType.get(self.adaptive_type.split('_')[0])} {Emotes.Lol.AttackType.get(self.attack_type)} "
+            + " ".join([f"{Emotes.Lol.Roles.get(role)}" for role in self.roles]),
             color=disnake.Colour.dark_blue(),
         )
         for field in self.stat_fields:
@@ -702,14 +714,17 @@ class MerakiChampion(lol.MerakiChampion):
 
     @property
     def BaseEmbed(self) -> disnake.Embed:
-        embed = FS.Embed(
-            author_name=self.full_name if self.full_name else self.name,
+        embed = disnake.Embed(
             title=f"*{self.title}*",
             description=f'> "{self.lore[:200]}[...]"' if len(self.lore) > 200 else f'> "{self.lore}"',
-            author_icon_url=self.skins[0].tile_path,
-            color=disnake.Colour.dark_blue(),
-            thumbnail=self.skins[0].load_screen_path,
-            footer_text=f"Last changed in patch {self.patch_last_changed}",
+            color=disnake.Colour.dark_blue()
+        ).set_author(
+            name=self.full_name if self.full_name else self.name,
+            icon_url=self.skins[0].tile_path
+        ).set_thumbnail(
+            self.skins[0].load_screen_path
+        ).set_footer(
+            text=f"Last changed in patch {self.patch_last_changed}"
         )
         return embed
 
@@ -741,7 +756,7 @@ class MerakiChampion(lol.MerakiChampion):
 
     @property
     def emote(self) -> str:
-        return FS.Emotes.Lol.Champions.get(self.id)
+        return Emotes.Lol.Champions.get(self.id)
 
 
 class CurrentGame(lol.spectator.CurrentGame):
@@ -776,20 +791,21 @@ class CurrentGame(lol.spectator.CurrentGame):
     @property
     def map_image(self) -> str:
         if self.map_name == "Summoner's Rift":
-            return FS.Images.Lol.RIFT
+            return Images.Lol.RIFT
         elif self.map_name == "Howling Abyss":
-            return FS.Images.Lol.ARAM
+            return Images.Lol.ARAM
         else:
             logging.info(f"Map image not found for the {self.map_name = }")
             return None
 
     @property
     def configEmbed(self) -> disnake.Embed:
-        return FS.Embed(
-            title=f"{FS.Emotes.Lol.LOGO} __**GAME EN COURS**__",
+        return disnake.Embed(
+            title=f"{Emotes.Lol.LOGO} __**GAME EN COURS**__",
             description=f"> **Map :** `{self.map_name}`\n> **Type :** `{self.game_name}`\n> **Durée :** `{strftime('%M:%S', gmtime(self.length_secs))}`",
-            color=disnake.Colour.blue(),
-            thumbnail=self.map_image,
+            color=disnake.Colour.blue()
+        ).set_thumbnail(
+            self.map_image
         )
 
     @async_property
@@ -800,7 +816,7 @@ class CurrentGame(lol.spectator.CurrentGame):
             for i in range(len(participant_tuples[0])):
                 ret.append(
                     {
-                        "name": (f"__**TEAM**__ {FS.Emotes.ALPHA[j]}" if not i else "➖"),
+                        "name": (f"__**TEAM**__ {Emotes.ALPHA[j]}" if not i else "➖"),
                         "value": "\n".join([p[i] for p in participant_tuples]),
                         "inline": True,
                     }
@@ -813,25 +829,25 @@ class CurrentGame(lol.spectator.CurrentGame):
             summoner_id=participant.summoner_id, champion_id=participant.champion_id
         ).get()
         return (
-            f"{league.short(league.first) if league else FS.Emotes.Lol.Tier.UNRANKED+FS.Emotes.Lol.Rank.NONE} **{participant.summoner_name}**",
-            f"{FS.Emotes.Lol.Champions.get(participant.champion_id)} {FS.Emotes.Lol.MASTERIES[championMastery.champion_level]} ➖ {FS.Emotes.Lol.Runes.Perks.Get(participant.rune_ids[0])}{FS.Emotes.Lol.Runes.Styles.Get(participant.rune_sub_style)}",
-            f"➖ {FS.Emotes.Lol.SummonerSpells.get(participant.spell_ids[0])}{FS.Emotes.Lol.SummonerSpells.get(participant.spell_ids[1])}",
+            f"{league.short(league.first) if league else Emotes.Lol.Tier.UNRANKED+Emotes.Lol.Rank.NONE} **{participant.summoner_name}**",
+            f"{Emotes.Lol.Champions.get(participant.champion_id)} {Emotes.Lol.MASTERIES[championMastery.champion_level]} ➖ {Emotes.Lol.Runes.Perks.Get(participant.rune_ids[0])}{Emotes.Lol.Runes.Styles.Get(participant.rune_sub_style)}",
+            f"➖ {Emotes.Lol.SummonerSpells.get(participant.spell_ids[0])}{Emotes.Lol.SummonerSpells.get(participant.spell_ids[1])}",
         )
 
     def perks_field(self, perksId: List[int]) -> dict:
         return {
-            "name": f"{FS.Emotes.Lol.Runes.Perks.NONE} **RUNES**",
-            "value": f"""> {FS.Emotes.Lol.Runes.Perks.Get(perksId[0])}{FS.Emotes.Lol.Runes.Perks.Get(perksId[4])}{FS.Emotes.Lol.Runes.Perks.Get(perksId[6])}
-        > {FS.Emotes.Lol.Runes.Perks.Get(perksId[1])}{FS.Emotes.Lol.Runes.Perks.Get(perksId[5])}{FS.Emotes.Lol.Runes.Perks.Get(perksId[7])}
-        > {FS.Emotes.Lol.Runes.Perks.Get(perksId[2])}⬛{FS.Emotes.Lol.Runes.Perks.Get(perksId[8])}
-        > {FS.Emotes.Lol.Runes.Perks.Get(perksId[3])}""",
+            "name": f"{Emotes.Lol.Runes.Perks.NONE} **RUNES**",
+            "value": f"""> {Emotes.Lol.Runes.Perks.Get(perksId[0])}{Emotes.Lol.Runes.Perks.Get(perksId[4])}{Emotes.Lol.Runes.Perks.Get(perksId[6])}
+        > {Emotes.Lol.Runes.Perks.Get(perksId[1])}{Emotes.Lol.Runes.Perks.Get(perksId[5])}{Emotes.Lol.Runes.Perks.Get(perksId[7])}
+        > {Emotes.Lol.Runes.Perks.Get(perksId[2])}⬛{Emotes.Lol.Runes.Perks.Get(perksId[8])}
+        > {Emotes.Lol.Runes.Perks.Get(perksId[3])}""",
             "inline": True,
         }
 
     def spells_field(self, spellsId: List[int]) -> dict:
         return {
-            "name": f"{FS.Emotes.FLAME} **SPELL**",
-            "value": f"> {FS.Emotes.Lol.SummonerSpells.get(spellsId[0])}{FS.Emotes.Lol.SummonerSpells.get(spellsId[1])}",
+            "name": f"{Emotes.FLAME} **SPELL**",
+            "value": f"> {Emotes.Lol.SummonerSpells.get(spellsId[0])}{Emotes.Lol.SummonerSpells.get(spellsId[1])}",
             "inline": True,
         }
 
@@ -841,9 +857,9 @@ class CurrentGame(lol.spectator.CurrentGame):
         championMastery = await lol.ChampionMastery(
             summoner_id=participant.summoner_id, champion_id=participant.champion_id
         ).get()
-        embed.set_thumbnail(url=champion.skins[0].tile_path)
+        embed.set_thumbnail(champion.skins[0].tile_path)
         masteryField: dict = {
-            "name": f"{FS.Emotes.Lol.MASTERIES[0]} **MASTERY**",
+            "name": f"{Emotes.Lol.MASTERIES[0]} **MASTERY**",
             "value": f"> {ChampionMasteries.champion_to_line(championMastery)}",
             "inline": True,
         }

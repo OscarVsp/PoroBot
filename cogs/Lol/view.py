@@ -4,41 +4,40 @@ from typing import Union
 
 import disnake
 
-import modules.FastSnake as FS
+from modules.Assets import *
 from .watcher import *
 
-drink_embed = FS.Embed(
+drink_embed = disnake.Embed(
     title="__**:underage: RÈGLES DE L'ARAM À BOIRE ! :beers:**__",
     description="""✅ :arrow_right: Donner une gorgée :beers:
                          :o2: :arrow_right: Boire une gorgée :beers:
-                         :vs: :arrow_right: ✅ ou :o2: en fonction.""",
-    fields=[
-        {
-            "name": "__Pendant la partie :__",
-            "value": """> 1️⃣ Faire un kill ...................................................... ✅1️⃣
-                             > :two: Mourrir ............................................................. :o2:1️⃣
-                             > :three: Toutes les 5 assist ......................................... ✅1️⃣
-                             > :four: First blood ........................................................ :vs:1️⃣
-                             > :five: Pentakill ............................................................ :vs::five:
-                             > :six: Faire un kill dans la fontaine (et survivre) ✅:two: (:four:)
-                             > :seven: Toucher le nexus ............................................ :o2:1️⃣
-                             > :eight: Dans la fontaine sur l'écran de victoire .... ✅:three:""",
-        },
-        {
-            "name": "__Après la partie :__",
-            "value": """> 1️⃣ Perfect game (0 mort) ................................. ✅:five:
-                             > :two: 100% kill participation ................................. ✅:five:
-                             > :three: Perfect support (0 kill) ................................ ✅:three:
-                             > :four: Abandon .......................................................... :o2::five:
-                             > :five: Avoir tilt ........................................................... :o2::five:""",
-        },
-        {
-            "name": "__Spectateur :__",
-            "value": """> S'il y a un spectateur,celui-ci doit choisir un joueur avant la partie. Chaque fois que ce joueur doit ✅ ou :o2:, le spectateur fait de même.
-                             > Celui-ci peut donner des gorgées à n'importe quel joueur et n'importe quel joueur pour lui donner des gorgées.""",
-        },
-    ],
-    thumbnail=FS.Images.Poros.GRAGAS,
+                         :vs: :arrow_right: ✅ ou :o2: en fonction."""
+).add_field(
+    name="__Pendant la partie :__", 
+    value="""> 1️⃣ Faire un kill ...................................................... ✅1️⃣
+             > :two: Mourrir ............................................................. :o2:1️⃣
+             > :three: Toutes les 5 assist ......................................... ✅1️⃣
+             > :four: First blood ........................................................ :vs:1️⃣
+             > :five: Pentakill ............................................................ :vs::five:
+             > :six: Faire un kill dans la fontaine (et survivre) ✅:two: (:four:)
+             > :seven: Toucher le nexus ............................................ :o2:1️⃣
+             > :eight: Dans la fontaine sur l'écran de victoire .... ✅:three:""",
+    inline=True
+).add_field(
+    name="__Après la partie :__",
+    value="""> 1️⃣ Perfect game (0 mort) ................................. ✅:five:
+             > :two: 100% kill participation ................................. ✅:five:
+             > :three: Perfect support (0 kill) ................................ ✅:three:
+             > :four: Abandon .......................................................... :o2::five:
+             > :five: Avoir tilt ........................................................... :o2::five:""",
+    inline=True
+).add_field(
+    name="__Spectateur :__",
+    value="""> S'il y a un spectateur,celui-ci doit choisir un joueur avant la partie. Chaque fois que ce joueur doit ✅ ou :o2:, le spectateur fait de même.
+             > Celui-ci peut donner des gorgées à n'importe quel joueur et n'importe quel joueur pour lui donner des gorgées.""",
+    inline=True
+).set_thumbnail(
+    Images.Poros.GRAGAS
 )
 
 
@@ -60,7 +59,7 @@ class CurrentGameView(disnake.ui.View):
         except NotFound:
             if isinstance(inter, disnake.ApplicationCommandInteraction):
                 await inter.edit_original_message(
-                    embed=FS.Embed(
+                    embed=disnake.Embed(
                         title="Invocateur inconnu",
                         description=f"Le nom d'invocateur ***{self.summoner_name}*** ne correspond à aucun invocateur...",
                     ),
@@ -70,7 +69,7 @@ class CurrentGameView(disnake.ui.View):
                 return
             else:
                 await inter.send(
-                    embed=FS.Embed(
+                    embed=disnake.Embed(
                         title="Invocateur inconnu",
                         description=f"Le nom d'invocateur ***{self.summoner_name}*** ne correspond à aucun invocateur...",
                     ),
@@ -81,14 +80,14 @@ class CurrentGameView(disnake.ui.View):
             await inter.edit_original_message(
                 embeds=[
                     await summoner.embed,
-                    FS.Embed(description=f"{FS.Emotes.LOADING} *Recherche de game en cours...*"),
+                    disnake.Embed(description=f"{Emotes.LOADING} *Recherche de game en cours...*"),
                 ]
             )
         else:
             self.inter = await inter.send(
                 embeds=[
                     await summoner.embed,
-                    FS.Embed(description=f"{FS.Emotes.LOADING} *Recherche de game en cours...*"),
+                    disnake.Embed(description=f"{Emotes.LOADING} *Recherche de game en cours...*"),
                 ]
             )
         counter: int = 0
@@ -109,7 +108,7 @@ class CurrentGameView(disnake.ui.View):
                 await inter.edit_original_message(
                     embeds=[
                         (await summoner.embed),
-                        FS.Embed(
+                        disnake.Embed(
                             description="*Pas de partie en cours ou bien le mode de jeu n'est pas supporté (only Summoner Rift and ARAM)*"
                         ),
                     ]
@@ -119,7 +118,7 @@ class CurrentGameView(disnake.ui.View):
                 await self.inter.edit(
                     embeds=[
                         (await summoner.embed),
-                        FS.Embed(
+                        disnake.Embed(
                             description="*Pas de partie en cours ou bien le mode de jeu n'est pas supporté (only Summoner Rift and ARAM)*"
                         ),
                     ]
@@ -132,14 +131,14 @@ class CurrentGameView(disnake.ui.View):
             await inter.edit_original_message(
                 embeds=[
                     await summoner.embed,
-                    FS.Embed(description=f"{FS.Emotes.LOADING} *Récupération des données...*"),
+                    disnake.Embed(description=f"{Emotes.LOADING} *Récupération des données...*"),
                 ]
             )
         else:
             await self.inter.edit(
                 embeds=[
                     await summoner.embed,
-                    FS.Embed(description=f"{FS.Emotes.LOADING} *Récupération des données...*"),
+                    disnake.Embed(description=f"{Emotes.LOADING} *Récupération des données...*"),
                 ]
             )
 
@@ -197,7 +196,7 @@ class CurrentGameView(disnake.ui.View):
             await inter.response.edit_message(embeds=await self.embeds(), view=self)
 
     @disnake.ui.button(
-        label="Champion details", emoji=FS.Emotes.Lol.Champions.NONE, row=3, style=disnake.ButtonStyle.green
+        label="Champion details", emoji=Emotes.Lol.Champions.NONE, row=3, style=disnake.ButtonStyle.green
     )
     async def champion(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
         await inter.response.defer()
@@ -206,7 +205,7 @@ class CurrentGameView(disnake.ui.View):
             .participants[self.current_participant_index[1]]
             .champion_id
         ).get()
-        await champion.start(inter.channel)
+        await champion.start(inter.author)
         await self.update(inter)
 
     async def call_back(self, inter: disnake.MessageInteraction):
@@ -236,7 +235,7 @@ class ClashTeamView(disnake.ui.View):
                 return self
             else:
                 await inter.edit_original_message(
-                    embed=FS.Embed(
+                    embed=disnake.Embed(
                         title="Pas de team clash",
                         description=f"L'invocateur ***{self.summoner_name}*** ne fais pas parti d'une équipe clash...",
                     ),
@@ -246,7 +245,7 @@ class ClashTeamView(disnake.ui.View):
                 return None
         except NotFound:
             await inter.edit_original_message(
-                embed=FS.Embed(
+                embed=disnake.Embed(
                     title="Invocateur inconnu",
                     description=f"Le nom d'invocateur ***{self.summoner_name}*** ne correspond à aucun invocateur...",
                 ),
@@ -263,7 +262,7 @@ class ClashTeamView(disnake.ui.View):
             if len(name) > 12:
                 name = name[:12]
             button = disnake.ui.Button(
-                label=name, custom_id=f"{i}", emoji=FS.Emotes.Lol.Positions.get(self.team.players[i].position)
+                label=name, custom_id=f"{i}", emoji=Emotes.Lol.Positions.get(self.team.players[i].position)
             )
             button.callback = self.call_back
             self.add_item(button)
@@ -272,7 +271,7 @@ class ClashTeamView(disnake.ui.View):
                 self.current_summoner = self.summoners[i]
         self.add_item(
             disnake.ui.Button(
-                style=disnake.ButtonStyle.link, url=await self.team.opgg_url, emoji=FS.Emotes.Lol.OPGG, row=2
+                style=disnake.ButtonStyle.link, url=await self.team.opgg_url, emoji=Emotes.Lol.OPGG, row=2
             )
         )
         await self.update(inter)
@@ -322,6 +321,9 @@ class ChampionView(disnake.ui.View):
 
     async def update(self, inter: disnake.MessageInteraction):
         if isinstance(inter, disnake.TextChannel):
+            await inter.send(embeds=self.embeds, view=self)
+            return
+        if isinstance(inter, disnake.Member | disnake.User):
             await inter.send(embeds=self.embeds, view=self)
             return
         if isinstance(inter, disnake.PartialMessageable):
