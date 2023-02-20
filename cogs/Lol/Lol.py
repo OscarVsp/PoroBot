@@ -162,7 +162,7 @@ class Lol(commands.Cog):
         else:
             await inter.edit_original_message(embed=warning(f"Not champion with name **{nom}**"))
 
-    @champion.autocomplete("nom")
+    @champion.autocomplete("nom")   #TODO difflib to find closed match (cf. draft)
     async def autocomp_championt(self, inter: disnake.ApplicationCommandInteraction, user_input: str):
         champions = []
         for champion in (await champion_keys_cache.data)["name_by_id"].values():
