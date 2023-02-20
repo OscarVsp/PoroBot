@@ -1,4 +1,4 @@
-disnake=2.8.*
-pyot=6.0.*
+disnake==2.8.*
+pyot==6.0.*
 requests
 python-dotenv
