@@ -371,3 +371,4 @@ FodyWeavers.xsd
 *.json
 .vscode/
 !.gitignore
+porobot.env
