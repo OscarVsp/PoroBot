@@ -4,17 +4,19 @@ from typing import Union
 
 import disnake
 
-from modules.Assets import *
 from .watcher import *
+from modules.Assets import *
 
-drink_embed = disnake.Embed(
-    title="__**:underage: RÈGLES DE L'ARAM À BOIRE ! :beers:**__",
-    description="""✅ :arrow_right: Donner une gorgée :beers:
+drink_embed = (
+    disnake.Embed(
+        title="__**:underage: RÈGLES DE L'ARAM À BOIRE ! :beers:**__",
+        description="""✅ :arrow_right: Donner une gorgée :beers:
                          :o2: :arrow_right: Boire une gorgée :beers:
-                         :vs: :arrow_right: ✅ ou :o2: en fonction."""
-).add_field(
-    name="__Pendant la partie :__", 
-    value="""> 1️⃣ Faire un kill ...................................................... ✅1️⃣
+                         :vs: :arrow_right: ✅ ou :o2: en fonction.""",
+    )
+    .add_field(
+        name="__Pendant la partie :__",
+        value="""> 1️⃣ Faire un kill ...................................................... ✅1️⃣
              > :two: Mourrir ............................................................. :o2:1️⃣
              > :three: Toutes les 5 assist ......................................... ✅1️⃣
              > :four: First blood ........................................................ :vs:1️⃣
@@ -22,22 +24,24 @@ drink_embed = disnake.Embed(
              > :six: Faire un kill dans la fontaine (et survivre) ✅:two: (:four:)
              > :seven: Toucher le nexus ............................................ :o2:1️⃣
              > :eight: Dans la fontaine sur l'écran de victoire .... ✅:three:""",
-    inline=True
-).add_field(
-    name="__Après la partie :__",
-    value="""> 1️⃣ Perfect game (0 mort) ................................. ✅:five:
+        inline=True,
+    )
+    .add_field(
+        name="__Après la partie :__",
+        value="""> 1️⃣ Perfect game (0 mort) ................................. ✅:five:
              > :two: 100% kill participation ................................. ✅:five:
              > :three: Perfect support (0 kill) ................................ ✅:three:
              > :four: Abandon .......................................................... :o2::five:
              > :five: Avoir tilt ........................................................... :o2::five:""",
-    inline=True
-).add_field(
-    name="__Spectateur :__",
-    value="""> S'il y a un spectateur,celui-ci doit choisir un joueur avant la partie. Chaque fois que ce joueur doit ✅ ou :o2:, le spectateur fait de même.
+        inline=True,
+    )
+    .add_field(
+        name="__Spectateur :__",
+        value="""> S'il y a un spectateur,celui-ci doit choisir un joueur avant la partie. Chaque fois que ce joueur doit ✅ ou :o2:, le spectateur fait de même.
              > Celui-ci peut donner des gorgées à n'importe quel joueur et n'importe quel joueur pour lui donner des gorgées.""",
-    inline=True
-).set_thumbnail(
-    Images.Poros.GRAGAS
+        inline=True,
+    )
+    .set_thumbnail(Images.Poros.GRAGAS)
 )
 
 

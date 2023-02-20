@@ -50,7 +50,7 @@ class Emotes:
         "🇼",
         "🇽",
         "🇾",
-        "🇿"
+        "🇿",
     ]
 
     class CardColor:

@@ -1,4 +1,5 @@
 disnake==2.8.*
+pre-commit
 pyot==6.0.*
-requests
 python-dotenv
+requests

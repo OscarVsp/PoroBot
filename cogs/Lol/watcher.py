@@ -223,7 +223,9 @@ class ChampionMasteries(lol.ChampionMasteries):
                     embeds.append(disnake.Embed(title=title, description=text, color=color))
                     text = ""
                     title = None
-                text += f"{Emotes.Lol.Champions.get(champion.champion_id)} *{self.champion_points_formatted(champion)}*\n"
+                text += (
+                    f"{Emotes.Lol.Champions.get(champion.champion_id)} *{self.champion_points_formatted(champion)}*\n"
+                )
             embeds.append(disnake.Embed(title=title, description=text, color=color))
         return embeds
 
@@ -300,19 +302,20 @@ class ClashTeam(lol.ClashTeam):
         for player in self.sortedPlayers:
             summoner = await Summoner(id=player.summoner_id).get()
             league = await summoner.league_entries.get()
-            description += f"> {Emotes.Lol.Positions.get(player.position)}{Emotes.Lol.Tier.get(league.first.tier)} {summoner.name}"
+            description += (
+                f"> {Emotes.Lol.Positions.get(player.position)}{Emotes.Lol.Tier.get(league.first.tier)} {summoner.name}"
+            )
             if player.role == "CAPTAIN":
                 description += f" {Emotes.Lol.CAPTAIN}"
             description += "\n"
-        return disnake.Embed(
-            title=f"**{self.name}**",
-            description=description,
-            color=disnake.Colour.blue()
-        ).set_author(
-            name=f"{self.abbreviation.upper()}",
-        ).set_thumbnail(
-            self.icon_url
+        return (
+            disnake.Embed(title=f"**{self.name}**", description=description, color=disnake.Colour.blue())
+            .set_author(
+                name=f"{self.abbreviation.upper()}",
+            )
+            .set_thumbnail(self.icon_url)
         )
+
 
 class ClashTournament(lol.ClashTournament):
     class Meta(lol.ClashTournament.Meta):
@@ -363,23 +366,14 @@ class Summoner(lol.Summoner):
         summonerLeague = await self.league_entries.get()
         champMastField = championMasteries.field()
         summField = summonerLeague.field
-        return disnake.Embed(
-            color=disnake.Colour.blue()
-        ).set_author(
-            name=f"{self.name.upper()}",
-            icon_url=self.icon_url
-        ).add_field(
-            name=champMastField.get('name'),
-            value=champMastField.get('value'),
-            inline=summField.get('inline')
-        ).add_field(
-            name=summField.get('name'),
-            value=summField.get('value'),
-            inline=summField.get('inline')
-        ).add_field(
-            name=f"{Emotes.Lol.XP} **LEVEL**", 
-            value=f"> **{self.level}**",
-            inline=True
+        return (
+            disnake.Embed(color=disnake.Colour.blue())
+            .set_author(name=f"{self.name.upper()}", icon_url=self.icon_url)
+            .add_field(
+                name=champMastField.get("name"), value=champMastField.get("value"), inline=summField.get("inline")
+            )
+            .add_field(name=summField.get("name"), value=summField.get("value"), inline=summField.get("inline"))
+            .add_field(name=f"{Emotes.Lol.XP} **LEVEL**", value=f"> **{self.level}**", inline=True)
         )
 
 
@@ -535,18 +529,19 @@ class MerakiChampion(lol.MerakiChampion):
         embeds: List[disnake.Embed] = []
 
         for ability in abilities:
-            embed = disnake.Embed(
-                title=f"__**{letter.upper()} - {ability.name}**__",
-                color=self.spellType_to_color(ability)
-            ).set_thumbnail(
-                ability.icon
-            ).add_field(
-                name="Cost",
-                value=(
-                    f"{Emotes.Lol.Stats.Ressource(ability.resource)} {self.modifiers_to_line(ability.cost.modifiers)}"
-                    if ability.resource
-                    else "`--`"
-                ),
+            embed = (
+                disnake.Embed(
+                    title=f"__**{letter.upper()} - {ability.name}**__", color=self.spellType_to_color(ability)
+                )
+                .set_thumbnail(ability.icon)
+                .add_field(
+                    name="Cost",
+                    value=(
+                        f"{Emotes.Lol.Stats.Ressource(ability.resource)} {self.modifiers_to_line(ability.cost.modifiers)}"
+                        if ability.resource
+                        else "`--`"
+                    ),
+                )
             )
             text = (
                 f"{Emotes.Lol.Stats.ABILITYHASTE} {self.modifiers_to_line(ability.cooldown.modifiers)}"
@@ -581,9 +576,7 @@ class MerakiChampion(lol.MerakiChampion):
 
             details: List[str] = []
             if ability.on_target_cd_static and ability.on_target_cd_static.lower() != "none":
-                details.append(
-                    f"> **Per target cd:** {Emotes.Lol.Stats.ABILITYHASTE} `{ability.on_target_cd_static}`"
-                )
+                details.append(f"> **Per target cd:** {Emotes.Lol.Stats.ABILITYHASTE} `{ability.on_target_cd_static}`")
             if ability.targeting and ability.targeting.lower() != "none":
                 details.append(f"> **Target type:** `{ability.targeting}`")
             if ability.spell_effects and ability.spell_effects.lower() != "none":
@@ -639,10 +632,8 @@ class MerakiChampion(lol.MerakiChampion):
                     )
                 ]
             ),
-            color=self.spellType_to_color(ability)
-        ).set_thumbnail(
-            ability.icon
-        )
+            color=self.spellType_to_color(ability),
+        ).set_thumbnail(ability.icon)
 
     @property
     def abilities_embeds(self) -> List[disnake.Embed]:
@@ -714,17 +705,15 @@ class MerakiChampion(lol.MerakiChampion):
 
     @property
     def BaseEmbed(self) -> disnake.Embed:
-        embed = disnake.Embed(
-            title=f"*{self.title}*",
-            description=f'> "{self.lore[:200]}[...]"' if len(self.lore) > 200 else f'> "{self.lore}"',
-            color=disnake.Colour.dark_blue()
-        ).set_author(
-            name=self.full_name if self.full_name else self.name,
-            icon_url=self.skins[0].tile_path
-        ).set_thumbnail(
-            self.skins[0].load_screen_path
-        ).set_footer(
-            text=f"Last changed in patch {self.patch_last_changed}"
+        embed = (
+            disnake.Embed(
+                title=f"*{self.title}*",
+                description=f'> "{self.lore[:200]}[...]"' if len(self.lore) > 200 else f'> "{self.lore}"',
+                color=disnake.Colour.dark_blue(),
+            )
+            .set_author(name=self.full_name if self.full_name else self.name, icon_url=self.skins[0].tile_path)
+            .set_thumbnail(self.skins[0].load_screen_path)
+            .set_footer(text=f"Last changed in patch {self.patch_last_changed}")
         )
         return embed
 
@@ -803,10 +792,8 @@ class CurrentGame(lol.spectator.CurrentGame):
         return disnake.Embed(
             title=f"{Emotes.Lol.LOGO} __**GAME EN COURS**__",
             description=f"> **Map :** `{self.map_name}`\n> **Type :** `{self.game_name}`\n> **Durée :** `{strftime('%M:%S', gmtime(self.length_secs))}`",
-            color=disnake.Colour.blue()
-        ).set_thumbnail(
-            self.map_image
-        )
+            color=disnake.Colour.blue(),
+        ).set_thumbnail(self.map_image)
 
     @async_property
     async def team_fields(self) -> List[dict]:
